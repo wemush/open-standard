@@ -507,7 +507,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 
 | Organization | Use Case | Since |
 |--------------|----------|-------|
-| WeMush | Platform | Full cultivation tracking | 2025 |
+| WeMush Platform | Full cultivation tracking | 2025 |
 | Mush Ohio | Commercial production tracking | 2025 |
 | [Your organization?] | [Submit PR to add] | [Year] |
 
