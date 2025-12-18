@@ -392,7 +392,7 @@ If you use WOLS in research, please cite:
 
 ## License
 
-**Specification**: [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE-SPEC)
+**Specification & Documentation**: [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE)
 
 You are free to:
 
@@ -400,7 +400,9 @@ You are free to:
 - ✅ Adapt — remix, transform, build upon
 - ✅ Commercial use — use in commercial products
 
-**Reference Implementations**: [MIT License](LICENSE-CODE)
+**Code Examples**: Code snippets in this documentation may also be used under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) for easy integration into your projects.
+
+**Reference Implementations**: Official client libraries (in separate repositories) are licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ---
 
