@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Public Draft
+**Status**: Active
 **Version**: 1.0.0
-**Date**: December 16, 2025
+**Date**: December 18, 2025
 **Author**: Mark Beacom, WeMush Foundation
 **License**: CC BY 4.0
 
@@ -477,7 +477,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Patch**: Clarifications, bug fixes
 
 **Current Version**: 1.0.0
-**Stability**: Public Draft (feedback welcome)
+**Stability**: Active (feedback welcome)
 
 ---
 
@@ -573,9 +573,9 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
-### Version 1.0.0 (December 16, 2025)
+### Version 1.0.0 (December 18, 2025)
 
-- Initial public draft
+- Initial release
 - Core specimen schema defined
 - QR encoding formats specified
 - Privacy and security guidelines
