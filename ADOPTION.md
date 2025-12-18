@@ -8,7 +8,7 @@ Organizations, projects, and individuals using the WeMush Open Labeling Standard
 
 | Organization | Location | Specimens | Use Case | Since |
 |--------------|----------|-----------|----------|-------|
-| **Mush Ohio** | Ohio, USA | Mushrooms (Pleurotus, Shiitake) | Production tracking, traceability, customer transparency | 2025 |
+| **Mush Ohio** | Ohio, USA | Culinary Mushrooms | Production tracking, traceability, customer transparency | 2025 |
 
 ### Research Institutions
 
