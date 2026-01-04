@@ -3,8 +3,8 @@
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
 **Status**: Active
-**Version**: 1.0.0
-**Date**: December 18, 2025
+**Version**: 1.1.0
+**Date**: January 4, 2026
 **Author**: Mark Beacom, WeMush Foundation
 **License**: CC BY 4.0
 
@@ -47,28 +47,33 @@ This standard is designed for mushroom cultivation but extensible to any biologi
 
 ### Specimen Object (Core)
 
-The foundational entity representing a biological specimen at any stage of cultivation.
+The foundational entity representing a biological specimen at any stage of cultivation. WOLS uses JSON-LD format for semantic web interoperability.
 
 ```typescript
 interface SpecimenLabel {
+  // JSON-LD Context (Required)
+  "@context": string;            // Schema URL: "https://wemush.com/wols/v1"
+  "@type": string;               // Entity type: "Specimen"
+
   // Required Fields
-  id: string;                    // Unique identifier (CUID)
-  version: string;               // Spec version (e.g., "1.0.0")
+  id: string;                    // Unique identifier with wemush: prefix (e.g., "wemush:clx1a2b3c4")
+  version: string;               // Spec version (e.g., "1.1.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name (e.g., "Pleurotus ostreatus")
 
   // Taxonomy & Genetics
-  strain?: string;               // Strain name or identifier
-  genetics?: {
-    source?: string;             // Origin of genetic material
-    generation?: number;         // Passage number
-    parentIds?: string[];        // Parent specimen IDs
+  strain?: {
+    name: string;                // Strain name or identifier
+    generation?: string;         // Filial generation (e.g., "F1", "F2", "P")
+    clonalGeneration?: number;   // Subculture/clone count (e.g., 1, 2, 3...)
+    lineage?: string;            // Parent specimen ID reference
+    source?: string;             // "spore", "tissue", "agar", "liquid"
   };
 
   // Lifecycle Tracking
   stage: GrowthStage;            // INOCULATION | COLONIZATION | FRUITING | HARVEST
   created: string;               // ISO 8601 timestamp
-  batchId?: string;              // Associated batch identifier
+  batch?: string;                // Associated batch identifier
 
   // Attribution
   organization?: string;         // Organization ID
@@ -135,19 +140,29 @@ GET https://api.wemush.com/v1/specimens/clx1a2b3c4
 **Use Case**: Substrate bags, fruiting blocks, labels with space
 **Data Limit**: 2,000 bytes (binary QR code)
 
+Embedded format uses JSON-LD for semantic interoperability:
+
 ```json
 {
-  "v": "1.0.0",
-  "id": "clx1a2b3c4d5e6f7g8",
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Specimen",
+  "id": "wemush:clx1a2b3c4d5e6f7g8",
+  "version": "1.1.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
-  "strain": "Blue Oyster PoHu",
+  "strain": {
+    "name": "Blue Oyster PoHu",
+    "generation": "F2",
+    "clonalGeneration": 3
+  },
   "stage": "COLONIZATION",
   "created": "2025-12-16T10:30:00Z",
   "batch": "batch_2025_12_001",
-  "org": "org_mushoh"
+  "organization": "org_mushoh"
 }
 ```
+
+**Size**: ~380 bytes — well within QR capacity with error correction level M
 
 #### 3. Encrypted Format (Research/Commercial)
 
@@ -316,14 +331,21 @@ PATCH /v1/specimens/{id}
 
 ```json
 {
-  "id": "clx1a2b3c4d5e6f7g8",
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Specimen",
+  "id": "wemush:clx1a2b3c4d5e6f7g8",
+  "version": "1.1.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
-  "strain": "Blue Oyster PoHu",
+  "strain": {
+    "name": "Blue Oyster PoHu",
+    "generation": "F2",
+    "clonalGeneration": 3
+  },
   "stage": "COLONIZATION",
   "created": "2025-12-16T10:30:00Z",
-  "batchId": "batch_2025_12_001",
-  "organizationId": "org_mushoh",
+  "batch": "batch_2025_12_001",
+  "organization": "org_mushoh",
   "metadata": {
     "substrate": {
       "components": [
@@ -397,7 +419,10 @@ Organizations can add custom fields under reserved namespaces:
 
 ```json
 {
-  "id": "clx1a2b3c4",
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Specimen",
+  "id": "wemush:clx1a2b3c4",
+  "version": "1.1.0",
   "species": "Hericium erinaceus",
   "custom": {
     "mushoh": {
@@ -476,7 +501,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.0.0
+**Current Version**: 1.1.0
 **Stability**: Active (feedback welcome)
 
 ---
@@ -572,6 +597,17 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.1.0 (January 4, 2026)
+
+- **JSON-LD format adoption**: Added `@context` and `@type` fields for semantic web interoperability
+- **Structured strain object**: Strain field now supports `name`, `generation`, `clonalGeneration`, `lineage`, and `source` subfields
+- **Dual generation tracking**: `generation` for filial (F1, F2) and `clonalGeneration` for subculture count (1, 2, 3...)
+- **ID prefix**: Specimen IDs now use `wemush:` prefix for namespace clarity (e.g., `wemush:clx1a2b3c4`)
+- **Context URL**: Schema hosted at `https://wemush.com/wols/v1`
+- **Field naming consistency**: Renamed `batchId` → `batch`, `organizationId` → `organization`, `v` → `version`
+- **QR capacity verified**: JSON-LD format at ~400-450 bytes, well within 2,000 byte QR limit
+- **Backwards compatible**: Existing parsers can ignore `@context`/`@type` and continue working
 
 ### Version 1.0.0 (December 18, 2025)
 
