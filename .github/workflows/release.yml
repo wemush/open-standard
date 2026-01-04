@@ -1,0 +1,43 @@
+name: 'Publish Release'
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    environment: releases
+    permissions:
+      id-token: write
+      contents: write
+      discussions: write
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify Versions Match
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#refs/tags/}"
+          MODULE_VERSION=$(grep -E '^\*\*Version\*\*:' SPECIFICATION.md | sed 's/\*\*Version\*\*: //')
+          echo "Git Tag Version: $TAG_VERSION"
+          echo "Specification Version: $MODULE_VERSION"
+          if [[ "$TAG_VERSION" != "$MODULE_VERSION" ]]; then
+            echo "Error: Version mismatch between tag ($TAG_VERSION) and SPECIFICATION.md ($MODULE_VERSION)" >&2
+            exit 1
+          fi
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b  # v2.5.0
+        with:
+          discussion_category_name: announcements
+          generate_release_notes: true
+          files: |
+            SPECIFICATION.md
+            README.md
+            LICENSE
