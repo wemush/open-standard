@@ -49,11 +49,11 @@ The global mushroom industry is worth **$50 billion** but operates on spreadshee
 ### Generate a Label (JavaScript/TypeScript)
 
 ```bash
-npm install @wemush/specimen-labels
+npm install @wemush/wols
 ```
 
 ```typescript
-import { generateLabel } from '@wemush/specimen-labels';
+import { generateLabel } from '@wemush/wols';
 
 const label = await generateLabel({
   species: "Pleurotus ostreatus",
@@ -70,11 +70,11 @@ const label = await generateLabel({
 ### Scan and Parse (Python)
 
 ```bash
-pip install wemush-labels
+pip install wols
 ```
 
 ```python
-from wemush_labels import parse_label, scan_qr_code
+from wols import parse_label, scan_qr_code
 
 # Scan QR code from image
 specimen_data = scan_qr_code("path/to/qr_code.png")
@@ -122,12 +122,13 @@ print(f"Created: {specimen.created}")
 
 ### Official Libraries
 
-| Language | Repository | Status |
-|----------|-----------|---------|
-| **JavaScript/TypeScript** | [@wemush/specimen-labels](https://github.com/wemush/specimen-labels-js) | 📋 Planned |
-| **Python** | [wemush-labels](https://github.com/wemush/specimen-labels-py) | 📋 Planned |
-| **Go** | [wemush-go](https://github.com/wemush/specimen-labels-go) | 📋 Planned |
-| **Rust** | [wemush-rs](https://github.com/wemush/specimen-labels-rs) | 📋 Planned |
+| Language | Package | Repository | Status |
+|----------|---------|-----------|--------|
+| **JavaScript/TypeScript** | `npm install @wemush/wols` | [specimen-labels-js](https://github.com/wemush/specimen-labels-js) | 📋 Planned |
+| **Python** | `pip install wols` | [specimen-labels-py](https://github.com/wemush/specimen-labels-py) | 📋 Planned |
+| **Container/CLI** | `docker pull ghcr.io/wemush/specimen-labels-py:latest` | [ghcr.io/wemush/specimen-labels-py](https://ghcr.io/wemush/specimen-labels-py) | 📋 Planned |
+| **Go** | — | [specimen-labels-go](https://github.com/wemush/specimen-labels-go) | 📋 Planned |
+| **Rust** | — | [specimen-labels-rs](https://github.com/wemush/specimen-labels-rs) | 📋 Planned |
 
 ### Platform Support
 

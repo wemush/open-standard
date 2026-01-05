@@ -4,8 +4,8 @@
 >
 > **Target Libraries**:
 >
-> - `@wemush/wols` (npm) — TypeScript/JavaScript
-> - `wemush-wols` (PyPI) — Python
+> - [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) (npm) — TypeScript/JavaScript
+> - [`wols`](https://github.com/wemush/specimen-labels-py) (PyPI) — Python
 >
 > **Specification Version**: 1.1.0
 > **Date**: January 4, 2026
@@ -48,8 +48,8 @@
 ├── qr/             # QR code generation (optional)
 └── crypto/         # Encryption utilities (optional)
 
-wemush-wols (PyPI)
-├── wemush_wols/
+wols (PyPI)
+├── wols/
 │   ├── core/       # Types, validation, serialization
 │   ├── qr/         # QR code generation (optional)
 │   └── crypto/     # Encryption utilities (optional)
@@ -530,7 +530,7 @@ src/
 ```toml
 # pyproject.toml
 [project]
-name = "wemush-wols"
+name = "wols"
 version = "1.1.0"
 description = "Official WOLS (WeMush Open Labeling Standard) library"
 readme = "README.md"
@@ -543,18 +543,18 @@ dependencies = []
 [project.optional-dependencies]
 qr = ["qrcode[pil]>=7.0", "pillow>=9.0"]
 crypto = ["cryptography>=40.0"]
-all = ["wemush-wols[qr,crypto]"]
+all = ["wols[qr,crypto]"]
 
 [project.urls]
 Homepage = "https://wemush.com/open-standard"
-Repository = "https://github.com/wemush/wols-python"
+Repository = "https://github.com/wemush/specimen-labels-py"
 Documentation = "https://wemush.com/open-standard/specification"
 ```
 
 ### Python File Structure
 
 ```bash
-wemush_wols/
+wols/
 ├── __init__.py           # Main exports
 ├── types.py              # Dataclasses and type definitions
 ├── specimen.py           # create_specimen, serialize_specimen
@@ -655,7 +655,7 @@ Library versions MUST align with WOLS specification versions:
 ### 🔗 Links
 - [Specification](https://wemush.com/open-standard/specification)
 - [npm package](https://www.npmjs.com/package/@wemush/wols)
-- [PyPI package](https://pypi.org/project/wemush-wols/)
+- [PyPI package](https://pypi.org/project/wols/)
 ```
 
 ---

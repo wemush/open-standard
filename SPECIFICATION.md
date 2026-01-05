@@ -446,16 +446,22 @@ Organizations can add custom fields under reserved namespaces:
 
 ### Open Source Libraries
 
-**JavaScript/TypeScript**: `@wemush/specimen-label`
+**JavaScript/TypeScript**: [`@wemush/wols`](https://github.com/wemush/specimen-labels-js)
 
 ```bash
-npm install @wemush/specimen-label
+npm install @wemush/wols
 ```
 
-**Python**: `wemush-labels`
+**Python**: [`wols`](https://github.com/wemush/specimen-labels-py)
 
 ```bash
-pip install wemush-labels
+pip install wols
+```
+
+**Container/CLI**: [`specimen-labels-py`](https://ghcr.io/wemush/specimen-labels-py) (arm64/amd64)
+
+```bash
+docker pull ghcr.io/wemush/specimen-labels-py:latest
 ```
 
 **API**: `https://api.wemush.com/v1`

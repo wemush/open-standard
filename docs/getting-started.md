@@ -24,7 +24,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 2. **Generate your first label**:
 
    ```typescript
-   import { generateLabel } from '@wemush/specimen-labels';
+   import { generateLabel } from '@wemush/wols';
 
    const label = await generateLabel({
      species: "Pleurotus ostreatus",
@@ -85,16 +85,19 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 
    ```bash
    # JavaScript/TypeScript
-   npm install @wemush/specimen-labels
+   npm install @wemush/wols
 
    # Python
-   pip install wemush-labels
+   pip install wols
+
+   # Container/CLI (arm64/amd64)
+   docker pull ghcr.io/wemush/specimen-labels-py:latest
    ```
 
 3. **Generate a label**:
 
    ```typescript
-   import { generateLabel } from '@wemush/specimen-labels';
+   import { generateLabel } from '@wemush/wols';
 
    const label = await generateLabel({
      species: "Pleurotus ostreatus",
@@ -110,7 +113,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 4. **Parse a label**:
 
    ```python
-   from wemush_labels import parse_label
+   from wols import parse_label
 
    specimen = parse_label(qr_code_data)
    print(f"Species: {specimen.species}")
