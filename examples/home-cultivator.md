@@ -30,7 +30,7 @@ Sarah implements WOLS tracking with minimal effort:
 Sarah receives a new culture from a friend:
 
 ```typescript
-import { generateLabel } from '@wemush/specimen-labels';
+import { generateLabel } from '@wemush/wols';
 
 const culture = await generateLabel({
   species: "Pleurotus ostreatus",
@@ -239,7 +239,7 @@ Sarah sells at farmers markets:
 ## Code Example: Complete Workflow
 
 ```typescript
-import { generateLabel, updateLabel } from '@wemush/specimen-labels';
+import { generateLabel, updateLabel } from '@wemush/wols';
 
 // 1. Culture
 const culture = await generateLabel({

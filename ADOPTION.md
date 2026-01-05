@@ -34,8 +34,8 @@ Organizations, projects, and individuals using the WeMush Open Labeling Standard
 
 | Project | Language | Type | Description | Repository |
 |---------|----------|------|-------------|------------|
-| [@wemush/specimen-labels](https://github.com/wemush/specimen-labels-js) | TypeScript | Library | Official JavaScript/TypeScript implementation | 📋 Planned |
-| [wemush-labels](https://github.com/wemush/specimen-labels-py) | Python | Library | Official Python implementation | 📋 Planned |
+| [@wemush/wols](https://github.com/wemush/specimen-labels-js) | TypeScript | Library | Official JavaScript/TypeScript implementation | 📋 Planned |
+| [wols](https://github.com/wemush/specimen-labels-py) | Python | Library | Official Python implementation | 📋 Planned |
 
 ### Research Papers
 

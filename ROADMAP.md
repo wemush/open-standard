@@ -109,8 +109,8 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
 ### v1.1.0 Deliverables
 
 - [ ] IoT Integration Guide
-- [ ] @wemush/specimen-labels npm package
-- [ ] wemush-labels Python package
+- [ ] @wemush/wols npm package ([specimen-labels-js](https://github.com/wemush/specimen-labels-js))
+- [ ] wols Python package ([specimen-labels-py](https://github.com/wemush/specimen-labels-py))
 - [ ] WOLS CLI tool
 - [ ] Enhanced security documentation
 - [ ] API specification document
