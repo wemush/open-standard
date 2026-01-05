@@ -124,9 +124,9 @@ print(f"Created: {specimen.created}")
 
 | Language | Package | Repository | Status |
 |----------|---------|-----------|--------|
-| **JavaScript/TypeScript** | `npm install @wemush/wols` | [specimen-labels-js](https://github.com/wemush/specimen-labels-js) | 📋 Planned |
-| **Python** | `pip install wols` | [specimen-labels-py](https://github.com/wemush/specimen-labels-py) | 📋 Planned |
-| **Container/CLI** | `docker pull ghcr.io/wemush/specimen-labels-py:latest` | [ghcr.io/wemush/specimen-labels-py](https://ghcr.io/wemush/specimen-labels-py) | 📋 Planned |
+| **JavaScript/TypeScript** | `npm install @wemush/wols` | [specimen-labels-js](https://github.com/wemush/specimen-labels-js) | ✅ Released |
+| **Python** | `pip install wols` | [specimen-labels-py](https://github.com/wemush/specimen-labels-py) | ✅ Released |
+| **Container/CLI** | `docker pull ghcr.io/wemush/specimen-labels-py:latest` | [ghcr.io/wemush/specimen-labels-py](https://ghcr.io/wemush/specimen-labels-py) | ✅ Released |
 | **Go** | — | [specimen-labels-go](https://github.com/wemush/specimen-labels-go) | 📋 Planned |
 | **Rust** | — | [specimen-labels-rs](https://github.com/wemush/specimen-labels-rs) | 📋 Planned |
 
