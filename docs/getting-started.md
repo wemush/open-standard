@@ -152,26 +152,27 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 
 ### Specimen Types
 
-WOLS defines four primary specimen types:
+WOLS defines five primary specimen types:
 
 | Type | Description | Example |
-|------|-------------|---------|
+| ----- | ------------- | --------- |
 | **CULTURE** | Pure cultures on agar or in liquid | Agar plate, liquid culture jar |
 | **SPAWN** | Colonized grain or substrate for inoculation | Grain spawn, sawdust spawn |
 | **SUBSTRATE** | Growing medium being colonized | Fruiting blocks, bags, logs |
 | **FRUITING** | Mature specimens producing mushrooms | Fruiting chamber specimens |
+| **HARVEST** | Harvested and processed specimens | Fresh mushrooms, dried product |
 
 ### Growth Stages
 
-Track specimens through their lifecycle:
+Track specimens through their lifecycle (v1.2.0 includes 7 research-grade stages):
 
-- **INOCULATION**: Just inoculated
-- **COLONIZATION**: Mycelium spreading
-- **CONSOLIDATION**: Fully colonized, strengthening
-- **PRIMORDIA**: Pins forming
-- **FRUITING**: Mushrooms growing
-- **HARVEST**: Ready to harvest
-- **COMPLETE**: Harvest finished
+- **INOCULATION**: Initial introduction of spawn/culture to substrate
+- **INCUBATION**: Post-inoculation rest period before visible growth
+- **COLONIZATION**: Active mycelial growth through substrate
+- **PRIMORDIA**: Pin initiation and early fruit body formation
+- **FRUITING**: Active fruit body development and maturation
+- **SENESCENCE**: Declining productivity, end-of-life phase
+- **HARVEST**: Mushrooms harvested and processed
 
 ### Encoding Formats
 
@@ -183,12 +184,14 @@ WOLS supports three encoding formats:
 wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 ```
 
-**2. Embedded** (full JSON, most common):
+**2. Embedded** (full JSON-LD, most common):
 
 ```json
 {
-  "v": "1.0.0",
-  "id": "clx1a2b3c4",
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Specimen",
+  "id": "wemush:clx1a2b3c4",
+  "version": "1.2.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "stage": "COLONIZATION"
@@ -224,12 +227,12 @@ Track a complete grow cycle:
    const spawn = generateLabel({
      type: "SPAWN",
      species: "Pleurotus ostreatus",
-     strain: "Blue Oyster",
-     stage: "COLONIZATION",
-     genetics: {
-       parentId: culture.id, // Link to parent
-       generation: 1,
+     strain: {
+       name: "Blue Oyster",
+       generation: "F1",
+       lineage: culture.id, // Link to parent
      },
+     stage: "COLONIZATION",
    });
    ```
 
@@ -238,11 +241,13 @@ Track a complete grow cycle:
    ```typescript
    const substrate = generateLabel({
      type: "SUBSTRATE",
-     stage: "INOCULATION",
-     genetics: {
-       parentId: spawn.id,
-       generation: 2,
+     species: "Pleurotus ostreatus",
+     strain: {
+       name: "Blue Oyster",
+       generation: "F2",
+       lineage: spawn.id,
      },
+     stage: "INOCULATION",
    });
    ```
 
@@ -251,11 +256,13 @@ Track a complete grow cycle:
    ```typescript
    const fruiting = generateLabel({
      type: "FRUITING",
-     stage: "PRIMORDIA",
-     genetics: {
-       parentId: substrate.id,
-       generation: 3,
+     species: "Pleurotus ostreatus",
+     strain: {
+       name: "Blue Oyster",
+       generation: "F3",
+       lineage: substrate.id,
      },
+     stage: "PRIMORDIA",
    });
    ```
 

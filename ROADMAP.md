@@ -2,8 +2,8 @@
 
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
-**Current Version**: 1.0.0
-**Last Updated**: December 18, 2025
+**Current Version**: 1.2.0
+**Last Updated**: January 26, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -18,21 +18,26 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 
 ## Roadmap Overview
 
-```bash
+```text
 2025 Q4: v1.0.0 ✅ Foundation
 └─ Core specification
 └─ Initial documentation
 └─ First adopters
 
-2026 Q1: v1.1.0 🚧 Integration
-└─ IoT sensor specs
-└─ Enhanced security
-└─ Developer tools
+2026 Q1: v1.2.0 ✅ Integration & Developer Experience
+└─ Type alias system
+└─ Flexible ID validation
+└─ Generation format flexibility
+└─ Reserved _meta namespace
+└─ Environment detection utilities
+└─ Migration utilities
+└─ Extended growth stages (7 research-grade stages)
+└─ Integration feedback improvements
 
-2026 Q2: v1.2.0 📋 Expansion
+2026 Q2: v1.3.0 📋 IoT & Analytics
+└─ IoT sensor specs
 └─ Advanced analytics
 └─ Supply chain features
-└─ Multi-language support
 
 2026 Q3-Q4: v2.0.0 📋 Maturity
 └─ Performance optimization
@@ -42,7 +47,7 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 
 ## Current: v1.0.0 (December 2025)
 
-### Status: ✅ RELEASED
+### Status: ✅ v1.0.0 RELEASED
 
 ### Goals
 
@@ -61,132 +66,168 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 - [x] ADOPTION.md - Adopter tracking
 - [x] GitHub repository - Public source control
 - [x] Initial documentation structure
+- [x] @wemush/wols npm package - Published and in production use
 
 ### Metrics
 
 - ✅ 1+ commercial adopter
 - ✅ Specification published
 - ✅ Community forums active
-- 🎯 Target: 5 GitHub stars (Current: TBD)
-- 🎯 Target: 3 discussions started
+- ✅ @wemush/wols npm package in production (WeMush platform) ← NEW
+- ✅ Target: 5 GitHub stars (Current: 49)
+- ✅ Target: 3 discussions started
 
-## Next: v1.1.0 (Q1 2026)
+## Current: v1.2.0 (January 2026)
 
-### Status: 🚧 PLANNING
+### Status: ✅ v1.2.0 RELEASED
 
 ### Theme: **Integration & Developer Experience**
 
-Focus on making WOLS easier to integrate and extend for developers and equipment manufacturers.
+Focus on making WOLS easier to integrate and extend for developers and equipment manufacturers. **Incorporates real-world feedback from WeMush platform integration.**
 
-### v1.1.0 Goals
+### v1.2.0 Goals
+
+1. **Integration Feedback Improvements** (from WeMush platform)
+   - **Flexible ID format validation**: Support ULIDs, UUIDs, and custom patterns
+   - **Type alias system**: Map platform-specific types (LIQUID_CULTURE, GRAIN_SPAWN, PRIMORDIA) to WOLS categories
+   - **Generation format flexibility**: Accept `G{n}`, `F{n}`, or numeric formats
+   - **Reserved metadata namespace**: `_meta` field for round-trip implementation data
+   - **Convenience API methods**: `parseOrThrow()`, `parseOrNull()` variants
+   - **Environment detection helpers**: `isServer()`, `supportsWebCrypto()` utilities
+
+2. **Extended Growth Stages** (Research-Grade Precision)
+   - **7 lifecycle stages**: INOCULATION → INCUBATION → COLONIZATION → PRIMORDIA → FRUITING → SENESCENCE → HARVEST
+   - **INCUBATION**: Post-inoculation monitoring before visible colonization
+   - **PRIMORDIA**: Pin initiation tracking for precise timing
+   - **SENESCENCE**: End-of-life monitoring for research specimens
+   - **Backward compatible**: Older parsers gracefully handle new stages
+
+3. **Developer Tools & Libraries**
+   - JavaScript/TypeScript library (v0.1.0) ✅ @wemush/wols published
+   - Python library (v1.0) - v0.1.1 update in progress
+   - CLI tool for label generation
+
+4. **Migration Utilities**
+   - Version comparison functions
+   - Specimen migration handlers
+   - Backward compatibility preserved
+
+### v1.2.0 Deliverables
+
+- [x] @wemush/wols npm package v0.1.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) ✅ DONE
+- [x] Type alias system with 20+ built-in aliases ✅ DONE
+- [x] ID validation modes (strict, ulid, uuid, any) ✅ DONE
+- [x] Generation normalization utilities ✅ DONE
+- [x] Environment detection helpers ✅ DONE
+- [x] Migration utilities ✅ DONE
+- [x] Reserved `_meta` namespace ✅ DONE
+- [x] Extended growth stages (7 research-grade stages) ✅ DONE
+- [ ] wols Python package v1.2 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) - IN PROGRESS
+- [ ] Migration guide from v1.0/v1.1 to v1.2
+
+### Success Metrics
+
+- ✅ 1+ commercial platform integration (WeMush)
+- 🎯 3+ equipment manufacturers in discussions
+- 🎯 10+ organizations using WOLS
+- 🎯 50+ GitHub stars
+- 🎯 1000+ label generations via libraries
+
+### Timeline
+
+- **January 2026**: v1.2.0 specification and JS/TS library released ✅
+- **February 2026**: Python library v1.2, community feedback
+- **March 2026**: Documentation finalized, adoption push
+
+## Real-World Integration Learnings
+
+### WeMush Platform Integration (January 2026)
+
+The WeMush cultivation tracking platform completed full integration with `@wemush/wols`:
+
+**Features Successfully Implemented:**
+
+- ✅ Compact URL encoding for QR codes on petri dishes and culture tubes
+- ✅ Embedded JSON format for larger labels
+- ✅ AES-256-GCM encryption for sensitive research specimens
+- ✅ Round-trip encryption/decryption with metadata preservation
+- ✅ Browser (Web Crypto API) and server (Node.js) decryption
+- ✅ PWA protocol handler for `wemush://` URLs
+
+**Issues Resolved in v1.2.0:**
+
+| Challenge | v1.0 Workaround | v1.2.0 Solution |
+| ----------- | ------------ | -------------- |
+| Strict ID format | Store original ID in `custom._originalId` | ✅ `idMode: 'ulid' \| 'uuid' \| 'any'` |
+| Limited types | Map via `PLATFORM_TO_WOLS_TYPE` | ✅ `registerTypeAlias()` with 20+ built-ins |
+| F{n} only generation | Transform G{n} to F{n} on encode | ✅ `normalizeGeneration()` |
+| parseCompactUrl API | Check `.success` then access `.data` | ✅ `parseCompactUrlOrThrow()`, `parseCompactUrlOrNull()` |
+| Metadata loss | Store in `custom` field | ✅ Reserved `_meta` namespace |
+| Env detection | Manual checks | ✅ `isServer()`, `isCryptoSupported()` |
+
+**Extended Growth Stages (Delivered in v1.2.0):**
+
+The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 research-grade stages:
+
+| Platform Stage | WOLS v1.2.0 | Notes |
+| -------------- | ----------- | ----- |
+| INOCULATION | ✅ | Initial spore/culture introduction |
+| INCUBATION | ✅ | Post-inoculation, pre-visible growth |
+| COLONIZATION | ✅ | Active mycelial growth |
+| PRIMORDIA | ✅ | Pin initiation (hyphal knots) |
+| FRUITING | ✅ | Fruiting body development |
+| SENESCENCE | ✅ | End-of-life monitoring |
+| HARVEST | ✅ | Final harvest stage |
+
+## Future: v1.3.0 (Q2 2026)
+
+### Status: 📋 PLANNED
+
+### Theme: **IoT & Analytics**
+
+Focus on enterprise features, IoT integration, and supply chain tracking.
+
+### v1.3.0 Goals
 
 1. **IoT Sensor Integration Specification**
    - Standard for encoding sensor data in WOLS labels
    - Examples: temperature, humidity, CO₂, light sensors
    - Real-time monitoring integration patterns
 
-2. **Enhanced Security Features**
-   - Blockchain-ready verification hooks
-   - Advanced encryption options
-   - Multi-signature support for supply chains
-
-3. **Developer Tools & Libraries**
-   - JavaScript/TypeScript library (v1.0)
-   - Python library (v1.0)
-   - CLI tool for label generation
-   - VS Code extension for WOLS editing
-
-4. **Image Metadata Standard**
-   - Embed WOLS data in image EXIF
-   - Photo documentation integration
-   - Computer vision readiness
-
-5. **API Specifications**
-   - REST API standard for WOLS servers
-   - GraphQL schema
-   - Webhook patterns for events
-
-### v1.1.0 Deliverables
-
-- [ ] IoT Integration Guide
-- [ ] @wemush/wols npm package ([specimen-labels-js](https://github.com/wemush/specimen-labels-js))
-- [ ] wols Python package ([specimen-labels-py](https://github.com/wemush/specimen-labels-py))
-- [ ] WOLS CLI tool
-- [ ] Enhanced security documentation
-- [ ] API specification document
-- [ ] 5+ code examples for each library
-
-### Success Metrics
-
-- 🎯 3+ equipment manufacturers in discussions
-- 🎯 10+ organizations using WOLS
-- 🎯 2+ independent implementations
-- 🎯 50+ GitHub stars
-- 🎯 1000+ label generations via libraries
-
-### Timeline
-
-- **January 2026**: IoT spec draft, library development starts
-- **February 2026**: Beta releases of libraries, community feedback
-- **March 2026**: v1.1.0 release, documentation finalized
-
-## Future: v1.2.0 (Q2 2026)
-
-### Status: 📋 PLANNED
-
-### Theme: **Scale & Expansion**
-
-Focus on enterprise features, analytics, and multi-region support.
-
-### v1.2.0 Goals
-
-1. **Advanced Analytics Schema**
+2. **Advanced Analytics Schema**
    - Yield prediction data fields
    - Quality metrics standardization
    - Time-series data encoding
 
-2. **Supply Chain Integration**
+3. **Supply Chain Integration**
    - Multi-party verification patterns
    - Custody transfer tracking
    - Wholesale/retail integration specs
 
-3. **Multi-Language Support**
-   - Translations: Spanish, French, German, Chinese
-   - Internationalization guide
-   - Region-specific field support
+4. **Enhanced Security Features**
+   - Blockchain-ready verification hooks
+   - Multi-signature support for supply chains
 
-4. **Carbon Tracking Standard**
-   - Carbon footprint calculation fields
-   - Sustainability metrics
-   - Integration with carbon credit systems
+### v1.3.0 Deliverables
 
-5. **Enhanced Genetics Encoding**
-   - DNA sequence references
-   - Phenotype tracking
-   - Breeding program support
-
-### v1.2.0 Deliverables
-
+- [ ] IoT Integration Guide
 - [ ] Analytics specification
 - [ ] Supply chain guide
-- [ ] Translation infrastructure
-- [ ] Carbon tracking documentation
-- [ ] Genetics extension spec
-- [ ] Enterprise deployment guide
+- [ ] Enhanced security documentation
+- [ ] API specification document (REST, GraphQL)
 
-### v1.2.0 Success Metrics
+### v1.3.0 Success Metrics
 
 - 🎯 25+ organizations
 - 🎯 5+ supply chain integrations
-- 🎯 3+ languages fully supported
 - 🎯 1 academic paper published using WOLS
 - 🎯 100+ GitHub stars
 
-### v1.2.0 Timeline
+### v1.3.0 Timeline
 
 - **April 2026**: Spec drafts, community feedback
 - **May 2026**: Implementation and testing
-- **June 2026**: v1.2.0 release
+- **June 2026**: v1.3.0 release
 
 ## Long-Term: v2.0.0 (Q3-Q4 2026)
 
@@ -273,8 +314,13 @@ Major version focused on performance, global adoption, and standards body recogn
 Track community-requested features and their status:
 
 | Feature | Votes | Status | Target Version |
-|---------|-------|--------|----------------|
-| IoT sensor integration | - | 🚧 In Progress | v1.1.0 |
+| --------- | ------- | -------- | ---------------- |
+| Flexible ID formats | 1 | ✅ Released | v1.2.0 |
+| Type alias system | 1 | ✅ Released | v1.2.0 |
+| Environment detection | 1 | ✅ Released | v1.2.0 |
+| Migration utilities | 1 | ✅ Released | v1.2.0 |
+| Extended growth stages | 1 | ✅ Released | v1.2.0 |
+| IoT sensor integration | - | 📋 Planned | v1.3.0 |
 | Blockchain verification | - | 📋 Planned | v2.0.0 |
 | Mobile app example | - | 💭 Considering | TBD |
 | Video documentation | - | 💭 Considering | TBD |
@@ -286,19 +332,20 @@ Track community-requested features and their status:
 ### External Dependencies
 
 - **JavaScript ecosystem**: Node.js, npm, TypeScript
-- **Python ecosystem**: Python 3.8+, pip
+- **Python ecosystem**: Python 3.12+, pip, uv
 - **GitHub**: Repository hosting, CI/CD
 - **Community**: Volunteer contributors
 
 ### Risks & Mitigation
 
 | Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
+| ------ | -------- | ------------- | ------------ |
 | Low adoption | High | Medium | Focus on developer experience, marketing |
 | Competing standards emerge | High | Low | Be first to market, superior quality |
 | Maintainer burnout | Medium | Medium | Expand steering committee, share workload |
 | Breaking changes needed | Medium | Low | Careful design, RFC process |
 | Security vulnerability | High | Low | Security audit, bug bounty program |
+| Integration friction | Medium | Medium | Address real-world feedback promptly |
 
 ## Resource Requirements
 
@@ -309,6 +356,7 @@ Track community-requested features and their status:
 - 1 full-time developer (libraries)
 - 1 part-time technical writer (documentation)
 - Community contributors (testing, feedback)
+- WeMush platform team (integration feedback and PRs)
 
 **Infrastructure**:
 
@@ -390,18 +438,19 @@ Features prioritized by:
 
 ### What We Promise
 
-✅ **Stability**: No breaking changes without major version bump
-✅ **Transparency**: Public roadmap, open discussions
-✅ **Community**: Your input shapes priorities
-✅ **Quality**: Thorough testing and documentation
-✅ **Support**: Responsive to issues and questions
+- ✅ **Stability**: No breaking changes without major version bump
+- ✅ **Transparency**: Public roadmap, open discussions
+- ✅ **Community**: Your input shapes priorities
+- ✅ **Quality**: Thorough testing and documentation
+- ✅ **Support**: Responsive to issues and questions
+- ✅ **Feedback Loop**: Real-world integration feedback incorporated ← NEW
 
 ### What We Don't Promise
 
-❌ **Exact Timelines**: Dates are estimates, may shift
-❌ **Every Feature**: Can't implement everything
-❌ **Commercial Support**: Community-driven project
-❌ **Backward Compatibility Forever**: v2.0+ may break changes
+- ❌ **Exact Timelines**: Dates are estimates, may shift
+- ❌ **Every Feature**: Can't implement everything
+- ❌ **Commercial Support**: Community-driven project
+- ❌ **Backward Compatibility Forever**: v2.0+ may break changes
 
 ## Get Involved
 
@@ -423,9 +472,9 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: December 18, 2025
-**Next Review**: March 2026
-**Version**: 1.0.0
+**Last Updated**: January 26, 2026
+**Next Review**: April 2026
+**Version**: 1.2.0 (Roadmap document version)
 
 ---
 

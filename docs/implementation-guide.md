@@ -7,8 +7,8 @@
 > - [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) (npm) — TypeScript/JavaScript
 > - [`wols`](https://github.com/wemush/specimen-labels-py) (PyPI) — Python
 >
-> **Specification Version**: 1.1.0
-> **Date**: January 4, 2026
+> **Specification Version**: 1.2.0
+> **Date**: January 26, 2026
 
 ---
 
@@ -33,7 +33,7 @@
 
 ### Design Goals
 
-1. **Spec Compliance**: Libraries MUST produce and consume JSON-LD compliant WOLS v1.1.0 specimens
+1. **Spec Compliance**: Libraries MUST produce and consume JSON-LD compliant WOLS v1.2.0 specimens
 2. **Type Safety**: Full TypeScript types / Python type hints with strict validation
 3. **Zero Dependencies** (core): Minimal dependencies for the core parser/validator
 4. **QR Optional**: QR code generation/scanning as optional peer dependencies
@@ -105,8 +105,11 @@ type SpecimenType =
 
 type GrowthStage =
   | "INOCULATION"
+  | "INCUBATION"
   | "COLONIZATION"
+  | "PRIMORDIA"
   | "FRUITING"
+  | "SENESCENCE"
   | "HARVEST";
 ```
 
@@ -117,7 +120,7 @@ from typing import Optional, Dict, Any, Literal
 from datetime import datetime
 
 SpecimenType = Literal["CULTURE", "SPAWN", "SUBSTRATE", "FRUITING", "HARVEST"]
-GrowthStage = Literal["INOCULATION", "COLONIZATION", "FRUITING", "HARVEST"]
+GrowthStage = Literal["INOCULATION", "INCUBATION", "COLONIZATION", "PRIMORDIA", "FRUITING", "SENESCENCE", "HARVEST"]
 
 @dataclass
 class Strain:
@@ -477,7 +480,7 @@ class WolsEncryptionError(WolsError):
 ```json
 {
   "name": "@wemush/wols",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Official WOLS (WeMush Open Labeling Standard) library",
   "type": "module",
   "main": "./dist/index.js",
@@ -531,7 +534,7 @@ src/
 # pyproject.toml
 [project]
 name = "wols"
-version = "1.1.0"
+version = "1.2.0"
 description = "Official WOLS (WeMush Open Labeling Standard) library"
 readme = "README.md"
 license = "MIT"
@@ -618,10 +621,11 @@ wols/
 
 Library versions MUST align with WOLS specification versions:
 
-| Spec Version | Library Version      | Notes            |
-|--------------|----------------------|------------------|
-| WOLS 1.0.0   | `@wemush/wols@1.0.x` | Initial release  |
-| WOLS 1.1.0   | `@wemush/wols@1.1.x` | JSON-LD format   |
+| Spec Version | Library Version      | Notes                                                    |
+|--------------|----------------------|----------------------------------------------------------|
+| WOLS 1.0.0   | `@wemush/wols@1.0.x` | Initial release                                          |
+| WOLS 1.1.0   | `@wemush/wols@1.1.x` | JSON-LD format                                           |
+| WOLS 1.2.0   | `@wemush/wols@1.2.x` | Extended growth stages, type aliases, `_meta` namespace  |
 
 ### Release Process
 

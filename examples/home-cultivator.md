@@ -34,7 +34,9 @@ import { generateLabel } from '@wemush/wols';
 
 const culture = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster - Friend's Strain",
+  strain: {
+    name: "Blue Oyster - Friend's Strain",
+  },
   type: "CULTURE",
   stage: "COLONIZATION",
   created: "2025-12-01T10:00:00Z",
@@ -56,13 +58,13 @@ Two weeks later, culture is ready:
 ```typescript
 const spawn = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster - Friend's Strain",
   type: "SPAWN",
   stage: "INOCULATION",
   created: "2025-12-15T14:00:00Z",
-  genetics: {
-    parentId: culture.id, // Links to parent culture
-    generation: 1
+  strain: {
+    name: "Blue Oyster - Friend's Strain",
+    generation: "F1",
+    lineage: culture.id, // Links to parent culture
   },
   custom: {
     sarah: {
@@ -83,13 +85,13 @@ Spawn colonizes in 2 weeks:
 ```typescript
 const block = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster - Friend's Strain",
   type: "SUBSTRATE",
   stage: "INOCULATION",
   created: "2025-12-29T16:00:00Z",
-  genetics: {
-    parentId: spawn.id,
-    generation: 2
+  strain: {
+    name: "Blue Oyster - Friend's Strain",
+    generation: "F2",
+    lineage: spawn.id,
   },
   substrate: {
     components: [
@@ -244,7 +246,9 @@ import { generateLabel, updateLabel } from '@wemush/wols';
 // 1. Culture
 const culture = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster",
+  strain: {
+    name: "Blue Oyster",
+  },
   type: "CULTURE",
   stage: "COLONIZATION",
   created: new Date().toISOString()
@@ -254,10 +258,13 @@ printLabel(culture.qrDataUrl);
 // 2. Spawn (2 weeks later)
 const spawn = await generateLabel({
   species: culture.species,
-  strain: culture.strain,
   type: "SPAWN",
   stage: "INOCULATION",
-  genetics: { parentId: culture.id, generation: 1 },
+  strain: {
+    name: culture.strain.name,
+    generation: "F1",
+    lineage: culture.id,
+  },
   created: new Date().toISOString()
 });
 printLabel(spawn.qrDataUrl);
@@ -265,10 +272,13 @@ printLabel(spawn.qrDataUrl);
 // 3. Substrate (2 weeks later)
 const substrate = await generateLabel({
   species: spawn.species,
-  strain: spawn.strain,
   type: "SUBSTRATE",
   stage: "INOCULATION",
-  genetics: { parentId: spawn.id, generation: 2 },
+  strain: {
+    name: spawn.strain.name,
+    generation: "F2",
+    lineage: spawn.id,
+  },
   substrate: {
     components: [
       { type: "Hardwood sawdust", percentage: 70 },

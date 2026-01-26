@@ -44,7 +44,7 @@ Develop and maintain an open, vendor-agnostic specification that enables:
 **Current Members**:
 
 | Name | Affiliation | Role | Term |
-|------|-------------|------|------|
+| ---- | ------------- | ------ | ------ |
 | Mark Beacom | WeMush Foundation | Chair | 2025-2027 |
 | [Open] | Commercial Industry | Industry Rep | TBD |
 | [Open] | Academic Institution | Research Rep | TBD |

@@ -69,10 +69,10 @@ Yes! Use the `custom` namespace to add organization-specific fields:
 
 Official libraries:
 
-- JavaScript/TypeScript (planned)
-- Python (planned)
-- Go (planned)
-- Rust (planned)
+- JavaScript/TypeScript — ✅ Released (`npm install @wemush/wols`)
+- Python — ✅ Released (`pip install wols`)
+- Go — 📋 Planned
+- Rust — 📋 Planned
 
 You can also implement WOLS in any language by following the specification.
 
@@ -197,7 +197,7 @@ Apply via GitHub Discussions when seats open.
 ### How is WOLS different from GS1 barcodes?
 
 | Feature | WOLS | GS1 |
-|---------|------|-----|
+| -------- | ------ | ----- |
 | **License** | Free, open source | Membership fees required |
 | **Focus** | Agriculture/research | General retail |
 | **Data** | Cultivation-specific | Generic product info |
@@ -228,7 +228,7 @@ Yes! WOLS v2.0 will include blockchain integration patterns. You can:
 ### How does WOLS compare to spreadsheets?
 
 | Aspect | WOLS | Spreadsheets |
-|--------|------|--------------|
+| ------- | ------ | -------------- |
 | **Traceability** | Built-in lineage | Manual tracking |
 | **Scanning** | QR codes | N/A |
 | **Interoperability** | Standard format | No standard |
@@ -318,9 +318,9 @@ Yes! Options:
 
 See [ROADMAP.md](../ROADMAP.md) for details:
 
-- **v1.1.0** (Q1 2026): IoT integration, developer tools
-- **v1.2.0** (Q2 2026): Analytics, supply chain, translations
-- **v2.0.0** (Q3-Q4 2026): Blockchain, standards alignment
+- **v1.2.0** (Jan 2026): ✅ Extended growth stages, type aliases, `_meta` namespace
+- **v1.3.0** (Q2 2026): IoT integration, developer tools, translations
+- **v2.0.0** (Q3-Q4 2026): Blockchain, standards alignment, supply chain
 
 ### Can I request features?
 

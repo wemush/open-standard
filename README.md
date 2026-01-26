@@ -1,6 +1,6 @@
 # WeMush Open Labeling Standard (WOLS)
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/wemush/open-standard/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/wemush/open-standard/releases)
 [![License](https://img.shields.io/badge/license-CC%20BY%204.0-green.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/wemush/open-standard)](https://github.com/wemush/open-standard/discussions)
 [![Stars](https://img.shields.io/github/stars/wemush/open-standard?style=social)](https://github.com/wemush/open-standard/stargazers)
@@ -123,7 +123,7 @@ print(f"Created: {specimen.created}")
 ### Official Libraries
 
 | Language | Package | Repository | Status |
-|----------|---------|-----------|--------|
+| -------- | -------- | --------- | ------ |
 | **JavaScript/TypeScript** | `npm install @wemush/wols` | [specimen-labels-js](https://github.com/wemush/specimen-labels-js) | ✅ Released |
 | **Python** | `pip install wols` | [specimen-labels-py](https://github.com/wemush/specimen-labels-py) | ✅ Released |
 | **Container/CLI** | `docker pull ghcr.io/wemush/specimen-labels-py:latest` | [ghcr.io/wemush/specimen-labels-py](https://ghcr.io/wemush/specimen-labels-py) | ✅ Released |
@@ -133,7 +133,7 @@ print(f"Created: {specimen.created}")
 ### Platform Support
 
 | Platform | WOLS Support | Link |
-|----------|--------------|------|
+| -------- | ------------ | ---- |
 | **WeMush** | ✅ Native | [wemush.com](https://wemush.com) |
 | **[Your Platform?]** | [Submit PR] | [Your link] |
 
@@ -147,20 +147,34 @@ print(f"Created: {specimen.created}")
 
 ```typescript
 interface SpecimenLabel {
-  // Required
-  id: string;                    // Unique identifier
-  version: string;               // Spec version (e.g., "1.0.0")
-  type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING
-  species: string;               // Scientific name
-  stage: GrowthStage;            // Current growth stage
-  created: string;               // ISO 8601 timestamp
+  // JSON-LD Context (Required)
+  "@context": string;            // Schema URL: "https://wemush.com/wols/v1"
+  "@type": string;               // Entity type: "Specimen"
 
-  // Optional
-  strain?: string;               // Strain identifier
-  genetics?: GeneticsInfo;       // Lineage tracking
-  batchId?: string;              // Batch/cohort identifier
+  // Required Fields
+  id: string;                    // Unique identifier with wemush: prefix
+  version: string;               // Spec version (e.g., "1.2.0")
+  type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
+  species: string;               // Scientific name
+
+  // Taxonomy & Genetics
+  strain?: {
+    name: string;                // Strain name or identifier
+    generation?: string;         // Filial generation (e.g., "F1", "F2", "P")
+    clonalGeneration?: number;   // Subculture/clone count
+    lineage?: string;            // Parent specimen ID reference
+    source?: string;             // "spore", "tissue", "agar", "liquid"
+  };
+
+  // Lifecycle Tracking
+  stage: GrowthStage;            // Current growth stage (7 stages in v1.2.0)
+  created: string;               // ISO 8601 timestamp
+  batch?: string;                // Associated batch identifier
+
+  // Attribution & Extensibility
   organization?: string;         // Organization ID
   custom?: Record<string, any>;  // Extensible fields
+  _meta?: Record<string, any>;   // Implementation metadata (v1.2.0)
   signature?: string;            // Cryptographic signature
 }
 ```
@@ -177,11 +191,16 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 
 ```json
 {
-  "v": "1.0.0",
-  "id": "clx1a2b3c4",
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Specimen",
+  "id": "wemush:clx1a2b3c4d5e6f7g8",
+  "version": "1.2.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
-  "strain": "Blue Oyster",
+  "strain": {
+    "name": "Blue Oyster PoHu",
+    "generation": "F2"
+  },
   "stage": "COLONIZATION",
   "created": "2025-12-16T10:30:00Z"
 }
@@ -307,7 +326,7 @@ We welcome contributions from:
 ### Contribution Types
 
 | Type | Description | Examples |
-|------|-------------|----------|
+| ---- | ----------- | -------- |
 | 🐛 **Bug Fix** | Fix errors in spec or code | Typos, broken links, incorrect examples |
 | ✨ **Enhancement** | Improve existing features | Better examples, clearer docs |
 | 🎉 **New Feature** | Propose spec additions | New fields, encoding formats |
@@ -351,7 +370,7 @@ The WOLS specification is governed by a steering committee that reviews proposal
 ### Organizations Using WOLS
 
 | Organization | Type | Use Case | Since |
-|--------------|------|----------|-------|
+| ------------- | ------ | ---------- | ------- |
 | **Mush Ohio** | Commercial Farm | Production tracking | 2025 |
 | [Your org?] | [Type] | [Use case] | [Year] |
 
@@ -421,21 +440,43 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 
 ## Roadmap
 
-### Current: Version 1.0.0 (Dec 2025)
+### Version History
+
+#### Version 1.0.0 (Dec 2025)
 
 - ✅ Core specification released
-- ✅ JavaScript/TypeScript library
-- ✅ Python library (beta)
-- ✅ Reference implementation (WeMush platform)
+- ✅ Basic specimen types (CULTURE, SPAWN, SUBSTRATE, FRUITING)
+- ✅ 4 growth stages (INOCULATION, COLONIZATION, FRUITING, HARVEST)
+- ✅ Compact and embedded encoding formats
+- ✅ Basic strain tracking (string format)
+- ✅ Environmental data support
 
-### Next: Version 1.1.0 (Q1 2026)
+#### Version 1.1.0 (Jan 2026)
+
+- ✅ JSON-LD format with `@context` and `@type` fields
+- ✅ Enhanced strain object (name, generation, lineage, source)
+- ✅ Structured ID format with `wemush:` prefix
+- ✅ Added HARVEST specimen type (5 types total)
+- ✅ JavaScript/TypeScript library released
+- ✅ Python library released
+- ✅ Field renames for clarity (`batchId`→`batch`, `organizationId`→`organization`)
+
+#### Version 1.2.0 (Jan 2026) — Current
+
+- ✅ Extended growth stages (7 stages: added INCUBATION, PRIMORDIA, SENESCENCE)
+- ✅ Type aliases and generation flexibility (clonalGeneration support)
+- ✅ `_meta` namespace for implementation metadata
+- ✅ Reference implementation (WeMush platform)
+- ✅ Comprehensive documentation and examples
+
+### Next: Version 1.3.0 (Q2 2026)
 
 - 🚧 IoT sensor integration spec
 - 🚧 Blockchain verification option
 - 🚧 Image metadata standard
 - 🚧 Multi-language translations
 
-### Future: Version 2.0.0 (Q2 2026)
+### Future: Version 2.0.0 (Q3-Q4 2026)
 
 - 📋 Extended field data support
 - 📋 Advanced genetic encoding
@@ -518,7 +559,7 @@ WOLS development is supported by:
 
 <div align="center">
 
-**Built with 🍄 by cultivators, for cultivators**
+Built with 🍄 by cultivators, for cultivators
 
 [⭐ Star this repo](https://github.com/wemush/open-standard) • [📖 Read the spec](https://wemush.com/open-standard/specification) • [💬 Join the discussion](https://github.com/wemush/open-standard/discussions) • [🚀 Use the platform](https://wemush.com)
 

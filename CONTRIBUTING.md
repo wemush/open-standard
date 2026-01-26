@@ -295,7 +295,7 @@ describe('generateLabel', () => {
   });
 
   it('should handle all specimen types', () => {
-    const types = ['CULTURE', 'SPAWN', 'SUBSTRATE', 'FRUITING'];
+    const types = ['CULTURE', 'SPAWN', 'SUBSTRATE', 'FRUITING', 'HARVEST'];
     types.forEach(type => {
       const label = generateLabel({ /* ... */ type });
       expect(label.type).toBe(type);
