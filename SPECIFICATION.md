@@ -3,8 +3,8 @@
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
 **Status**: Active
-**Version**: 1.1.0
-**Date**: January 4, 2026
+**Version**: 1.2.0
+**Date**: January 26, 2026
 **Author**: Mark Beacom, WeMush Foundation
 **License**: CC BY 4.0
 
@@ -71,7 +71,7 @@ interface SpecimenLabel {
   };
 
   // Lifecycle Tracking
-  stage: GrowthStage;            // INOCULATION | COLONIZATION | FRUITING | HARVEST
+  stage: GrowthStage;            // INOCULATION | INCUBATION | COLONIZATION | PRIMORDIA | FRUITING | SENESCENCE | HARVEST
   created: string;               // ISO 8601 timestamp
   batch?: string;                // Associated batch identifier
 
@@ -81,6 +81,15 @@ interface SpecimenLabel {
 
   // Extensibility
   custom?: Record<string, any>; // Vendor-specific extensions
+
+  // Implementation Metadata (v1.2.0)
+  _meta?: {
+    sourceId?: string;           // Original ID from source system
+    sourceSystem?: string;       // Identifier of importing system
+    importedAt?: string;         // ISO 8601 import timestamp
+    schemaVersion?: string;      // Source system schema version
+    [key: string]: unknown;      // Extensible for implementation use
+  };
 
   // Verification (Optional)
   signature?: string;            // Cryptographic signature for authenticity
@@ -99,12 +108,78 @@ enum SpecimenType {
 }
 
 enum GrowthStage {
-  INOCULATION = "INOCULATION",
-  COLONIZATION = "COLONIZATION",
-  FRUITING = "FRUITING",
-  HARVEST = "HARVEST",
+  INOCULATION = "INOCULATION",   // Initial inoculation of substrate/medium
+  INCUBATION = "INCUBATION",     // Post-inoculation monitoring period (v1.2.0)
+  COLONIZATION = "COLONIZATION", // Active mycelial colonization
+  PRIMORDIA = "PRIMORDIA",       // Pin initiation stage (v1.2.0)
+  FRUITING = "FRUITING",         // Active fruiting body development
+  SENESCENCE = "SENESCENCE",     // End-of-life/declining productivity (v1.2.0)
+  HARVEST = "HARVEST",           // Harvested mushrooms
 }
 ```
+
+### Type Aliases (v1.2.0)
+
+Implementations SHOULD support common type aliases to improve usability:
+
+| Alias | Canonical Type |
+| ----- | -------------- |
+| LIQUID_CULTURE, LC, AGAR, PETRI, SLANT, CULTURE_PLATE | CULTURE |
+| GRAIN_SPAWN, SAWDUST_SPAWN, PLUG_SPAWN, DOWEL | SPAWN |
+| BLOCK, BAG, BED, LOG, BUCKET | SUBSTRATE |
+| FLUSH, PINNING, FRUIT, FIRST_FLUSH | FRUITING |
+| FRESH, DRIED, PROCESSED, EXTRACT | HARVEST |
+
+**Note**: `PRIMORDIA` is a `GrowthStage` value (not a `SpecimenType`), representing the pin initiation phase. A `FRUITING` type specimen progresses through stages including `PRIMORDIA` → `FRUITING` → `SENESCENCE`. Implementations MUST reject `PRIMORDIA` as a specimen type and SHOULD provide a helpful error message directing users to use `stage: "PRIMORDIA"` instead. See Extended Growth Stages below.
+
+Custom aliases can be registered via library functions. Alias resolution is case-insensitive.
+
+### Extended Growth Stages (v1.2.0)
+
+WOLS v1.2.0 introduces research-grade lifecycle tracking with 7 growth stages:
+
+| Stage | Description | Typical Duration | Key Observations |
+| ----- | ----------- | ---------------- | ---------------- |
+| **INOCULATION** | Initial introduction of spawn/culture to substrate | Day 0 | Inoculation date, spawn rate, technique |
+| **INCUBATION** | Post-inoculation rest period before visible growth | 1-7 days | Temperature, humidity, contamination watch |
+| **COLONIZATION** | Active mycelial growth through substrate | 2-6 weeks | Colonization %, growth rate, vigor |
+| **PRIMORDIA** | Pin initiation and early fruit body formation | 3-10 days | Pin count, distribution, environmental triggers |
+| **FRUITING** | Active fruit body development and maturation | 5-14 days | Size, morphology, flush number |
+| **SENESCENCE** | Declining productivity, end-of-life phase | Variable | Yield decline, contamination risk, disposal |
+| **HARVEST** | Mushrooms harvested and processed | N/A | Yield weight, quality grade, storage |
+
+**Scientific Rationale:**
+
+- **INCUBATION** vs **COLONIZATION**: Incubation is the initial rest period where spawn recovers from inoculation stress; colonization is active hyphal extension. Research protocols often track these separately.
+- **PRIMORDIA** vs **FRUITING**: Primordia formation (pinning) is a distinct morphological event triggered by environmental changes. Separating this allows researchers to correlate environmental parameters with pin initiation.
+- **SENESCENCE**: Tracking end-of-life allows yield optimization studies and substrate reuse research.
+
+**Backward Compatibility:** v1.0/v1.1 parsers will accept specimens with new stages but may not recognize them. Implementations SHOULD handle unknown stages gracefully.
+
+### Generation Notation (v1.2.0)
+
+The `strain.generation` field accepts multiple formats:
+
+| Format | Example | Description |
+| ------ | --------- | ------------- |
+| Filial | F1, F2, F3 | Preferred notation |
+| Parental | P, P1 | Parent/original culture |
+| Generational | G1, G2, G3 | Alternative notation |
+| Numeric | 1, 2, 3 | Simplified format |
+
+Implementations SHOULD normalize to filial notation (F{n}) by default.
+
+### ID Format Options (v1.2.0)
+
+The `id` field MUST start with `wemush:` prefix. The suffix format is flexible:
+
+| Mode | Pattern | Example |
+| ------ | --------- | --------- |
+| Default | `wemush:[a-z0-9]+` | wemush:clx1a2b3c4 |
+| ULID | `wemush:{ULID}` | wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV |
+| UUID | `wemush:{UUID}` | wemush:550e8400-e29b-41d4-a716-446655440000 |
+
+Implementations MUST accept any non-empty suffix after `wemush:` prefix.
 
 ---
 
@@ -380,7 +455,7 @@ PATCH /v1/specimens/{id}
 ### Data Classification
 
 | Level | Description | Encoding | Examples |
-|-------|-------------|----------|----------|
+| ------- | ----------- | --------- | --------- |
 | **Public** | Non-sensitive cultivation data | Embedded JSON | Species, growth stage, harvest date |
 | **Organization** | Internal operational data | Compact + API | Substrate formulas, vendor info |
 | **Research** | Proprietary genetics/methods | Encrypted | Novel strains, trade secrets |
@@ -470,6 +545,91 @@ docker pull ghcr.io/wemush/specimen-labels-py:latest
 
 ---
 
+## Library API Reference (v1.2.0)
+
+### Environment Detection
+
+Implementations SHOULD provide runtime environment detection for selecting appropriate crypto backends:
+
+```typescript
+// Runtime environment detection
+isServer(): boolean           // Node.js environment
+isBrowser(): boolean          // Browser window context
+isWebWorker(): boolean        // Web Worker context
+isDeno(): boolean             // Deno runtime
+isBun(): boolean              // Bun runtime
+getRuntimeEnvironment(): RuntimeEnvironment  // 'node' | 'browser' | 'webworker' | 'deno' | 'bun' | 'unknown'
+
+// Crypto capability detection
+isCryptoSupported(): boolean  // Any crypto available
+supportsWebCrypto(): boolean  // Web Crypto API available
+supportsNodeCrypto(): boolean // Node.js crypto available
+
+// Feature detection
+supportsTextEncoding(): boolean  // TextEncoder/TextDecoder available
+supportsURLAPIs(): boolean       // URL/URLSearchParams available
+```
+
+**Use Case**: Selecting appropriate encryption implementation for cross-platform libraries.
+
+### Convenience Methods
+
+Implementations SHOULD provide convenience wrappers for common parse operations:
+
+```typescript
+// Standard parse (returns discriminated union)
+parseCompactUrl(url: string): ParseResult<SpecimenRef>
+// Usage: if (result.success) { use(result.data) } else { handle(result.error) }
+
+// Exception-throwing variant
+parseCompactUrlOrThrow(url: string): SpecimenRef
+// Throws WolsParseError on failure
+
+// Null-returning variant
+parseCompactUrlOrNull(url: string): SpecimenRef | null
+// Returns null on failure (for optional chaining)
+```
+
+### Migration Utilities
+
+Implementations SHOULD provide version management utilities:
+
+```typescript
+// Version comparison
+compareVersions(a: string, b: string): -1 | 0 | 1
+isOutdated(version: string): boolean    // Older than library version
+isNewer(version: string): boolean       // Newer than library version
+getCurrentVersion(): string             // Current library WOLS version
+
+// Migration registry
+registerMigration(fromVersion: string, toVersion: string, handler: MigrationHandler): void
+canMigrate(specimen: Specimen): boolean
+migrate(specimen: Specimen): Specimen   // Chains migrations automatically
+getMigrations(): Array<[string, string]>
+```
+
+### Type Mapping
+
+Implementations SHOULD export centralized type mappings for UI integration:
+
+```typescript
+// Canonical WOLS types to platform-friendly names
+const WOLS_TO_PLATFORM_MAP: Record<SpecimenType, string[]> = {
+  CULTURE: ['Liquid Culture', 'LC', 'Agar', 'Petri', 'Slant', 'Culture Plate'],
+  SPAWN: ['Grain Spawn', 'Sawdust Spawn', 'Plug Spawn', 'Dowel'],
+  SUBSTRATE: ['Block', 'Bag', 'Bed', 'Log', 'Bucket'],
+  FRUITING: ['Pinning', 'Primordia', 'Fruiting', 'Flush', 'First Flush'],
+  HARVEST: ['Fresh', 'Dried', 'Processed', 'Extract'],
+};
+
+// Mapping functions
+mapToWolsType(platformType: string): SpecimenType | null
+mapFromWolsType(wolsType: SpecimenType): string[]
+registerPlatformType(platformType: string, wolsType: SpecimenType): void
+```
+
+---
+
 ## Use Cases
 
 ### 1. Home Cultivator Tracking
@@ -507,7 +667,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.1.0
+**Current Version**: 1.2.0
 **Stability**: Active (feedback welcome)
 
 ---
@@ -537,7 +697,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 ### Organizations Using WOLS
 
 | Organization | Use Case | Since |
-|--------------|----------|-------|
+| ------------ | -------- | ----- |
 | WeMush Platform | Full cultivation tracking | 2025 |
 | Mush Ohio | Commercial production tracking | 2025 |
 | [Your organization?] | [Submit PR to add] | [Year] |
@@ -568,7 +728,7 @@ A: Yes, the standard is crop-agnostic.
 
 ## License
 
-**Creative Commons Attribution 4.0 International (CC BY 4.0)**
+### Creative Commons Attribution 4.0 International (CC BY 4.0)
 
 You are free to:
 
@@ -603,6 +763,19 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.2.0 (January 26, 2026)
+
+- **Extended growth stages**: Research-grade lifecycle tracking with 7 stages (added INCUBATION, PRIMORDIA, SENESCENCE)
+- **Flexible ID formats**: Accept ULID, UUID in addition to CUID after `wemush:` prefix
+- **Type aliases**: Built-in mapping for common platform types (e.g., `LIQUID_CULTURE` → `CULTURE`, `PRIMORDIA` → `FRUITING`)
+- **Generation flexibility**: Accept `G{n}` and numeric notation in addition to `F{n}`
+- **`_meta` namespace**: Reserved field for implementation metadata (preserved through operations)
+- **Migration utilities**: Version comparison and upgrade helpers for future-proofing
+- **Environment detection**: Runtime detection helpers for crypto and platform selection
+- **Convenience methods**: `parseCompactUrlOrThrow()` and `parseCompactUrlOrNull()` wrappers
+- **Type mapping exports**: Centralized `WOLS_TO_PLATFORM_MAP` for UI integration
+- **Library API Reference**: New section documenting implementation requirements
 
 ### Version 1.1.0 (January 4, 2026)
 

@@ -7,25 +7,25 @@ Organizations, projects, and individuals using the WeMush Open Labeling Standard
 ### Commercial Cultivators
 
 | Organization | Location | Specimens | Use Case | Since |
-|--------------|----------|-----------|----------|-------|
+| ------------- | --------- | --------- | -------- | ----- |
 | **Mush Ohio** | Ohio, USA | Culinary Mushrooms | Production tracking, traceability, customer transparency | 2025 |
 
 ### Research Institutions
 
 | Institution | Department | Research Area | Use Case | Since |
-|-------------|------------|---------------|----------|-------|
+| ------------- | ----------- | ----------- | -------- | ----- |
 | [Add your institution] | | | | |
 
 ### Equipment Manufacturers
 
 | Manufacturer | Product Line | Integration | Use Case | Since |
-|--------------|--------------|-------------|----------|-------|
+| ------------- | ------------- | ----------- | -------- | ----- |
 | [Add your company] | | | | |
 
 ### Platforms & Software
 
 | Platform | Type | WOLS Support | Use Case | Since |
-|----------|------|--------------|----------|-------|
+| -------- | ---- | ------------ | -------- | ----- |
 | **WeMush** | Cultivation management | ✅ Native | Complete specimen tracking platform | 2025 |
 
 ## Projects & Implementations
@@ -33,14 +33,14 @@ Organizations, projects, and individuals using the WeMush Open Labeling Standard
 ### Open Source Projects
 
 | Project | Language | Type | Description | Repository |
-|---------|----------|------|-------------|------------|
-| [@wemush/wols](https://github.com/wemush/specimen-labels-js) | TypeScript | Library | Official JavaScript/TypeScript implementation | 📋 Planned |
-| [wols](https://github.com/wemush/specimen-labels-py) | Python | Library | Official Python implementation | 📋 Planned |
+| ------- | -------- | ---- | ----------- | ---------- |
+| [@wemush/wols](https://github.com/wemush/specimen-labels-js) | TypeScript | Library | Official JavaScript/TypeScript implementation | ✅ Released |
+| [wols](https://github.com/wemush/specimen-labels-py) | Python | Library | Official Python implementation | ✅ Released |
 
 ### Research Papers
 
 | Title | Authors | Institution | Year | DOI/Link |
-|-------|---------|-------------|------|----------|
+| ------ | --------- | ------------- | ------ | ---------- |
 | [Add your research] | | | | |
 
 ## Use Cases
@@ -196,7 +196,7 @@ If you use WOLS in academic research, please cite:
 ### Research Using WOLS
 
 | Paper | Authors | Journal | Year | DOI |
-|-------|---------|---------|------|-----|
+| ------- | -------- | --------- | ------ | ----- |
 | [Add your publication] | | | | |
 
 **Published research using WOLS?** [Submit it here](https://github.com/wemush/open-standard/issues/new?template=research.md)
@@ -206,19 +206,19 @@ If you use WOLS in academic research, please cite:
 ### Software Platforms
 
 | Platform | Integration Type | Status | Documentation |
-|----------|-----------------|--------|---------------|
+| -------- | ---------------- | ------ | ------------- |
 | WeMush | Native | ✅ Live | [docs.wemush.com](https://docs.wemush.com) |
 
 ### IoT & Hardware
 
 | Device/Sensor | Manufacturer | Integration | Status |
-|---------------|--------------|-------------|--------|
+| ------------- | ------------- | ----------- | ------ |
 | [Add your device] | | | |
 
 ### Label Printers
 
 | Printer Model | Manufacturer | Compatible | Notes |
-|---------------|--------------|------------|-------|
+| ------------- | ------------- | ---------- | ------- |
 | Brother QL-820NWB | Brother | ✅ Yes | 2.4" labels recommended |
 | Dymo LabelWriter 550 | Dymo | ✅ Yes | QR codes print well |
 | Rollo Label Printer | Rollo | ✅ Yes | High-speed printing |
@@ -261,7 +261,7 @@ If you use WOLS in academic research, please cite:
 - **Industries**: Agriculture, Research, [more coming]
 - **Active Since**: December 2025
 
-*Last updated: December 18, 2025*
+*Last updated: January 26, 2026*
 
 ## Testimonials
 
@@ -338,7 +338,7 @@ Organizations using WOLS can display these badges on their websites:
 **Version Badge**:
 
 ```markdown
-[![WOLS v1.0.0](https://img.shields.io/badge/WOLS-v1.0.0-blue)](https://github.com/wemush/open-standard)
+[![WOLS v1.2.0](https://img.shields.io/badge/WOLS-v1.2.0-blue)](https://github.com/wemush/open-standard)
 ```
 
 ### Logo Usage

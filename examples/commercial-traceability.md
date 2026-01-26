@@ -80,15 +80,15 @@ const masterCulture = await generateLabel({
 ```typescript
 const spawnBatch = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "MO-Blue-001",
   type: "SPAWN",
   stage: "INOCULATION",
   created: "2025-12-01T08:00:00Z",
-  batchId: "SB-2025-048", // Spawn Batch number
+  batch: "SB-2025-048", // Spawn Batch number
   organization: "mush-ohio",
-  genetics: {
-    parentId: masterCulture.id,
-    generation: 1
+  strain: {
+    name: "MO-Blue-001",
+    generation: "F1",
+    lineage: masterCulture.id,
   },
   substrate: {
     components: [
@@ -134,15 +134,15 @@ const spawnBatch = await generateLabel({
 ```typescript
 const block = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "MO-Blue-001",
   type: "SUBSTRATE",
   stage: "INOCULATION",
   created: "2025-12-15T10:00:00Z",
-  batchId: "FB-2025-321", // Fruiting Block batch
+  batch: "FB-2025-321", // Fruiting Block batch
   organization: "mush-ohio",
-  genetics: {
-    parentId: spawnBatch.id,
-    generation: 2
+  strain: {
+    name: "MO-Blue-001",
+    generation: "F2",
+    lineage: spawnBatch.id,
   },
   substrate: {
     components: [
@@ -217,14 +217,14 @@ await updateLabel(block.id, {
 ```typescript
 const retailLabel = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster",
   type: "FRUITING",
   stage: "HARVEST",
   created: "2026-01-12T08:00:00Z",
   organization: "mush-ohio",
-  genetics: {
-    parentId: block.id, // Links to specific block
-    lineage: [masterCulture.id, spawnBatch.id, block.id]
+  strain: {
+    name: "Blue Oyster",
+    generation: "F3",
+    lineage: block.id, // Links to specific block
   },
   yields: [{
     date: "2026-01-12T06:00:00Z",
