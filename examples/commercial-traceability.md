@@ -43,16 +43,14 @@ Every stage gets a WOLS label with complete traceability.
 ```typescript
 const masterCulture = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "MO-Blue-001", // Internal strain ID
+  strain: {
+    name: "MO-Blue-001", // Internal strain ID
+    source: "Commercial supplier",
+  },
   type: "CULTURE",
   stage: "COLONIZATION",
   created: "2025-01-01T00:00:00Z",
   organization: "mush-ohio",
-  genetics: {
-    source: "Commercial supplier",
-    acquisitionDate: "2025-01-01",
-    generation: 0
-  },
   custom: {
     mushOhio: {
       internalId: "MC-001",

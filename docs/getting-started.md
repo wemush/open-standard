@@ -28,7 +28,9 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 
    const label = await generateLabel({
      species: "Pleurotus ostreatus",
-     strain: "Blue Oyster",
+     strain: {
+       name: "Blue Oyster",
+     },
      type: "SUBSTRATE",
      stage: "COLONIZATION",
      created: new Date().toISOString(),
@@ -216,7 +218,9 @@ Track a complete grow cycle:
    const culture = generateLabel({
      type: "CULTURE",
      species: "Pleurotus ostreatus",
-     strain: "Blue Oyster",
+     strain: {
+       name: "Blue Oyster",
+     },
      stage: "COLONIZATION",
    });
    ```

@@ -7,7 +7,7 @@
 
 An open-source specification for encoding cultivation specimen data in machine-readable QR codes. **Vendor-agnostic. Privacy-preserving. Research-grade.**
 
-🍄 [Read the Full Specification](./SPECIFICATION.md) | 📖 [View Online](https://wemush.com/open-standard) | 🌐 [WeMush Platform](https://www.wemush.com) | 💬 [Join the Discussion](https://github.com/wemush/open-standard/discussions)
+🍄 [Read the Full Specification](./SPECIFICATION.md) | 📖 [View Online](https://wemush.com/open-standard) | 🌐 [WeMush Platform](https://wemush.com) | 💬 [Join the Discussion](https://github.com/wemush/open-standard/discussions)
 
 ---
 
@@ -57,7 +57,10 @@ import { generateLabel } from '@wemush/wols';
 
 const label = await generateLabel({
   species: "Pleurotus ostreatus",
-  strain: "Blue Oyster PoHu",
+  strain: {
+    name: "Blue Oyster PoHu",
+    generation: "F2",
+  },
   type: "SUBSTRATE",
   stage: "COLONIZATION",
   created: new Date().toISOString(),
