@@ -103,9 +103,9 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
    - **Backward compatible**: Older parsers gracefully handle new stages
 
 3. **Developer Tools & Libraries**
-   - JavaScript/TypeScript library (v0.1.0) ✅ @wemush/wols published
-   - Python library (v1.0) - v0.1.1 update in progress
-   - CLI tool for label generation
+   - JavaScript/TypeScript library (v1.2.0) ✅ @wemush/wols published
+   - Python library (v1.2.0) ✅ wols published (PyPI + GHCR container)
+   - CLI tool (v1.2.0) ✅ `wols` command available
 
 4. **Migration Utilities**
    - Version comparison functions
@@ -114,7 +114,7 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
 
 ### v1.2.0 Deliverables
 
-- [x] @wemush/wols npm package v0.1.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) ✅ DONE
+- [x] @wemush/wols npm package v1.2.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) ✅ DONE
 - [x] Type alias system with 20+ built-in aliases ✅ DONE
 - [x] ID validation modes (strict, ulid, uuid, any) ✅ DONE
 - [x] Generation normalization utilities ✅ DONE
@@ -122,7 +122,9 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
 - [x] Migration utilities ✅ DONE
 - [x] Reserved `_meta` namespace ✅ DONE
 - [x] Extended growth stages (7 research-grade stages) ✅ DONE
-- [ ] wols Python package v1.2 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) - IN PROGRESS
+- [x] wols Python package v1.2.0 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) ✅ DONE
+- [x] CLI tool (`wols` command) ✅ DONE
+- [x] Container image (GHCR) ✅ DONE
 - [ ] Migration guide from v1.0/v1.1 to v1.2
 
 ### Success Metrics
