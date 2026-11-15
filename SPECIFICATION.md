@@ -3,7 +3,7 @@
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
 **Status**: Release candidate — public comment period (see [Governance](#governance))
-**Version**: 1.3.0-rc.1
+**Version**: 1.3.0-rc.2
 **Date**: November 14, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
@@ -290,10 +290,17 @@ wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iter
 Requirements:
 
 - **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format). The decrypted specimen's `id` MUST equal `wemush:{id}` from the URL path; decoders MUST reject a mismatch.
-- **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the UTF-8 passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST use at least 100,000 iterations. Decoders MUST reject iteration counts below 10,000. Generators MUST NOT use a fixed or library-wide salt.
+- **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST NOT use a fixed or library-wide salt.
+  - **Passphrase encoding**: Implementations MUST normalize the passphrase to Unicode Normalization Form C (NFC) and then encode it as UTF-8 before derivation, so the same passphrase typed on different platforms produces the same key.
+  - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing. Implementations MAY offer a lower setting, down to 100,000, for faster scanning.
+  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000. They MUST check the limit before deriving a key, so a crafted label can't stall a scanner.
 - **`kdf=raw`**: The key is exactly 32 bytes. `salt` and `i` MUST be omitted.
 - **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Decoders SHOULD also accept padded input.
-- **Field-level encryption**: Implementations that encrypt individual fields inside an embedded label MUST replace each field's value with an object of the form `{ "encrypted": true, "algorithm": "AES-256-GCM", "payload": e, "iv": iv, "kdf": kdf, "salt"?: salt, "iterations"?: i }` using the same encodings, where the plaintext is the UTF-8 JSON serialization of the field value.
+- **Field-level encryption**: Implementations that encrypt individual top-level fields inside an embedded label MUST replace each field's value with an object of the form `{ "encrypted": true, "algorithm": "AES-256-GCM", "payload": e, "iv": iv, "kdf": kdf, "salt"?: salt, "iterations"?: i }`. It uses the same encodings and key rules as the URL format, and the plaintext is the UTF-8 JSON serialization of the field value.
+  - **Binding**: The AES-GCM additional authenticated data (AAD) MUST be the UTF-8 encoding of the label's full `id`, a line feed (U+000A), and the field name. For example, `wemush:clx1a2b3c4` followed by a line feed and `strain`. This binds each encrypted value to its field and label, so values swapped between fields or copied from another label fail authentication.
+  - **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` MUST NOT be encrypted. Decoders MUST reject a label in which any of them is an encrypted object, and MUST NOT substitute a decrypted value for them.
+  - **Total cost**: Before deriving any key, decoders MUST add up the iterations of each distinct `salt` and `iterations` pair in the label, and reject the label if the total exceeds 10,000,000.
+  - Each encrypted field MUST use its own IV.
 - **Legacy labels**: Encrypted URLs without a `kdf` parameter predate v1.3.0 and are implementation-specific. Decoders MAY support them but MUST NOT generate them.
 
 ---
@@ -733,7 +740,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.3.0-rc.1 (release candidate; 1.2.0 remains the latest final release until 1.3.0 is final)
+**Current Version**: 1.3.0-rc.2 (release candidate; 1.2.0 remains the latest final release until 1.3.0 is final)
 **Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
@@ -831,6 +838,16 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.3.0-rc.2 (Release candidate — November 15, 2026)
+
+Changes since `1.3.0-rc.1`, from implementation feedback:
+
+- **Passphrase normalization**: Passphrases are normalized to NFC before PBKDF2.
+- **Iteration limits**: Generators SHOULD default to 600,000 iterations. Decoders MUST reject more than 10,000,000, checked before any key is derived, including the total for field-level encryption.
+- **Field-level binding**: Field-level encryption uses AAD (`{id}` + line feed + field name), so swapped or copied values fail authentication.
+- **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` can't be encrypted.
+- **Conformance**: Adds `field-encryption.json` and new cases in `encrypted.json`.
 
 ### Version 1.3.0-rc.1 (Release candidate — November 14, 2026)
 

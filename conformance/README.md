@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0** (currently release candidate `1.3.0-rc.1`). See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0** (currently release candidate `1.3.0-rc.2`). See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 
@@ -9,7 +9,8 @@ Shared, language-neutral test cases that every WOLS implementation should pass. 
 | [`vectors/embedded.json`](./vectors/embedded.json) | Embedded JSON-LD validation, ID formats | `validate` |
 | [`vectors/primordia.json`](./vectors/primordia.json) | `PRIMORDIA` supplied as a type, alias resolution | `create` |
 | [`vectors/generation.json`](./vectors/generation.json) | `generation`, `clonalGeneration`, `transferDepth` | `validate` |
-| [`vectors/encrypted.json`](./vectors/encrypted.json) | Encrypted format wire specification | `derive`, `decrypt` |
+| [`vectors/encrypted.json`](./vectors/encrypted.json) | Encrypted format wire specification, passphrase normalization, iteration limits | `derive`, `decrypt` |
+| [`vectors/field-encryption.json`](./vectors/field-encryption.json) | Field-level encryption, AAD binding, identifying fields, total cost limit | `decryptFields` |
 
 Compact URL vectors will be added once the compact parameter and code registries are settled (see [ROADMAP.md](../ROADMAP.md)).
 
@@ -25,7 +26,7 @@ Every file has this shape:
   "cases": [
     {
       "id": "stable-case-id",
-      "operation": "validate | create | derive | decrypt",
+      "operation": "validate | create | derive | decrypt | decryptFields",
       "requirement": "MUST | SHOULD",
       "description": "…",
       "input": { },
@@ -46,6 +47,9 @@ What `expected` means for each operation:
 - **`decrypt`**: The input is an encrypted URL plus a `secret`, which is either `{ kdf: "pbkdf2", passphrase }` or `{ kdf: "raw", keyBase64url }`.
   - On success, the decrypted bytes must equal `plaintext` exactly and parse to `specimen`.
   - On failure, decryption must be refused. `reason` is a suggested error category and doesn't have to match exactly.
+- **`decryptFields`**: The input is an embedded label whose fields may hold field-level encryption objects, plus a `secret` in the same form as `decrypt`.
+  - On success, decrypting every encrypted field must produce `specimen`.
+  - On failure, the label must be refused, with `reason` as for `decrypt`.
 
 A case marked `SHOULD` is recommended behavior. An implementation that skips it can still conform.
 
@@ -66,13 +70,9 @@ node conformance/tools/verify_vectors.mjs
 
 ## Current library status
 
-These results are from testing the vectors in November 2026. The encrypted vector was tried with the TypeScript library only.
+| Library | Status |
+| ------- | ------ |
+| `wols` (Python) | Passed every `1.3.0-rc.1` vector ([specimen-labels-py#8](https://github.com/wemush/specimen-labels-py/pull/8)). The `rc.2` additions (NFC normalization, iteration cap, field-level AAD) are in progress. |
+| `@wemush/wols` (TypeScript) | `1.3.0` work in progress ([specimen-labels-js#8](https://github.com/wemush/specimen-labels-js/pull/8)). |
 
-| Vector file | `@wemush/wols` 1.2.0 | `wols` 1.2.0 (Python) |
-| ----------- | -------------------- | --------------------- |
-| `embedded.json` | 10 of 13 pass. Rejects ULID, UUID, and other non-CUID suffixes. | 6 of 13 pass. Rejects every short ID, including the spec's own `wemush:clx1a2b3c4`. |
-| `primordia.json` | 3 of 5 pass. Resolves the type but doesn't set the stage. | 1 of 5 pass. Rejects `PRIMORDIA` and `PINNING` as types. |
-| `generation.json` | 6 of 10 pass. Doesn't know `transferDepth`. | 3 of 10 pass. ID rejection masks most cases. |
-| `encrypted.json` | Fails. Uses a fixed salt and can't accept a per-label `salt`. | Not tried yet. Its format is known to differ (see [Interoperability Notes](../docs/interoperability-notes.md#2-encrypted-format)). |
-
-The 1.3.0 draft introduced `transferDepth` and the `PRIMORDIA` stage rule, so the 1.2.0 libraries were expected to fail those cases. The ID failures are 1.2.0 conformance bugs.
+`1.3.0` becomes final once one library passes every `MUST` vector in this directory. See [GOVERNANCE.md](../GOVERNANCE.md#pre-releases).

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import base64
 import json
+import unicodedata
 from pathlib import Path
 
 from cryptography.hazmat.primitives import hashes
@@ -45,6 +46,10 @@ def specimen(id_: str, **fields: object) -> dict:
     }
     base.update(fields)
     return base
+
+
+def serialize_value(value: object) -> str:
+    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
 
 
 def serialize(obj: dict) -> str:
@@ -182,6 +187,16 @@ def generation_cases() -> list[dict]:
 # Encrypted format
 # ---------------------------------------------------------------------------
 
+def derive_key(passphrase: str, salt: bytes, iterations: int) -> bytes:
+    # Passphrases are normalized to Unicode NFC before UTF-8 encoding.
+    data = unicodedata.normalize("NFC", passphrase).encode("utf-8")
+    return PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=iterations).derive(data)
+
+
+def field_aad(id_: str, field: str) -> bytes:
+    return f"{id_}\n{field}".encode("utf-8")
+
+
 def encrypted_cases() -> list[dict]:
     passphrase = "correct horse battery staple"
     salt = bytes(range(16))                     # FIXED for reproducibility only
@@ -194,10 +209,12 @@ def encrypted_cases() -> list[dict]:
     plaintext = serialize(spec)
 
     def derive(pw: str, s: bytes, n: int) -> bytes:
-        return PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=s, iterations=n).derive(pw.encode())
+        return derive_key(pw, s, n)
 
     pb_key = derive(passphrase, salt, iterations)
     pb_ct = AESGCM(pb_key).encrypt(iv, plaintext.encode(), None)
+    nfc_pass = unicodedata.normalize("NFC", "Pilzzüchter Ångström")
+    nfc_ct = AESGCM(derive(nfc_pass, salt, iterations)).encrypt(iv, plaintext.encode(), None)
     raw_ct = AESGCM(raw_key).encrypt(iv, plaintext.encode(), None)
 
     def url(id_suffix, ct, kdf, s=None, n=None, *, pad=False):
@@ -259,6 +276,86 @@ def encrypted_cases() -> list[dict]:
         case("reject-unknown-kdf", "Unknown kdf values MUST be rejected",
              url("clx1a2b3c4", pb_ct, "scrypt", salt, iterations), pb_secret,
              {"success": False, "reason": "unsupported-kdf"}),
+        case("reject-excessive-iterations",
+             "Decoders MUST reject more than 10,000,000 PBKDF2 iterations without deriving a key",
+             url("clx1a2b3c4", pb_ct, "pbkdf2", salt, 10_000_001), pb_secret,
+             {"success": False, "reason": "excessive-iterations"}),
+        {
+            "id": "pbkdf2-nfc-normalization", "operation": "derive", "requirement": "MUST",
+            "description": "Passphrases are normalized to NFC before derivation: a decomposed (NFD) "
+                           "passphrase derives the same key as its composed form",
+            "input": {"passphrase": unicodedata.normalize("NFD", nfc_pass),
+                      "saltBase64url": b64url(salt), "iterations": iterations},
+            "expected": {"keyBase64url": b64url(derive(nfc_pass, salt, iterations))},
+        },
+        case("decrypt-nfd-passphrase",
+             "A label encrypted with an NFC passphrase decrypts with the same passphrase typed in NFD form",
+             url("clx1a2b3c4", nfc_ct, "pbkdf2", salt, iterations),
+             {"kdf": "pbkdf2", "passphrase": unicodedata.normalize("NFD", nfc_pass)}, ok),
+    ]
+
+
+def field_cases() -> list[dict]:
+    passphrase = "correct horse battery staple"
+    salt = bytes(range(16, 32))                 # FIXED for reproducibility only
+    iterations = 100_000
+    raw_key = bytes(range(200, 232))
+    id_ = "wemush:clx1a2b3c4"
+    pb_key = derive_key(passphrase, salt, iterations)
+
+    strain = {"name": "MO-Blue-001", "generation": "F1"}
+    batch = "batch_2025_12_001"
+
+    def enc(field, value, *, key=pb_key, kdf="pbkdf2", iv_seed=0, aad_id=id_, aad_field=None, n=iterations,
+            s=salt):
+        iv = bytes((iv_seed + k) % 256 for k in range(12))
+        ct = AESGCM(key).encrypt(iv, serialize_value(value).encode(), field_aad(aad_id, aad_field or field))
+        obj = {"encrypted": True, "algorithm": "AES-256-GCM", "payload": b64url(ct), "iv": b64url(iv), "kdf": kdf}
+        if kdf == "pbkdf2":
+            obj["salt"] = b64url(s)
+            obj["iterations"] = n
+        return obj
+
+    clear = specimen(id_, strain=strain, stage="COLONIZATION", batch=batch)
+    pb_secret = {"kdf": "pbkdf2", "passphrase": passphrase}
+    raw_secret = {"kdf": "raw", "keyBase64url": b64url(raw_key)}
+
+    def case(cid, desc, label, secret, expected, req="MUST"):
+        return {"id": cid, "operation": "decryptFields", "requirement": req, "description": desc,
+                "input": {"specimen": label, "secret": secret}, "expected": expected}
+
+    two = specimen(id_, strain=enc("strain", strain, iv_seed=1), stage="COLONIZATION",
+                   batch=enc("batch", batch, iv_seed=2))
+    swapped = dict(two, strain=two["batch"], batch=two["strain"])
+    moved = specimen(id_, strain=enc("strain", strain, iv_seed=3, aad_id="wemush:zzz999"),
+                     stage="COLONIZATION", batch=batch)
+    ident = specimen(id_, strain=strain, stage="COLONIZATION", batch=batch)
+    ident["species"] = enc("species", "Pleurotus ostreatus", iv_seed=4)
+    costly = specimen(id_, strain=enc("strain", strain, iv_seed=5, n=6_000_000, s=bytes(range(40, 56))),
+                      stage="COLONIZATION",
+                      batch=enc("batch", batch, iv_seed=6, n=6_000_000, s=bytes(range(60, 76))))
+    # Costly payloads are never decrypted; they are encrypted with the 100k key only so the
+    # objects are well-formed. Decoders must refuse before deriving any key.
+
+    return [
+        case("decrypt-fields-pbkdf2", "Decrypt two passphrase-encrypted fields in an embedded label",
+             two, pb_secret, {"success": True, "specimen": clear}),
+        case("decrypt-fields-raw", "Decrypt a raw-key encrypted field",
+             specimen(id_, strain=enc("strain", strain, key=raw_key, kdf="raw", iv_seed=7),
+                      stage="COLONIZATION", batch=batch),
+             raw_secret, {"success": True, "specimen": clear}),
+        case("reject-swapped-fields", "Encrypted values swapped between fields MUST fail authentication",
+             swapped, pb_secret, {"success": False, "reason": "authentication-failed"}),
+        case("reject-field-from-other-label",
+             "An encrypted value copied from another label MUST fail authentication",
+             moved, pb_secret, {"success": False, "reason": "authentication-failed"}),
+        case("reject-encrypted-identifying-field",
+             "Identifying fields (@context, @type, id, version, type, species) MUST NOT be encrypted",
+             ident, pb_secret, {"success": False, "reason": "identifying-field"}),
+        case("reject-excessive-total-cost",
+             "Decoders MUST reject a label whose total PBKDF2 cost exceeds 10,000,000 iterations "
+             "before deriving any key",
+             costly, pb_secret, {"success": False, "reason": "excessive-iterations"}),
     ]
 
 
@@ -271,6 +368,8 @@ def main() -> None:
           "Generation, Subculture, and Transfer Tracking", generation_cases())
     write("encrypted.json", "Encrypted format wire specification",
           "QR Code Encoding > Encrypted Format", encrypted_cases())
+    write("field-encryption.json", "Field-level encryption in embedded labels",
+          "QR Code Encoding > Encrypted Format (Field-level encryption)", field_cases())
     print(f"Wrote vectors to {OUT}")
 
 
