@@ -619,7 +619,7 @@ docker run --rm ghcr.io/wemush/specimen-labels-py create \
 
 **Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format) that implementations SHOULD pass.
 
-> **Interoperability note (non-normative):** The 1.2.0 reference libraries do not yet produce byte-compatible compact URLs or encrypted payloads across languages. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
+> **Interoperability note (non-normative):** The 1.3.0 reference libraries pass every conformance vector, so embedded and encrypted labels interoperate across languages. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
 

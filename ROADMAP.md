@@ -2,8 +2,8 @@
 
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
-**Current Version**: 1.2.0
-**Last Updated**: January 26, 2026
+**Current Version**: 1.3.0
+**Last Updated**: November 15, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -34,18 +34,26 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 └─ Extended growth stages (7 research-grade stages)
 └─ Integration feedback improvements
 
-2026 Q2: v1.3.0 📋 IoT & Analytics
+2026 Q4: v1.3.0 ✅ Interoperability & Conformance
+└─ Encrypted format wire specification
+└─ PRIMORDIA type handling
+└─ Transfer depth (strain.transferDepth)
+└─ Language-neutral conformance vectors
+
+Next: v1.4.0 📋 IoT, Analytics & Interoperability
+└─ Compact URL and species code registries
+└─ HTTPS resolver form
 └─ IoT sensor specs
 └─ Advanced analytics
 └─ Supply chain features
 
-2026 Q3-Q4: v2.0.0 📋 Maturity
+Future: v2.0.0 📋 Maturity
 └─ Performance optimization
 └─ Blockchain verification
 └─ Global standards alignment
 ```
 
-## Current: v1.0.0 (December 2025)
+## Released: v1.0.0 (December 2025)
 
 ### Status: ✅ v1.0.0 RELEASED
 
@@ -77,7 +85,7 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 - ✅ Target: 5 GitHub stars (Current: 49)
 - ✅ Target: 3 discussions started
 
-## Current: v1.2.0 (January 2026)
+## Released: v1.2.0 (January 2026)
 
 ### Status: ✅ v1.2.0 RELEASED
 
@@ -141,6 +149,28 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
 - **February 2026**: Python library v1.2, community feedback
 - **March 2026**: Documentation finalized, adoption push
 
+## Current: v1.3.0 (November 2026)
+
+### Status: ✅ v1.3.0 RELEASED
+
+### Theme: **Interoperability & Conformance**
+
+Closes the cross-implementation gaps found while integrating the WeMush Platform. See [Interoperability Notes](./docs/interoperability-notes.md) for what remains open.
+
+### Deliverables
+
+- [x] Encrypted format wire specification: `kdf`, per-label `salt`, `i`, separate `iv`, base64url, NFC passphrases, iteration limits, and field-level AAD ✅ DONE
+- [x] `PRIMORDIA` type handling: resolves to `FRUITING` and defaults `stage` ✅ DONE
+- [x] `strain.transferDepth` for per-transfer counting ✅ DONE
+- [x] Conformance vectors for embedded, `PRIMORDIA`, generation, encrypted, and field-level encryption cases ([`conformance/`](./conformance/README.md)) ✅ DONE
+- [x] Pre-release process and wire-format compatibility rule ([GOVERNANCE.md](./GOVERNANCE.md)) ✅ DONE
+- [x] `@wemush/wols` 1.3.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) passes every conformance vector ✅ DONE
+- [x] `wols` 1.3.0 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) passes every conformance vector ✅ DONE
+
+### Timeline
+
+- **November 2026**: 1.3.0-rc.1, 1.3.0-rc.2, and the final 1.3.0 release, with both libraries ✅
+
 ## Real-World Integration Learnings
 
 ### WeMush Platform Integration (January 2026)
@@ -181,7 +211,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 | SENESCENCE | ✅ | End-of-life monitoring |
 | HARVEST | ✅ | Final harvest stage |
 
-## Future: v1.3.0 (Q2 2026)
+## Next: v1.4.0
 
 ### Status: 📋 PLANNED
 
@@ -189,7 +219,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 
 Focus on enterprise features, IoT integration, and supply chain tracking.
 
-### v1.3.0 Goals
+### v1.4.0 Goals
 
 1. **IoT Sensor Integration Specification**
    - Standard for encoding sensor data in WOLS labels
@@ -217,40 +247,35 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2.
    - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table.
    - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL.
-   - ✅ *Released in 1.3.0* — **Encrypted format wire specification**: Specify key derivation (algorithm, iterations, and a per-label random salt instead of a fixed library salt), IV/nonce transport (`iv` parameter vs. prefixed), payload encoding (base64url vs. base64), and what `sig` means relative to encryption.
-   - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional and the TypeScript library never sets `created`.
-   - ✅ *Released in 1.3.0* — **`PRIMORDIA` type handling**: Resolve the conflict between "MUST reject `PRIMORDIA` as a type" and the documented `PRIMORDIA → FRUITING` alias.
+   - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional, and the TypeScript library sets `created` only when the caller passes it.
    - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks).
-   - ✅ *Released in 1.3.0* — **Generation vs. transfer depth**: Adds `strain.transferDepth`, clarifies that expansion transfers don't change `clonalGeneration`, and gives guidance for labels that encoded transfer depth as `F{n}`.
    - **Generation without a named strain**: Let specimens record `generation` and `clonalGeneration` when `strain.name` is unknown.
    - **Extended data attachment**: Define where `EnvironmentalData`, `SubstrateFormula`, and `CircularEconomyData` attach to a specimen, and align the REST example (`metadata`, `observations`) with the core model.
    - **Specimen condition**: Add an optional field for terminal or abnormal states (for example contaminated, disposed, archived). Today implementations must map a contaminated specimen to a growth stage, which loses information.
    - **Container/vessel (optional)**: Add an optional field for vessel and size (petri dish, jar, bag, monotub). Several current type aliases (`PETRI`, `BAG`, `BUCKET`) describe vessels rather than specimen types.
 
-### v1.3.0 Deliverables
+### v1.4.0 Deliverables
 
 - [ ] IoT Integration Guide
 - [ ] Analytics specification
 - [ ] Supply chain guide
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
-- [ ] Shared conformance test vectors that every reference library must pass (embedded, PRIMORDIA, generation, and encrypted cases done in [`conformance/`](./conformance/README.md); compact URL cases pending)
+- [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
 - [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
 
-### v1.3.0 Success Metrics
+### v1.4.0 Success Metrics
 
 - 🎯 25+ organizations
 - 🎯 5+ supply chain integrations
 - 🎯 1 academic paper published using WOLS
 - 🎯 100+ GitHub stars
 
-### v1.3.0 Timeline
+### v1.4.0 Timeline
 
-- **April 2026**: Spec drafts, community feedback
-- **May 2026**: Implementation and testing
-- **June 2026**: v1.3.0 release
+Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
-## Long-Term: v2.0.0 (Q3-Q4 2026)
+## Long-Term: v2.0.0
 
 ### Status: 📋 CONCEPTUAL
 
@@ -309,9 +334,7 @@ Major version focused on performance, global adoption, and standards body recogn
 
 ### v2.0.0 Timeline
 
-- **Q3 2026**: RFC period, breaking change proposals
-- **Q4 2026**: Implementation, testing, migration guides
-- **Late 2026/Early 2027**: v2.0.0 release
+Not yet scheduled. Expected phases: an RFC period for breaking-change proposals, then implementation, testing, and migration guides.
 
 ## Beyond 2.0
 
@@ -341,7 +364,7 @@ Track community-requested features and their status:
 | Environment detection | 1 | ✅ Released | v1.2.0 |
 | Migration utilities | 1 | ✅ Released | v1.2.0 |
 | Extended growth stages | 1 | ✅ Released | v1.2.0 |
-| IoT sensor integration | - | 📋 Planned | v1.3.0 |
+| IoT sensor integration | - | 📋 Planned | v1.4.0 |
 | Blockchain verification | - | 📋 Planned | v2.0.0 |
 | Mobile app example | - | 💭 Considering | TBD |
 | Video documentation | - | 💭 Considering | TBD |
@@ -493,9 +516,9 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: January 26, 2026
-**Next Review**: April 2026
-**Version**: 1.2.0 (Roadmap document version)
+**Last Updated**: November 15, 2026
+**Next Review**: February 2027
+**Version**: 1.3.0 (Roadmap document version)
 
 ---
 
