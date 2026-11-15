@@ -319,8 +319,9 @@ Yes! Options:
 See [ROADMAP.md](../ROADMAP.md) for details:
 
 - **v1.2.0** (Jan 2026): ✅ Extended growth stages, type aliases, `_meta` namespace
-- **v1.3.0** (Q2 2026): IoT integration, developer tools, translations
-- **v2.0.0** (Q3-Q4 2026): Blockchain, standards alignment, supply chain
+- **v1.3.0** (Nov 2026): ✅ Encrypted wire format, `PRIMORDIA` handling, `transferDepth`, conformance vectors
+- **v1.4.0** (planned): Compact URL and species code registries, HTTPS resolver form, IoT integration
+- **v2.0.0** (planned): Blockchain, standards alignment, supply chain
 
 ### Can I request features?
 

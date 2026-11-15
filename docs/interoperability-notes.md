@@ -1,9 +1,9 @@
 # WOLS Interoperability Notes
 
-> **Status**: Non-normative. This document records where implementations of WOLS 1.2.0 currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#future-v130-q2-2026).
+> **Status**: Non-normative. This document records where implementations of WOLS currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#next-v140).
 
-**Implementations reviewed**: `@wemush/wols` 1.2.0 (TypeScript), `wols` 1.2.0 (Python), and labels produced by the WeMush Platform.
-**Last reviewed**: November 2026
+**Implementations reviewed**: `@wemush/wols` 1.3.0 (TypeScript), `wols` 1.3.0 (Python), and labels produced by the WeMush Platform. Both 1.3.0 libraries pass every [conformance vector](../conformance/README.md). Notes about 1.2.0 behavior are kept where older labels or libraries may still be in use.
+**Last reviewed**: November 15, 2026
 
 ---
 
@@ -11,12 +11,12 @@
 
 | Area | Interoperable today? | Safe choice for implementers |
 | ---- | -------------------- | ---------------------------- |
-| Embedded JSON-LD | ✅ Yes (verified round-trip in both directions), when `id` is `wemush:` + lowercase alphanumeric | Prefer embedded format for cross-system exchange |
-| Compact URL | ⚠️ Partially | Use `wemush://`, full stage names, and the full species name in `s` |
-| Encrypted format | ❌ No (cross-language) | Only exchange encrypted labels between identical implementations |
-| ID formats | ⚠️ Partially | Use `wemush:` + lowercase alphanumeric (CUID-style) suffix |
-| Type aliases | ⚠️ Partially | Emit canonical types; accept aliases on input |
-| Generation semantics | ⚠️ Inconsistent in practice | Use `generation` only for filial generations |
+| Embedded JSON-LD | ✅ Yes (conformance vectors, 1.3.0 libraries) | Prefer embedded format for cross-system exchange |
+| Compact URL | ⚠️ Partially (no vectors yet) | Use `wemush://`, full stage names, and the full species name in `s` |
+| Encrypted format | ✅ Yes for the 1.3.0 wire format; ❌ not for labels made by 1.2.0 libraries | Generate with a 1.3.0 library; decode legacy labels only with the library that made them |
+| ID formats | ✅ Yes for `wemush:` + any non-empty suffix (1.3.0 libraries) | Emit `wemush:` + lowercase alphanumeric for older readers |
+| Type aliases and `PRIMORDIA` | ✅ Yes (1.3.0 libraries) | Emit canonical types; accept aliases on input |
+| Generation semantics | ⚠️ Inconsistent in older labels | Use `generation` only for filial generations and `transferDepth` for transfers |
 
 ---
 
@@ -42,11 +42,15 @@ The specification documents `wemush://v1/{id}?s={species_code}&st={stage}&t={tim
 
 The [Implementation Guide](./implementation-guide.md#appendix-species-codes-compact-format) defines the 5-letter species code table, which the TypeScript library follows and the Python library does not.
 
+The 1.3.0 libraries don't change compact URL output, because the parameter and species-code registries aren't settled. The Python 1.3.0 parser accepts both `wemush://` and `web+wemush://`; the TypeScript 1.3.0 parser still accepts only `wemush://`.
+
 **Today**: Generate compact URLs with `wemush://`, full stage names, and full species names (or codes from the specification's example), and treat unrecognized parameters as optional.
 
 ## 2. Encrypted format
 
-The specification documents `wemush://v1/encrypted/{id}?e={encrypted_payload}&sig={signature}` with AES-256-GCM. It does not define key derivation, IV/nonce transport, or payload encoding, so implementations chose differently:
+**Resolved in 1.3.0.** The [Encrypted Format](../SPECIFICATION.md#3-encrypted-format-researchcommercial) now defines the wire format: `iv`, `kdf`, a per-label `salt`, `i`, base64url encoding, NFC-normalized passphrases, iteration limits, and field-level AAD. Both 1.3.0 libraries pass the `encrypted` and `field-encryption` conformance vectors, so labels made by one decrypt with the other.
+
+The rest of this section describes the **1.2.0** libraries, whose labels are still not interchangeable. WOLS 1.2.0 documented `wemush://v1/encrypted/{id}?e={encrypted_payload}&sig={signature}` with AES-256-GCM but did not define key derivation, IV/nonce transport, or payload encoding, so implementations chose differently:
 
 | Aspect | TypeScript library | Python library |
 | ------ | ------------------ | -------------- |
@@ -57,33 +61,31 @@ The specification documents `wemush://v1/encrypted/{id}?e={encrypted_payload}&si
 
 The WeMush Platform carries the IV in the URL as `?e={payload}&iv={iv}` instead of `sig`.
 
-**Effect**: Encrypted labels cannot be decrypted across implementations, even with the same shared secret.
+**Effect**: Encrypted labels made by the 1.2.0 libraries cannot be decrypted across implementations, even with the same shared secret.
 
-**Today**: Treat encrypted labels as implementation-specific. Don't rely on `sig` being present.
-
-**Resolution (1.3.0 draft)**: The [Encrypted Format](../SPECIFICATION.md#3-encrypted-format-researchcommercial) now defines the wire format: `iv`, `kdf`, a per-label `salt`, `i`, and base64url encoding. Both libraries need updates to conform. The TypeScript changes are smaller: replace the fixed salt and carry `kdf`, `salt`, and `i` in the URL.
+**Today**: Generate encrypted labels with a 1.3.0 library. The 1.3.0 libraries never generate the legacy formats; decoding them is available only behind an explicit option. Don't rely on `sig` being present.
 
 ## 3. Specimen IDs
 
-The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. Both libraries validate strictly by default. The TypeScript `parseSpecimen()` rejects a ULID such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV` unless a different ID mode is configured. The Python validator requires a full-length CUID, so it rejects even the specification's own example ID, `wemush:clx1a2b3c4`. The [conformance vectors](../conformance/README.md) include ID cases for both.
+The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. **Resolved in the 1.3.0 libraries**, which accept any non-empty suffix by default and keep strict CUID/ULID checks as an opt-in mode. The 1.2.0 libraries validated strictly by default: TypeScript rejected ULIDs such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV`, and Python required a full-length CUID, rejecting even the specification's example ID `wemush:clx1a2b3c4`.
 
 The WeMush Platform puts its human-readable identification code (for example `WM-LC-250114-000001`) in the `id` field **without** the `wemush:` prefix. Both libraries reject these labels, so the platform falls back to lenient parsing when it reads its own labels.
 
-**Today**: Parsers should accept any non-empty suffix as the specification requires. Generators should emit `wemush:` + lowercase alphanumeric for the widest compatibility.
+**Today**: Generators should emit `wemush:` + lowercase alphanumeric for the widest compatibility with older readers.
 
 ## 4. `PRIMORDIA` as a specimen type
 
-The specification's Type Aliases note says implementations **MUST reject** `PRIMORDIA` as a specimen type. However, the 1.2.0 changelog lists `PRIMORDIA → FRUITING` as an alias and `PRIMORDIA` appears in `WOLS_TO_PLATFORM_MAP`. The libraries disagree: the published `@wemush/wols` 1.2.0 `createSpecimen()` silently resolves `type: "PRIMORDIA"` to `FRUITING`, while Python `create_specimen()` rejects it (its alias table includes the mapping, but creation doesn't apply it).
+**Resolved in 1.3.0.** `PRIMORDIA` supplied as a type resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`, with a warning, and is never emitted as a type. Both 1.3.0 libraries pass the `primordia` conformance vectors.
 
-**Today**: Emit `type: "FRUITING", stage: "PRIMORDIA"`. Never emit `PRIMORDIA` as a type.
+The 1.2.0 specification said implementations **MUST reject** `PRIMORDIA` as a type, which conflicted with its own alias table. The 1.2.0 libraries disagreed: TypeScript resolved it to `FRUITING` without setting the stage, and Python rejected it.
 
-**Resolution (1.3.0 draft)**: `PRIMORDIA` supplied as a type resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`, with a warning. The TypeScript library must also set the stage; the Python library must stop rejecting it.
+**Today**: Emit `type: "FRUITING", stage: "PRIMORDIA"`.
 
 ## 5. `created` and `stage`
 
 The core `SpecimenLabel` interface declares `stage` and `created` without `?`, which reads as required. In practice:
 
-- The TypeScript `createSpecimen()` treats `stage` as optional and **never sets `created`**. Callers must assign it (`specimen.created = new Date().toISOString()`), or the compact URL omits `t`.
+- The TypeScript `createSpecimen()` treats `stage` as optional and doesn't set `created` unless the caller passes it. Since 1.3.0 it accepts a `created` input (ISO 8601 string or `Date`); without one, the compact URL omits `t`.
 - The Python `create_specimen()` defaults `created` to the current time.
 - Both validators accept specimens without `stage`.
 
@@ -109,11 +111,11 @@ The specification defines `strain.generation` as the *filial* (sexual) generatio
 
 **Today**: Readers shouldn't assume that `F{n}` on a label produced before this note reflects sexual generations. Generators should keep `generation` constant across expansion transfers and record ancestry with `strain.lineage`.
 
-**Resolution (1.3.0 draft)**: The new `strain.transferDepth` field carries a per-transfer counter. Platforms that count transfers must emit it as `transferDepth` instead of `generation` (see [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130)).
+**Resolved in 1.3.0**: The `strain.transferDepth` field carries a per-transfer counter, and both 1.3.0 libraries support it. Platforms that count transfers should emit it as `transferDepth` instead of `generation` (see [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130)).
 
 ## 10. Scannability with phone cameras
 
-Native phone camera apps generally don't open custom schemes such as `wemush://` or `web+wemush://`. The WeMush Platform registers `web+wemush://` as a PWA protocol handler and also prints plain HTTPS tracking URLs for camera scanning. WOLS 1.2.0 doesn't define an HTTPS form. The Python library's HTTPS form (`https://wemush.com/s/v1/{id}`) is not a resolver endpoint on wemush.com today.
+Native phone camera apps generally don't open custom schemes such as `wemush://` or `web+wemush://`. The WeMush Platform registers `web+wemush://` as a PWA protocol handler and also prints plain HTTPS tracking URLs for camera scanning. WOLS 1.3.0 doesn't define an HTTPS form. The Python library's HTTPS form (`https://wemush.com/s/v1/{id}`) is not a resolver endpoint on wemush.com today.
 
 ---
 
