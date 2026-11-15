@@ -1,0 +1,268 @@
+{
+  "wolsVersion": "1.3.0",
+  "description": "Field-level encryption in embedded labels",
+  "specSection": "QR Code Encoding > Encrypted Format (Field-level encryption)",
+  "cases": [
+    {
+      "id": "decrypt-fields-pbkdf2",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "Decrypt two passphrase-encrypted fields in an embedded label",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "Awz3eS3QkOgbcRwq0EceTxk0icvCNtbpBPMXLoRNnUPqAVSsIMqGpnHksDsyvARTRoOKag-nb0k",
+            "iv": "AQIDBAUGBwgJCgsM",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          },
+          "stage": "COLONIZATION",
+          "batch": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "Idqq8-tlPHxLRBI0YeYZ6SHEm4a3tGzx6Izdr67nbzqciIk",
+            "iv": "AgMEBQYHCAkKCwwN",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          }
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": true,
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        }
+      }
+    },
+    {
+      "id": "decrypt-fields-raw",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "Decrypt a raw-key encrypted field",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "vHuyQuzUL5GR4I3ljZ6276gLc8-T3PYPBg3U0Pd-pgY4OrCPEkHqZMT2MRTrW8-97W3B9JD_cxo",
+            "iv": "BwgJCgsMDQ4PEBES",
+            "kdf": "raw"
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        },
+        "secret": {
+          "kdf": "raw",
+          "keyBase64url": "yMnKy8zNzs_Q0dLT1NXW19jZ2tvc3d7f4OHi4-Tl5uc"
+        }
+      },
+      "expected": {
+        "success": true,
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        }
+      }
+    },
+    {
+      "id": "reject-swapped-fields",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "Encrypted values swapped between fields MUST fail authentication",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "Idqq8-tlPHxLRBI0YeYZ6SHEm4a3tGzx6Izdr67nbzqciIk",
+            "iv": "AgMEBQYHCAkKCwwN",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          },
+          "stage": "COLONIZATION",
+          "batch": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "Awz3eS3QkOgbcRwq0EceTxk0icvCNtbpBPMXLoRNnUPqAVSsIMqGpnHksDsyvARTRoOKag-nb0k",
+            "iv": "AQIDBAUGBwgJCgsM",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          }
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "authentication-failed"
+      }
+    },
+    {
+      "id": "reject-field-from-other-label",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "An encrypted value copied from another label MUST fail authentication",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "iv9k236ihDVrrxuiE8VnT-JWQsruEe9xHJccumCfcBQ78hYerFOjzsFacf-JE6MceBfAA45EFmc",
+            "iv": "AwQFBgcICQoLDA0O",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "authentication-failed"
+      }
+    },
+    {
+      "id": "reject-encrypted-identifying-field",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "Identifying fields (@context, @type, id, version, type, species) MUST NOT be encrypted",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "JRreEtB5KPo039BXtc0Gp1808MyyiRtBmVJK8Uz5C2CjI_5_fg",
+            "iv": "BAUGBwgJCgsMDQ4P",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          },
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "identifying-field"
+      }
+    },
+    {
+      "id": "reject-excessive-total-cost",
+      "operation": "decryptFields",
+      "requirement": "MUST",
+      "description": "Decoders MUST reject a label whose total PBKDF2 cost exceeds 10,000,000 iterations before deriving any key",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "eDK_ASOyzcF7ix3259XOHXyaI28zqWV6Aa0Y02hkprrqz0Gd796irlKBCgaAyTZKwUkSbs14gTk",
+            "iv": "BQYHCAkKCwwNDg8Q",
+            "kdf": "pbkdf2",
+            "salt": "KCkqKywtLi8wMTIzNDU2Nw",
+            "iterations": 6000000
+          },
+          "stage": "COLONIZATION",
+          "batch": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "PzpAVX6bXf81a7rK7rVduAbYOd6xuNDtk8TVUq4q9uH9i0s",
+            "iv": "BgcICQoLDA0ODxAR",
+            "kdf": "pbkdf2",
+            "salt": "PD0-P0BBQkNERUZHSElKSw",
+            "iterations": 6000000
+          }
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "excessive-iterations"
+      }
+    }
+  ]
+}
