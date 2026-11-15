@@ -5,7 +5,7 @@
 **Status**: Active
 **Version**: 1.2.0
 **Date**: January 26, 2026
-**Author**: Mark Beacom, WeMush Foundation
+**Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
 The WOLS specification and reference libraries are open source.
@@ -57,7 +57,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix (e.g., "wemush:clx1a2b3c4")
-  version: string;               // Spec version (e.g., "1.1.0")
+  version: string;               // Spec version (e.g., "1.2.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name (e.g., "Pleurotus ostreatus")
 
@@ -222,7 +222,7 @@ Embedded format uses JSON-LD for semantic interoperability:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -330,27 +330,29 @@ interface CircularEconomyData {
 
 **Recommended Libraries**:
 
-- JavaScript/TypeScript: `qrcode` npm package
-- Python: `qrcode` or `python-qrcode`
-- Go: `github.com/skip2/go-qrcode`
+- JavaScript/TypeScript: [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) (uses the `qrcode` npm package as an optional peer dependency)
+- Python: [`wols`](https://github.com/wemush/specimen-labels-py) with the `qr` extra (`pip install "wols[qr]"`)
+- Other languages: any ISO/IEC 18004 QR encoder (e.g., Go: `github.com/skip2/go-qrcode`) applied to the serialized payload
 
 **Example (TypeScript)**:
 
 ```typescript
-import QRCode from 'qrcode';
+import { createSpecimen, toQRCodeDataURL } from '@wemush/wols';
 
-async function generateSpecimenLabel(specimen: SpecimenLabel): Promise<string> {
-  const payload = JSON.stringify(specimen);
-
-  // Generate QR code as data URL
-  const qrDataUrl = await QRCode.toDataURL(payload, {
-    errorCorrectionLevel: 'M',
-    type: 'image/png',
-    width: 300,
-    margin: 1,
+async function generateSpecimenLabel(): Promise<string> {
+  const specimen = createSpecimen({
+    type: 'SUBSTRATE',
+    species: 'Pleurotus ostreatus',
+    strain: 'Blue Oyster',        // string shorthand expands to { name: 'Blue Oyster' }
+    stage: 'COLONIZATION',
   });
+  specimen.created = new Date().toISOString();
 
-  return qrDataUrl;
+  // Embedded JSON-LD QR code as a PNG data URL
+  return toQRCodeDataURL(specimen, {
+    size: 300,
+    errorCorrection: 'M',
+  });
 }
 ```
 
@@ -360,27 +362,33 @@ async function generateSpecimenLabel(specimen: SpecimenLabel): Promise<string> {
 
 ```typescript
 import { BrowserQRCodeReader } from '@zxing/browser';
+import { parseSpecimen, parseCompactUrl } from '@wemush/wols';
 
-async function scanSpecimenLabel(): Promise<SpecimenLabel> {
+async function scanSpecimenLabel() {
   const codeReader = new BrowserQRCodeReader();
-  const result = await codeReader.decodeFromVideoDevice(null, 'video');
+  const result = await codeReader.decodeOnceFromVideoDevice(undefined, 'video');
+  const text = result.getText();
 
-  // Parse embedded JSON
-  if (result.getText().startsWith('{')) {
-    return JSON.parse(result.getText());
+  // Embedded JSON-LD format
+  if (text.trim().startsWith('{')) {
+    const parsed = parseSpecimen(text);
+    if (parsed.success) return parsed.data;
+    throw parsed.error;
   }
 
-  // Parse compact format
-  if (result.getText().startsWith('wemush://')) {
-    const url = new URL(result.getText());
-    const id = url.pathname.split('/').pop();
+  // Compact URL format
+  if (text.startsWith('wemush://')) {
+    const parsed = parseCompactUrl(text);
+    if (!parsed.success) throw parsed.error;
 
-    // Fetch full data from API
+    // Compact labels carry a reference; resolve full details if a resolver is available.
+    // The resolution endpoint takes the ID without the `wemush:` prefix.
+    const id = parsed.data.id.replace(/^wemush:/, '');
     const response = await fetch(`https://api.wemush.com/v1/specimens/${id}`);
-    return response.json();
+    return response.ok ? response.json() : parsed.data;
   }
 
-  throw new Error('Invalid QR code format');
+  throw new Error('Not a WOLS label');
 }
 ```
 
@@ -409,7 +417,7 @@ PATCH /v1/specimens/{id}
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -497,7 +505,7 @@ Organizations can add custom fields under reserved namespaces:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "species": "Hericium erinaceus",
   "custom": {
     "mushoh": {
@@ -521,23 +529,31 @@ Organizations can add custom fields under reserved namespaces:
 
 ### Open Source Libraries
 
-**JavaScript/TypeScript**: [`@wemush/wols`](https://github.com/wemush/specimen-labels-js)
+**TypeScript/JavaScript**: [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) (Apache 2.0)
 
 ```bash
-npm install @wemush/wols
+npm install @wemush/wols    # or: bun add @wemush/wols / pnpm add @wemush/wols
 ```
 
-**Python**: [`wols`](https://github.com/wemush/specimen-labels-py)
+**Python**: [`wols`](https://github.com/wemush/specimen-labels-py) (Apache 2.0)
 
 ```bash
-pip install wols
+pip install wols             # core
+pip install "wols[qr]"       # + QR generation and scanning
+pip install "wols[crypto]"   # + encryption
+pip install "wols[cli]"      # + command-line interface
+pip install "wols[all]"      # everything
 ```
 
-**Container/CLI**: [`specimen-labels-py`](https://ghcr.io/wemush/specimen-labels-py) (arm64/amd64)
+**Container/CLI**: [`specimen-labels-py`](https://github.com/wemush/specimen-labels-py/pkgs/container/specimen-labels-py) (arm64/amd64)
 
 ```bash
 docker pull ghcr.io/wemush/specimen-labels-py:latest
+docker run --rm ghcr.io/wemush/specimen-labels-py create \
+  --species "Pleurotus ostreatus" --type SUBSTRATE --json
 ```
+
+> **Interoperability note (non-normative):** The 1.2.0 reference libraries do not yet produce byte-compatible compact URLs or encrypted payloads across languages. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
 
@@ -764,6 +780,14 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
+### Unreleased (editorial, no normative changes)
+
+- Updated `version` values in examples from `1.1.0` to `1.2.0`
+- Implementation Guide examples now use the `@wemush/wols` reference library API
+- Expanded reference implementation install options (Python extras, container CLI usage)
+- Added non-normative [Interoperability Notes](./docs/interoperability-notes.md) documenting known divergences between implementations
+- Refreshed Next Steps
+
 ### Version 1.2.0 (January 26, 2026)
 
 - **Extended growth stages**: Research-grade lifecycle tracking with 7 stages (added INCUBATION, PRIMORDIA, SENESCENCE)
@@ -800,7 +824,8 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 **Next Steps**:
 
-1. Community feedback period (December 2025)
-2. Reference implementation release (January 2026)
-3. Interoperability testing (Q1 2026)
-4. Version 1.1 with community enhancements (Q2 2026)
+1. Community feedback period (December 2025) — Complete
+2. Reference implementation release (January 2026) — Complete ([npm](https://www.npmjs.com/package/@wemush/wols), [PyPI](https://pypi.org/project/wols/), [container](https://github.com/wemush/specimen-labels-py/pkgs/container/specimen-labels-py))
+3. WOLS v1.2.0 released (January 26, 2026) — Complete
+4. Cross-implementation interoperability — In progress; see [Interoperability Notes](./docs/interoperability-notes.md)
+5. Version 1.3.0 — See [ROADMAP.md](./ROADMAP.md) for scope and proposals

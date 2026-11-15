@@ -30,50 +30,58 @@ Sarah implements WOLS tracking with minimal effort:
 Sarah receives a new culture from a friend:
 
 ```typescript
-import { generateLabel } from '@wemush/wols';
+import { createSpecimen, toQRCodeDataURL } from '@wemush/wols';
 
-const culture = await generateLabel({
-  species: "Pleurotus ostreatus",
-  strain: {
-    name: "Blue Oyster - Friend's Strain",
-  },
-  type: "CULTURE",
-  stage: "COLONIZATION",
-  created: "2025-12-01T10:00:00Z",
-  custom: {
-    sarah: {
-      source: "Friend donation",
-      notes: "Said this gives huge flushes"
+// createSpecimen() has no `created` input, so set the timestamp on the result.
+const culture = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    strain: {
+      name: "Blue Oyster - Friend's Strain",
+    },
+    type: "CULTURE",
+    stage: "COLONIZATION",
+    custom: {
+      sarah: {
+        source: "Friend donation",
+        notes: "Said this gives huge flushes"
+      }
     }
-  }
-});
+  }),
+  created: "2025-12-01T10:00:00Z",
+};
+
+const cultureQr = await toQRCodeDataURL(culture, { size: 300, errorCorrection: 'M' });
 ```
 
-**Print label**, stick on petri dish.
+**Print label** (`cultureQr` is a PNG data URL), stick on petri dish.
 
 #### Step 2: Transfer to Grain Spawn
 
 Two weeks later, culture is ready:
 
 ```typescript
-const spawn = await generateLabel({
-  species: "Pleurotus ostreatus",
-  type: "SPAWN",
-  stage: "INOCULATION",
-  created: "2025-12-15T14:00:00Z",
-  strain: {
-    name: "Blue Oyster - Friend's Strain",
-    generation: "F1",
-    lineage: culture.id, // Links to parent culture
-  },
-  custom: {
-    sarah: {
-      substrate: "Rye grain",
-      weight: "5 lbs",
-      inoculationDate: "2025-12-15"
+const spawn = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    type: "SPAWN",
+    stage: "INOCULATION",
+    strain: {
+      name: "Blue Oyster - Friend's Strain",
+      // No generation bump: grain spawn is an expansion of the same genetics.
+      // Ancestry is recorded with lineage instead.
+      lineage: culture.id, // Links to parent culture
+    },
+    custom: {
+      sarah: {
+        substrate: "Rye grain",
+        weight: "5 lbs",
+        inoculationDate: "2025-12-15"
+      }
     }
-  }
-});
+  }),
+  created: "2025-12-15T14:00:00Z",
+};
 ```
 
 **Print label**, stick on spawn jar.
@@ -82,33 +90,42 @@ const spawn = await generateLabel({
 
 Spawn colonizes in 2 weeks:
 
+> **Note**: WOLS 1.2 defines the `SubstrateFormula` and `EnvironmentalData` structures but not yet where they attach on a Specimen, so this example carries them under `custom.sarah`. A standard placement is proposed for 1.3 in [ROADMAP.md](../ROADMAP.md).
+
 ```typescript
-const block = await generateLabel({
-  species: "Pleurotus ostreatus",
-  type: "SUBSTRATE",
-  stage: "INOCULATION",
-  created: "2025-12-29T16:00:00Z",
-  strain: {
-    name: "Blue Oyster - Friend's Strain",
-    generation: "F2",
-    lineage: spawn.id,
-  },
-  substrate: {
-    components: [
-      { type: "Hardwood sawdust", percentage: 70 },
-      { type: "Wheat bran", percentage: 25 },
-      { type: "Gypsum", percentage: 5 }
-    ],
-    moisture: 60,
-    sterilizationMethod: "Pressure cooked 2.5 hours"
-  },
-  custom: {
-    sarah: {
-      bagWeight: "5 lbs",
-      room: "Basement shelf 2"
+const block = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    type: "SUBSTRATE",
+    stage: "INOCULATION",
+    strain: {
+      name: "Blue Oyster - Friend's Strain",
+      lineage: spawn.id,
+    },
+    custom: {
+      sarah: {
+        bagWeight: "5 lbs",
+        room: "Basement shelf 2",
+        substrate: {
+          components: [
+            { ingredient: "Hardwood sawdust", percentage: 70 },
+            { ingredient: "Wheat bran", percentage: 25 },
+            { ingredient: "Gypsum", percentage: 5 }
+          ],
+          hydration: 60,
+          sterilization: {
+            method: "pressure cooker",
+            temperature: 121,
+            unit: "C",
+            duration: 150,
+            timestamp: "2025-12-29T12:00:00Z"
+          }
+        }
+      }
     }
-  }
-});
+  }),
+  created: "2025-12-29T16:00:00Z",
+};
 ```
 
 **Print label**, stick on grow bag.
@@ -125,22 +142,24 @@ Block starts pinning after 3 weeks:
   - Fresh air exchanges: 4/day
 
 ```typescript
-// Update via app or manually
-{
+// A stage change is a new value of the specimen (a platform such as WeMush
+// records it for you when you scan). Re-serialize or re-print as needed.
+const pinning = {
   ...block,
-  stage: "PRIMORDIA",
-  environment: {
-    temperature: { value: 65, unit: "F" },
-    humidity: { value: 85, unit: "%" },
-    co2: { value: 800, unit: "ppm" }
-  },
+  stage: "PRIMORDIA" as const,
   custom: {
     sarah: {
+      ...block.custom.sarah,
       pinningDate: "2026-01-19",
-      notes: "Beautiful pins! More than usual"
+      notes: "Beautiful pins! More than usual",
+      environment: {
+        temperature: { value: 65, unit: "F", timestamp: "2026-01-19T08:00:00Z" },
+        humidity: { value: 85, timestamp: "2026-01-19T08:00:00Z" },
+        co2: { value: 800, timestamp: "2026-01-19T08:00:00Z" }
+      }
     }
   }
-}
+};
 ```
 
 #### Step 5: Harvest & Record Yields
@@ -148,24 +167,26 @@ Block starts pinning after 3 weeks:
 First flush ready after 1 week:
 
 ```typescript
-{
-  ...block,
-  stage: "HARVEST",
-  yields: [
-    {
-      date: "2026-01-26T09:00:00Z",
-      weight: { value: 1.2, unit: "lbs" },
-      quality: "EXCELLENT",
-      notes: "Large clusters, perfect coloring"
-    }
-  ],
+const harvested = {
+  ...pinning,
+  stage: "HARVEST" as const,
   custom: {
     sarah: {
+      ...pinning.custom.sarah,
+      // WOLS 1.2 has no standard yield field, so yields live in custom too.
+      yields: [
+        {
+          date: "2026-01-26T09:00:00Z",
+          weight: { value: 1.2, unit: "lbs" },
+          quality: "EXCELLENT",
+          notes: "Large clusters, perfect coloring"
+        }
+      ],
       photoUrl: "photo-2026-01-26.jpg",
       sold: "Farmers market - $20"
     }
   }
-}
+};
 ```
 
 **Continue logging** second and third flushes.
@@ -187,7 +208,7 @@ Sarah has tracked 12 complete grows with WOLS:
 
 3. **Genetics**: "Friend's Strain" consistently outperforms commercial cultures
    - 1.5x yield on average
-   - Propagated through 4 generations (still strong)
+   - Subcultured through 4 clonal generations (still strong)
 
 4. **Timing**: Inoculating blocks on Friday = weekend pinning
    - Can harvest Monday morning for farmers market
@@ -241,70 +262,90 @@ Sarah sells at farmers markets:
 ## Code Example: Complete Workflow
 
 ```typescript
-import { generateLabel, updateLabel } from '@wemush/wols';
+import {
+  createSpecimen,
+  serializeSpecimen,
+  toQRCodeDataURL,
+  type Specimen,
+} from '@wemush/wols';
+
+// printLabel() is your own code: send a PNG data URL to your label printer.
+async function label(specimen: Specimen) {
+  printLabel(await toQRCodeDataURL(specimen, { size: 300, errorCorrection: 'M' }));
+}
+
+const now = () => new Date().toISOString();
 
 // 1. Culture
-const culture = await generateLabel({
-  species: "Pleurotus ostreatus",
-  strain: {
-    name: "Blue Oyster",
-  },
-  type: "CULTURE",
-  stage: "COLONIZATION",
-  created: new Date().toISOString()
-});
-printLabel(culture.qrDataUrl);
+const culture = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    strain: { name: "Blue Oyster" },
+    type: "CULTURE",
+    stage: "COLONIZATION",
+  }),
+  created: now(),
+};
+await label(culture);
 
-// 2. Spawn (2 weeks later)
-const spawn = await generateLabel({
-  species: culture.species,
-  type: "SPAWN",
-  stage: "INOCULATION",
-  strain: {
-    name: culture.strain.name,
-    generation: "F1",
-    lineage: culture.id,
-  },
-  created: new Date().toISOString()
-});
-printLabel(spawn.qrDataUrl);
+// 2. Spawn (2 weeks later): same genetics, linked by lineage
+const spawn = {
+  ...createSpecimen({
+    species: culture.species,
+    type: "SPAWN",
+    stage: "INOCULATION",
+    strain: { name: culture.strain!.name, lineage: culture.id },
+  }),
+  created: now(),
+};
+await label(spawn);
 
 // 3. Substrate (2 weeks later)
-const substrate = await generateLabel({
-  species: spawn.species,
-  type: "SUBSTRATE",
-  stage: "INOCULATION",
-  strain: {
-    name: spawn.strain.name,
-    generation: "F2",
-    lineage: spawn.id,
-  },
-  substrate: {
-    components: [
-      { type: "Hardwood sawdust", percentage: 70 },
-      { type: "Wheat bran", percentage: 25 },
-      { type: "Gypsum", percentage: 5 }
-    ],
-    moisture: 60
-  },
-  created: new Date().toISOString()
-});
-printLabel(substrate.qrDataUrl);
+const substrate = {
+  ...createSpecimen({
+    species: spawn.species,
+    type: "SUBSTRATE",
+    stage: "INOCULATION",
+    strain: { name: spawn.strain!.name, lineage: spawn.id },
+    custom: {
+      sarah: {
+        substrate: {
+          components: [
+            { ingredient: "Hardwood sawdust", percentage: 70 },
+            { ingredient: "Wheat bran", percentage: 25 },
+            { ingredient: "Gypsum", percentage: 5 }
+          ],
+          hydration: 60
+        }
+      }
+    },
+  }),
+  created: now(),
+};
+await label(substrate);
 
-// 4. Update stages as grow progresses
-await updateLabel(substrate.id, { stage: "COLONIZATION" }); // Day 7
-await updateLabel(substrate.id, { stage: "PRIMORDIA" });     // Day 21
-await updateLabel(substrate.id, { stage: "FRUITING" });      // Day 24
+// 4. Stage changes as the grow progresses (new values of the same specimen;
+//    the ID stays the same, so the printed label keeps working)
+const colonizing = { ...substrate, stage: "COLONIZATION" as const }; // Day 7
+const pinning = { ...colonizing, stage: "PRIMORDIA" as const };      // Day 21
+const fruiting = { ...pinning, stage: "FRUITING" as const };         // Day 24
 
-// 5. Record harvest
-await updateLabel(substrate.id, {
-  stage: "HARVEST",
-  yields: [{
-    date: new Date().toISOString(),
-    weight: { value: 1.2, unit: "lbs" },
-    quality: "EXCELLENT"
-  }]
-});
+// 5. Record harvest (no standard yield field in 1.2, so it goes in custom)
+const harvested = {
+  ...fruiting,
+  stage: "HARVEST" as const,
+  custom: {
+    sarah: {
+      ...substrate.custom!.sarah as object,
+      yields: [{
+        date: now(),
+        weight: { value: 1.2, unit: "lbs" },
+        quality: "EXCELLENT"
+      }]
+    }
+  },
+};
+console.log(serializeSpecimen(harvested)); // Full JSON-LD record
 ```
 
 ## Tips for Success
@@ -365,8 +406,8 @@ A: Keep it forever! Historical data helps identify long-term trends.
 
 ## Next Steps
 
-1. **Get started**: [Getting Started Guide](../getting-started.md)
-2. **See the spec**: [SPECIFICATION.md](../../SPECIFICATION.md)
+1. **Get started**: [Getting Started Guide](../docs/getting-started.md)
+2. **See the spec**: [SPECIFICATION.md](../SPECIFICATION.md)
 3. **Join community**: [GitHub Discussions](https://github.com/wemush/open-standard/discussions)
 4. **Share results**: Post your success story!
 

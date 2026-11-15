@@ -9,6 +9,8 @@
 >
 > **Specification Version**: 1.2.0
 > **Date**: January 26, 2026
+>
+> **Implementation status (non-normative)**: Some APIs described here are design targets that the 1.2.0 libraries do not ship yet: `createScanner`, `parseQRCodeImage`, and `encryptSpecimenFields` in TypeScript (partial encryption is available as `encryptSpecimen(specimen, { key, fields })`); `serialize_specimen` and the `to_qr_code*` functions in Python (shipped as `to_json`, `generate_qr_png`, `generate_qr_svg`, `generate_qr_base64`, and `scan_qr`); and Python's `create_specimen` takes `input_type=` rather than `type=`. Where library behavior diverges from [SPECIFICATION.md](../SPECIFICATION.md), see [Interoperability Notes](./interoperability-notes.md).
 
 ---
 
@@ -71,7 +73,7 @@ interface Specimen {
 
   // Required Fields
   id: string;                    // Format: "wemush:{cuid}" e.g., "wemush:clx1a2b3c4"
-  version: string;               // Semver, e.g., "1.1.0"
+  version: string;               // Semver, e.g., "1.2.0"
   type: SpecimenType;
   species: string;               // Scientific name
 
@@ -182,7 +184,7 @@ function toCompactUrl(specimen: Specimen): string;
 ```
 
 ```python
-# Python - wemush_wols
+# Python - wols
 
 def create_specimen(
     type: SpecimenType,
@@ -294,8 +296,8 @@ interface QRCodeOptions {
 ```
 
 ```python
-# Python - wemush_wols.qr
-from wemush_wols.qr import to_qr_code, to_qr_code_svg, to_qr_code_base64
+# Python - wols.qr
+from wols.qr import to_qr_code, to_qr_code_svg, to_qr_code_base64
 
 def to_qr_code(
     specimen: Specimen,
@@ -363,9 +365,9 @@ const specimen = await parseQRCodeImage('./label.png');
 
 | Field | Rule | Error Code |
 | ----- | ---- | ---------- |
-| `@context` | Must be `https://wols.wemush.com/v1` | `INVALID_CONTEXT` |
+| `@context` | Must be `https://wemush.com/wols/v1` | `INVALID_CONTEXT` |
 | `@type` | Must be `Specimen` | `INVALID_TYPE` |
-| `id` | Must match `wols:[a-z0-9]+` | `INVALID_ID_FORMAT` |
+| `id` | Must start with `wemush:` followed by a non-empty suffix (see [ID Format Options](../SPECIFICATION.md#id-format-options-v120)) | `INVALID_ID_FORMAT` |
 | `version` | Must be valid semver | `INVALID_VERSION` |
 | `type` | Must be valid SpecimenType | `INVALID_SPECIMEN_TYPE` |
 | `species` | Required, non-empty string | `REQUIRED_FIELD` |
@@ -375,10 +377,10 @@ const specimen = await parseQRCodeImage('./label.png');
 ### Validation API
 
 ```typescript
-import { validateSpecimen, ValidationLevel } from '@wemush/wols';
+import { validateSpecimen } from '@wemush/wols';
 
 const result = validateSpecimen(data, {
-  level: ValidationLevel.Strict,    // or 'Lenient'
+  level: 'strict',                  // or 'lenient'
   allowUnknownFields: true,         // For custom namespaces
 });
 
@@ -644,7 +646,7 @@ Library versions MUST align with WOLS specification versions:
 ### 🚀 Features
 - JSON-LD format support with `@context` and `@type` fields
 - Structured `strain` object with `name`, `generation`, `lineage`
-- ID prefix `wols:` for namespace clarity
+- ID prefix `wemush:` for namespace clarity
 
 ### 📦 Breaking Changes
 - None (backwards compatible with v1.0.x parsers)

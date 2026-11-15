@@ -41,25 +41,33 @@ Every stage gets a WOLS label with complete traceability.
 **Example - Master Culture**:
 
 ```typescript
-const masterCulture = await generateLabel({
-  species: "Pleurotus ostreatus",
-  strain: {
-    name: "MO-Blue-001", // Internal strain ID
-    source: "Commercial supplier",
-  },
-  type: "CULTURE",
-  stage: "COLONIZATION",
-  created: "2025-01-01T00:00:00Z",
-  organization: "mush-ohio",
-  custom: {
-    mushOhio: {
-      internalId: "MC-001",
-      location: "Culture library - Rack A1",
-      subCultureSchedule: "Monthly",
-      notes: "Consistent performer, high yield"
+import { createSpecimen, toQRCodeDataURL } from '@wemush/wols';
+
+// createSpecimen() has no `created` input, so set the timestamp on the result.
+const masterCulture = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    strain: {
+      name: "MO-Blue-001", // Internal strain ID
+      source: "agar", // How the culture is maintained ("spore", "tissue", "agar", "liquid")
+    },
+    type: "CULTURE",
+    stage: "COLONIZATION",
+    organization: "mush-ohio",
+    custom: {
+      mushOhio: {
+        internalId: "MC-001",
+        supplier: "Commercial supplier",
+        location: "Culture library - Rack A1",
+        subCultureSchedule: "Monthly",
+        notes: "Consistent performer, high yield"
+      }
     }
-  }
-});
+  }),
+  created: "2025-01-01T00:00:00Z",
+};
+
+const qrDataUrl = await toQRCodeDataURL(masterCulture, { size: 300, errorCorrection: 'M' });
 ```
 
 **Label placed on**: Culture tube in -80°C freezer
@@ -75,45 +83,55 @@ const masterCulture = await generateLabel({
 
 **Example - Spawn Batch**:
 
+> **Note**: WOLS 1.2 defines the `SubstrateFormula` and `EnvironmentalData` structures but not yet where they attach on a Specimen, so this example carries them under `custom.mushOhio`. A standard placement is proposed for 1.3 in [ROADMAP.md](../ROADMAP.md).
+
 ```typescript
-const spawnBatch = await generateLabel({
-  species: "Pleurotus ostreatus",
-  type: "SPAWN",
-  stage: "INOCULATION",
-  created: "2025-12-01T08:00:00Z",
-  batch: "SB-2025-048", // Spawn Batch number
-  organization: "mush-ohio",
-  strain: {
-    name: "MO-Blue-001",
-    generation: "F1",
-    lineage: masterCulture.id,
-  },
-  substrate: {
-    components: [
-      { type: "Organic rye grain", percentage: 98 },
-      { type: "Gypsum", percentage: 2 }
-    ],
-    moisture: 50,
-    sterilizationMethod: "Autoclave 15 PSI for 90 minutes",
-    sterilizationDate: "2025-12-01T06:00:00Z"
-  },
-  environment: {
-    temperature: { value: 75, unit: "F" },
-    humidity: { value: 60, unit: "%" }
-  },
-  custom: {
-    mushOhio: {
-      batchSize: "50 bags",
-      operatorId: "OP-103",
-      room: "Spawn production room",
-      expectedReady: "2025-12-15",
-      qualityCheck: {
-        sterileTest: "PASS",
-        inspector: "QC-Manager"
+const spawnBatch = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    type: "SPAWN",
+    stage: "INOCULATION",
+    batch: "SB-2025-048", // Spawn Batch number
+    organization: "mush-ohio",
+    strain: {
+      name: "MO-Blue-001",
+      // Grain spawn is an expansion of the same genetics, so the filial
+      // generation does not change. Ancestry is recorded with lineage.
+      lineage: masterCulture.id,
+    },
+    custom: {
+      mushOhio: {
+        batchSize: "50 bags",
+        operatorId: "OP-103",
+        room: "Spawn production room",
+        expectedReady: "2025-12-15",
+        qualityCheck: {
+          sterileTest: "PASS",
+          inspector: "QC-Manager"
+        },
+        substrate: {
+          components: [
+            { ingredient: "Organic rye grain", percentage: 98 },
+            { ingredient: "Gypsum", percentage: 2 }
+          ],
+          hydration: 50,
+          sterilization: {
+            method: "autoclave",
+            temperature: 121, // 15 PSI
+            unit: "C",
+            duration: 90,
+            timestamp: "2025-12-01T06:00:00Z"
+          }
+        },
+        environment: {
+          temperature: { value: 75, unit: "F", timestamp: "2025-12-01T08:00:00Z" },
+          humidity: { value: 60, timestamp: "2025-12-01T08:00:00Z" }
+        }
       }
     }
-  }
-});
+  }),
+  created: "2025-12-01T08:00:00Z",
+};
 ```
 
 **Label placed on**: Master spawn bag (representative of batch)
@@ -130,40 +148,46 @@ const spawnBatch = await generateLabel({
 **Example - Individual Block**:
 
 ```typescript
-const block = await generateLabel({
-  species: "Pleurotus ostreatus",
-  type: "SUBSTRATE",
-  stage: "INOCULATION",
-  created: "2025-12-15T10:00:00Z",
-  batch: "FB-2025-321", // Fruiting Block batch
-  organization: "mush-ohio",
-  strain: {
-    name: "MO-Blue-001",
-    generation: "F2",
-    lineage: spawnBatch.id,
-  },
-  substrate: {
-    components: [
-      { type: "Hardwood sawdust (oak)", percentage: 68 },
-      { type: "Wheat bran", percentage: 27 },
-      { type: "Gypsum", percentage: 5 }
-    ],
-    moisture: 62,
-    sterilizationMethod: "Autoclave 15 PSI for 2.5 hours",
-    sterilizationDate: "2025-12-15T04:00:00Z",
-    inoculationRate: 10 // 10% spawn by weight
-  },
-  custom: {
-    mushOhio: {
-      blockNumber: "FB-2025-321-087", // Individual block in batch
-      weight: "5.0 lbs",
-      room: "Growing room 2",
-      rack: "R4-S3",
-      expectedFruit: "2026-01-05",
-      operatorId: "OP-107"
+const block = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    type: "SUBSTRATE",
+    stage: "INOCULATION",
+    batch: "FB-2025-321", // Fruiting Block batch
+    organization: "mush-ohio",
+    strain: {
+      name: "MO-Blue-001",
+      lineage: spawnBatch.id,
+    },
+    custom: {
+      mushOhio: {
+        blockNumber: "FB-2025-321-087", // Individual block in batch
+        weight: "5.0 lbs",
+        room: "Growing room 2",
+        rack: "R4-S3",
+        expectedFruit: "2026-01-05",
+        operatorId: "OP-107",
+        inoculationRate: 10, // 10% spawn by weight
+        substrate: {
+          components: [
+            { ingredient: "Hardwood sawdust (oak)", percentage: 68 },
+            { ingredient: "Wheat bran", percentage: 27 },
+            { ingredient: "Gypsum", percentage: 5 }
+          ],
+          hydration: 62,
+          sterilization: {
+            method: "autoclave",
+            temperature: 121, // 15 PSI
+            unit: "C",
+            duration: 150,
+            timestamp: "2025-12-15T04:00:00Z"
+          }
+        }
+      }
     }
-  }
-});
+  }),
+  created: "2025-12-15T10:00:00Z",
+};
 ```
 
 **Label placed on**: Each 5 lb fruiting block
@@ -174,24 +198,29 @@ const block = await generateLabel({
 
 - Scan block label at harvest
 - Record yield, quality, date
-- Update label data
+- Update the block's record (same ID, so the printed label keeps working)
 - Generate harvest batch ID
 
 **Example - Harvest Update**:
 
 ```typescript
-await updateLabel(block.id, {
-  stage: "HARVEST",
-  yields: [
-    {
-      date: "2026-01-12T06:00:00Z",
-      weight: { value: 1.8, unit: "lbs" },
-      quality: "PREMIUM",
-      flushNumber: 1
-    }
-  ],
+// The library has no update call: a stage change is a new value of the
+// specimen, saved by the farm's own system (or a platform such as WeMush).
+const harvestedBlock = {
+  ...block,
+  stage: "HARVEST" as const,
   custom: {
     mushOhio: {
+      ...(block.custom?.mushOhio as object),
+      // WOLS 1.2 has no standard yield field, so yields live in custom too.
+      yields: [
+        {
+          date: "2026-01-12T06:00:00Z",
+          weight: { value: 1.8, unit: "lbs" },
+          quality: "PREMIUM",
+          flushNumber: 1
+        }
+      ],
       harvestBatch: "HB-2026-008",
       harvester: "OP-112",
       packagingDate: "2026-01-12T08:00:00Z",
@@ -199,7 +228,8 @@ await updateLabel(block.id, {
       deliveryDate: "2026-01-12T14:00:00Z"
     }
   }
-});
+};
+await farmDb.save(harvestedBlock); // your own persistence layer
 ```
 
 #### 5. Customer-Facing Labels
@@ -213,38 +243,39 @@ await updateLabel(block.id, {
 **Example - Retail Package Label**:
 
 ```typescript
-const retailLabel = await generateLabel({
-  species: "Pleurotus ostreatus",
-  type: "FRUITING",
-  stage: "HARVEST",
-  created: "2026-01-12T08:00:00Z",
-  organization: "mush-ohio",
-  strain: {
-    name: "Blue Oyster",
-    generation: "F3",
-    lineage: block.id, // Links to specific block
-  },
-  yields: [{
-    date: "2026-01-12T06:00:00Z",
-    weight: { value: 0.5, unit: "lbs" }
-  }],
-  certifications: ["USDA Organic", "Local (Ohio)"],
-  custom: {
-    mushOhio: {
-      packageId: "PKG-2026-008-12",
-      packageWeight: "0.5 lbs",
-      price: "$8.00",
-      bestBy: "2026-01-19",
-      customerMessage: "Grown locally in Columbus, OH. Farm-to-table in 24 hours!",
-      farmInfo: {
-        name: "Mush Ohio",
-        location: "Columbus, OH",
-        website: "https://mushohio.com",
-        sustainabilityScore: 95
+const retailLabel = {
+  ...createSpecimen({
+    species: "Pleurotus ostreatus",
+    type: "HARVEST", // Harvested mushrooms (FRESH is an accepted alias)
+    stage: "HARVEST",
+    batch: "HB-2026-008",
+    organization: "mush-ohio",
+    strain: {
+      name: "MO-Blue-001",
+      lineage: block.id, // Links to specific block
+    },
+    custom: {
+      mushOhio: {
+        packageId: "PKG-2026-008-12",
+        packageWeight: "0.5 lbs",
+        harvestDate: "2026-01-12T06:00:00Z",
+        certifications: ["USDA Organic", "Local (Ohio)"],
+        price: "$8.00",
+        bestBy: "2026-01-19",
+        customerMessage: "Grown locally in Columbus, OH. Farm-to-table in 24 hours!",
+        farmInfo: {
+          name: "Mush Ohio",
+          location: "Columbus, OH",
+          website: "https://mushohio.com",
+          sustainabilityScore: 95
+        }
       }
     }
-  }
-});
+  }),
+  created: "2026-01-12T08:00:00Z",
+};
+
+const packageQr = await toQRCodeDataURL(retailLabel, { size: 300, errorCorrection: 'M' });
 ```
 
 **Label placed on**: Retail package (QR code printed on box)
@@ -278,10 +309,11 @@ const retailLabel = await generateLabel({
 **Example audit query**: "Show all blocks from spawn batch SB-2025-048"
 
 ```typescript
-// Instant query results
-const blocks = await searchLabels({
+// Query against the farm's own specimen store (WOLS defines the data,
+// not the database). Children point at their parent via strain.lineage.
+const blocks = await farmDb.query({
   organization: "mush-ohio",
-  genetics: { parentId: spawnBatch.id }
+  "strain.lineage": spawnBatch.id
 });
 // Returns all 50 blocks with complete history
 ```
@@ -306,18 +338,14 @@ const blocks = await searchLabels({
 
 ```typescript
 // Find all products from contaminated batch
-const affected = await searchLabels({
+const affected = await farmDb.query({
   organization: "mush-ohio",
-  custom: {
-    mushOhio: {
-      harvestBatch: "HB-2026-008" // Contaminated batch
-    }
-  }
+  "custom.mushOhio.harvestBatch": "HB-2026-008" // Contaminated batch
 });
 
 // Also trace backwards to source
-const sourceBlocks = await searchLabels({
-  id: affected.map(p => p.genetics.parentId)
+const sourceBlocks = await farmDb.query({
+  id: { $in: affected.map(p => p.strain?.lineage) }
 });
 
 // Alert all customers automatically
@@ -354,17 +382,18 @@ affected.forEach(product => {
 
 ```typescript
 // Query all harvests, group by conditions
-const harvests = await searchLabels({
+const harvests = await farmDb.query({
   organization: "mush-ohio",
   type: "SUBSTRATE",
   stage: "HARVEST"
 });
 
 const analysis = harvests.reduce((acc, block) => {
-  const temp = block.environment.temperature.value;
-  const yield = block.yields[0].weight.value;
+  const data = block.custom.mushOhio;
+  const temp = data.environment.temperature.value;
+  const yieldLbs = data.yields[0].weight.value;
   acc[temp] = acc[temp] || [];
-  acc[temp].push(yield);
+  acc[temp].push(yieldLbs);
   return acc;
 }, {});
 
@@ -398,36 +427,61 @@ const analysis = harvests.reduce((acc, block) => {
 ### Infrastructure
 
 ```typescript
-// Farm management system
+import {
+  createSpecimen,
+  parseSpecimen,
+  parseCompactUrl,
+  toQRCodeDataURL,
+  type Specimen,
+} from '@wemush/wols';
+
+// Farm management system (database and printer are the farm's own services)
 class FarmManagementSystem {
-  async createCultureBatch(masterCultureId: string, quantity: number) {
+  async createCultureBatch(masterCulture: Specimen, quantity: number) {
     const batch = [];
     for (let i = 0; i < quantity; i++) {
-      const label = await generateLabel({
-        // ... culture data
-        genetics: { parentId: masterCultureId }
-      });
-      await this.database.save(label);
-      await this.printer.print(label.qrDataUrl);
-      batch.push(label);
+      const specimen = {
+        ...createSpecimen({
+          type: "CULTURE",
+          species: masterCulture.species,
+          stage: "INOCULATION",
+          organization: "mush-ohio",
+          strain: {
+            name: masterCulture.strain!.name,
+            // Agar-to-agar subculture: count it as a clonal generation
+            clonalGeneration: (masterCulture.strain?.clonalGeneration ?? 0) + 1,
+            lineage: masterCulture.id,
+          },
+        }),
+        created: new Date().toISOString(),
+      };
+      await this.database.save(specimen);
+      await this.printer.print(await toQRCodeDataURL(specimen, { size: 300, errorCorrection: 'M' }));
+      batch.push(specimen);
     }
     return batch;
   }
 
-  async scanAndUpdate(qrData: string, updates: any) {
-    const label = await parseLabel(qrData);
-    const updated = await updateLabel(label.id, updates);
+  async scanAndUpdate(qrData: string, updates: Partial<Specimen>) {
+    // Embedded labels carry the full record; compact labels carry an ID to look up
+    const parsed = qrData.trim().startsWith('{')
+      ? parseSpecimen(qrData)
+      : parseCompactUrl(qrData);
+    if (!parsed.success) throw parsed.error;
+
+    const current = await this.database.findById(parsed.data.id);
+    const updated = { ...current, ...updates };
     await this.database.save(updated);
     return updated;
   }
 
-  async traceLineage(labelId: string) {
-    const label = await this.database.findById(labelId);
+  async traceLineage(specimenId: string) {
+    const specimen = await this.database.findById(specimenId);
     const lineage = [];
-    let current = label;
+    let current = specimen;
 
-    while (current.genetics?.parentId) {
-      const parent = await this.database.findById(current.genetics.parentId);
+    while (current.strain?.lineage) {
+      const parent = await this.database.findById(current.strain.lineage);
       lineage.unshift(parent);
       current = parent;
     }
@@ -446,7 +500,7 @@ class FarmManagementSystem {
       cultures: allLabels.filter(l => l.type === "CULTURE"),
       spawn: allLabels.filter(l => l.type === "SPAWN"),
       blocks: allLabels.filter(l => l.type === "SUBSTRATE"),
-      harvests: allLabels.flatMap(l => l.yields || []),
+      harvests: allLabels.flatMap(l => l.custom?.mushOhio?.yields || []),
       lineageMap: await this.buildLineageMap(allLabels)
     };
   }
@@ -481,7 +535,7 @@ class FarmManagementSystem {
 // Integrate with existing systems
 class IntegrationLayer {
   // Inventory management
-  async syncToInventory(label: WOLSLabel) {
+  async syncToInventory(label: Specimen) {
     await this.inventorySystem.update({
       sku: label.custom.mushOhio.blockNumber,
       quantity: 1,
@@ -496,10 +550,18 @@ class IntegrationLayer {
       blocks.map(id => this.database.findById(id))
     );
 
-    const packageLabel = await generateLabel({
-      // Combine multiple blocks into retail package
-      // Link all source blocks
-    });
+    const packageLabel = {
+      ...createSpecimen({
+        type: "HARVEST",
+        species: labels[0].species,
+        stage: "HARVEST",
+        organization: "mush-ohio",
+        // strain.lineage holds one parent ID, so list every source block in custom
+        strain: { name: labels[0].strain!.name, lineage: labels[0].id },
+        custom: { mushOhio: { orderId, sourceBlocks: labels.map(l => l.id) } },
+      }),
+      created: new Date().toISOString(),
+    };
 
     return packageLabel;
   }
@@ -510,8 +572,8 @@ class IntegrationLayer {
     await this.email.send({
       to: customerId,
       subject: "Your mushrooms are ready!",
-      qrCode: label.qrDataUrl,
-      harvestDate: label.yields[0].date,
+      qrCode: await toQRCodeDataURL(label, { size: 300, errorCorrection: 'M' }),
+      harvestDate: label.custom.mushOhio.harvestDate,
       farmInfo: label.custom.mushOhio.farmInfo
     });
   }
@@ -595,7 +657,7 @@ WOLS transformed Mush Ohio from a small operation with manual tracking to a prof
 ## Next Steps for Commercial Farms
 
 1. **Assess current tracking**: Identify gaps
-2. **Review WOLS spec**: [SPECIFICATION.md](../../SPECIFICATION.md)
+2. **Review WOLS spec**: [SPECIFICATION.md](../SPECIFICATION.md)
 3. **Plan implementation**: Phased rollout
 4. **Choose platform**: WeMush or build custom
 5. **Train team**: Hands-on practice

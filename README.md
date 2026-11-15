@@ -53,9 +53,9 @@ npm install @wemush/wols
 ```
 
 ```typescript
-import { generateLabel } from '@wemush/wols';
+import { createSpecimen, toQRCodeDataURL, serializeSpecimen } from '@wemush/wols';
 
-const label = await generateLabel({
+const specimen = createSpecimen({
   species: "Pleurotus ostreatus",
   strain: {
     name: "Blue Oyster PoHu",
@@ -63,27 +63,29 @@ const label = await generateLabel({
   },
   type: "SUBSTRATE",
   stage: "COLONIZATION",
-  created: new Date().toISOString(),
 });
+specimen.created = new Date().toISOString();
 
-// label.qrDataUrl → QR code as PNG data URL
-// label.json → Full specimen data
+const qrDataUrl = await toQRCodeDataURL(specimen); // QR code as PNG data URL
+const json = serializeSpecimen(specimen);          // Full JSON-LD specimen data
 ```
 
 ### Scan and Parse (Python)
 
 ```bash
-pip install wols
+pip install "wols[qr]"
 ```
 
 ```python
-from wols import parse_label, scan_qr_code
+from wols import parse_specimen
+from wols.qr import scan_qr
 
-# Scan QR code from image
-specimen_data = scan_qr_code("path/to/qr_code.png")
+# Scan a QR code image (returns a Specimen for embedded labels,
+# or a SpecimenRef for compact URLs)
+result = scan_qr("path/to/qr_code.png")
 
-# Or parse raw data
-specimen = parse_label(qr_code_data)
+# Or parse raw embedded JSON-LD text
+specimen = parse_specimen(qr_code_data)
 
 print(f"Species: {specimen.species}")
 print(f"Stage: {specimen.stage}")
@@ -288,7 +290,7 @@ WeMush will be that implementation.
 3. Other labs scan → perfect replication
 4. Accelerates scientific progress
 
-[See full example →](./examples/research-reproducibility.md)
+[See the research use case →](./SPECIFICATION.md#3-research-reproducibility)
 
 ---
 
@@ -296,17 +298,17 @@ WeMush will be that implementation.
 
 - 📘 [Full Specification](./SPECIFICATION.md) ([View Online](https://wemush.com/open-standard/specification))
 - 🚀 [Getting Started Guide](./docs/getting-started.md)
-- 🔧 [Implementation Guide](./docs/implementation.md)
-- 🔐 [Privacy & Security](./docs/security.md)
-- 🎨 [Design Principles](./docs/design-principles.md)
-- 💡 [Use Cases](./docs/use-cases.md)
+- 🔧 [Implementation Guide](./docs/implementation-guide.md)
+- 🔐 [Privacy & Security](./SPECIFICATION.md#privacy--security)
+- 🎨 [Design Principles](./SPECIFICATION.md#design-principles)
+- 💡 [Use Cases](./SPECIFICATION.md#use-cases)
 - ❓ [FAQ](./docs/faq.md)
 
 ### API Reference
 
-- [JavaScript/TypeScript API](./docs/api/javascript.md)
-- [Python API](./docs/api/python.md)
-- [REST API Endpoints](./docs/api/rest.md)
+- [JavaScript/TypeScript API](https://github.com/wemush/specimen-labels-js#readme)
+- [Python API](https://github.com/wemush/specimen-labels-py#readme)
+- [REST API Endpoints](./SPECIFICATION.md#api-specification)
 
 ---
 
