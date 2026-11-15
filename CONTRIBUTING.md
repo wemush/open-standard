@@ -108,7 +108,7 @@ For code, documentation, or specification changes:
 - Extended metadata schemas
 - Integration specifications (IoT, blockchain, etc.)
 
-> **Bootstrap phase**: While the steering committee has fewer than 3 seated members, specification changes follow the [bootstrap rules and pre-release process](./GOVERNANCE.md#bootstrap-phase) in GOVERNANCE.md in place of the steps below.
+> **Founding phase**: Until a broader steering committee is in place, the founders review and merge changes directly, and normative specification changes ship as release candidates. See the [founding phase](./GOVERNANCE.md#founding-phase) and [pre-release process](./GOVERNANCE.md#pre-releases) in GOVERNANCE.md. The steps below describe the full process that will apply afterwards.
 
 **Process**:
 
@@ -185,7 +185,7 @@ For code, documentation, or specification changes:
 4. 1-2 reviewers approve
 5. Merge
 
-> **Bootstrap phase**: While the steering committee has fewer than 3 seated members, specification changes follow the [bootstrap rules and pre-release process](./GOVERNANCE.md#bootstrap-phase) in GOVERNANCE.md in place of the steps below.
+> **Founding phase**: Until a broader steering committee is in place, the founders review and merge changes directly, and normative specification changes ship as release candidates. See the [founding phase](./GOVERNANCE.md#founding-phase) and [pre-release process](./GOVERNANCE.md#pre-releases) in GOVERNANCE.md. The steps below describe the full process that will apply afterwards.
 
 **Medium Changes** (new optional fields, minor additions):
 
