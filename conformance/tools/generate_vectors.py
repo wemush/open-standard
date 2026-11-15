@@ -14,8 +14,10 @@ Encrypted Format).
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import unicodedata
+from urllib.parse import quote
 from pathlib import Path
 
 from cryptography.hazmat.primitives import hashes
@@ -213,6 +215,14 @@ def encrypted_cases() -> list[dict]:
 
     pb_key = derive(passphrase, salt, iterations)
     pb_ct = AESGCM(pb_key).encrypt(iv, plaintext.encode(), None)
+    def enc_id_ct(full_id: str) -> bytes:
+        return AESGCM(pb_key).encrypt(iv, serialize(dict(spec, id=full_id)).encode(), None)
+
+    def ok_for(full_id: str) -> dict:
+        sp = dict(spec, id=full_id)
+        return {"success": True, "plaintext": serialize(sp), "specimen": sp}
+
+    bom_ct = AESGCM(pb_key).encrypt(iv, b"\xef\xbb\xbf" + plaintext.encode(), None)
     nfc_pass = unicodedata.normalize("NFC", "Pilzzüchter Ångström")
     nfc_ct = AESGCM(derive(nfc_pass, salt, iterations)).encrypt(iv, plaintext.encode(), None)
     raw_ct = AESGCM(raw_key).encrypt(iv, plaintext.encode(), None)
@@ -276,6 +286,30 @@ def encrypted_cases() -> list[dict]:
         case("reject-unknown-kdf", "Unknown kdf values MUST be rejected",
              url("clx1a2b3c4", pb_ct, "scrypt", salt, iterations), pb_secret,
              {"success": False, "reason": "unsupported-kdf"}),
+        case("decrypt-percent-encoded-id",
+             "The ID suffix is percent-encoded as one path segment and decoded before the id check",
+             url(quote("Lab A/plate+3%", safe=""), enc_id_ct("wemush:Lab A/plate+3%"), "pbkdf2", salt, iterations),
+             pb_secret, ok_for("wemush:Lab A/plate+3%")),
+        case("decrypt-percent-encoded-utf8-id", "Non-ASCII ID suffixes are percent-encoded UTF-8",
+             url(quote("Pilz-ü", safe=""), enc_id_ct("wemush:Pilz-ü"), "pbkdf2", salt, iterations),
+             pb_secret, ok_for("wemush:Pilz-ü")),
+        case("reject-invalid-percent-encoding", "Decoders MUST reject an ID suffix with invalid percent-encoding",
+             url("clx1a2b3c4%zz", pb_ct, "pbkdf2", salt, iterations), pb_secret,
+             {"success": False, "reason": "invalid-encoding"}),
+        case("reject-percent-encoded-invalid-utf8",
+             "Decoders MUST reject a percent-decoded ID suffix that is not valid UTF-8",
+             url("clx%C3%28", pb_ct, "pbkdf2", salt, iterations), pb_secret,
+             {"success": False, "reason": "invalid-encoding"}),
+        case("reject-non-decimal-iterations", "`i` MUST be plain decimal digits",
+             url("clx1a2b3c4", pb_ct, "pbkdf2", salt, "1e5"), pb_secret,
+             {"success": False, "reason": "invalid-parameter"}),
+        case("reject-huge-iterations",
+             "Iteration counts beyond any integer type MUST be rejected without deriving a key",
+             url("clx1a2b3c4", pb_ct, "pbkdf2", salt, "99999999999999999999"), pb_secret,
+             {"success": False, "reason": "excessive-iterations"}),
+        case("reject-plaintext-bom", "Decoders SHOULD reject a plaintext that starts with a UTF-8 byte order mark",
+             url("clx1a2b3c4", bom_ct, "pbkdf2", salt, iterations), pb_secret,
+             {"success": False, "reason": "invalid-plaintext"}, req="SHOULD"),
         case("reject-excessive-iterations",
              "Decoders MUST reject more than 10,000,000 PBKDF2 iterations without deriving a key",
              url("clx1a2b3c4", pb_ct, "pbkdf2", salt, 10_000_001), pb_secret,
@@ -370,6 +404,9 @@ def main() -> None:
           "QR Code Encoding > Encrypted Format", encrypted_cases())
     write("field-encryption.json", "Field-level encryption in embedded labels",
           "QR Code Encoding > Encrypted Format (Field-level encryption)", field_cases())
+    sums = "".join(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}\n"
+                   for f in sorted(OUT.glob("*.json")))
+    (OUT / "SHA256SUMS").write_text(sums)
     print(f"Wrote vectors to {OUT}")
 
 

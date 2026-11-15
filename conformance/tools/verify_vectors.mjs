@@ -9,6 +9,7 @@
  * Usage: node conformance/tools/verify_vectors.mjs
  */
 import { readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -71,15 +72,25 @@ async function deriveKey(passphrase, salt, iterations) {
 async function decrypt(url, secret) {
   const m = /^wemush:\/\/v1\/encrypted\/([^?]+)\?(.*)$/.exec(url);
   if (!m) return { success: false, reason: 'invalid-url' };
-  const [, id, query] = m;
+  const [, rawId, query] = m;
+  let id;
+  try {
+    // decodeURIComponent throws on malformed escapes and on invalid UTF-8.
+    id = decodeURIComponent(rawId);
+  } catch {
+    return { success: false, reason: 'invalid-encoding' };
+  }
+  if (!id) return { success: false, reason: 'invalid-url' };
   const q = new URLSearchParams(query);
   const kdf = q.get('kdf');
-  if (!q.get('e') || !q.get('iv') || !kdf) return { success: false, reason: 'missing-parameter' };
+  if (q.get('e') && !kdf) return { success: false, reason: 'legacy-format' };
+  if (!q.get('e') || !q.get('iv')) return { success: false, reason: 'missing-parameter' };
   let keyBytes;
   if (kdf === 'pbkdf2') {
     if (!q.get('salt') || !q.get('i')) return { success: false, reason: 'missing-parameter' };
+    if (!/^[0-9]+$/.test(q.get('i'))) return { success: false, reason: 'invalid-parameter' };
     const iterations = Number(q.get('i'));
-    if (!Number.isInteger(iterations) || iterations < MIN_ITERATIONS) return { success: false, reason: 'insufficient-iterations' };
+    if (iterations < MIN_ITERATIONS) return { success: false, reason: 'insufficient-iterations' };
     if (iterations > MAX_ITERATIONS) return { success: false, reason: 'excessive-iterations' };
     keyBytes = await deriveKey(secret.passphrase, fromB64url(q.get('salt')), iterations);
   } else if (kdf === 'raw') {
@@ -92,12 +103,18 @@ async function decrypt(url, secret) {
   const key = await subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
   let plaintext;
   try {
-    const buf = await subtle.decrypt({ name: 'AES-GCM', iv: fromB64url(q.get('iv')) }, key, fromB64url(q.get('e')));
-    plaintext = new TextDecoder().decode(buf);
+    const buf = new Uint8Array(await subtle.decrypt({ name: 'AES-GCM', iv: fromB64url(q.get('iv')) }, key, fromB64url(q.get('e'))));
+    if (buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) return { success: false, reason: 'invalid-plaintext' };
+    plaintext = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buf);
   } catch {
     return { success: false, reason: 'authentication-failed' };
   }
-  const specimen = JSON.parse(plaintext);
+  let specimen;
+  try {
+    specimen = JSON.parse(plaintext);
+  } catch {
+    return { success: false, reason: 'invalid-plaintext' };
+  }
   if (specimen.id !== `wemush:${id}`) return { success: false, reason: 'id-mismatch' };
   return { success: true, plaintext, specimen };
 }
@@ -144,6 +161,13 @@ async function decryptFields(label, secret) {
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
+
+// Check SHA256SUMS first, so a stale or edited vector file is reported.
+for (const line of readFileSync(join(VECTORS, 'SHA256SUMS'), 'utf8').trim().split('\n')) {
+  const [hash, name] = line.split(/\s+/);
+  const actual = createHash('sha256').update(readFileSync(join(VECTORS, name))).digest('hex');
+  if (actual === hash) pass++; else { fail++; console.log(`FAIL SHA256SUMS ${name}`); }
+}
 
 for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort()) {
   const doc = JSON.parse(readFileSync(join(VECTORS, file), 'utf8'));

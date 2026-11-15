@@ -279,23 +279,25 @@ wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iter
 
 | Parameter | Required | Value |
 | --------- | -------- | ----- |
-| `{id}` | Yes | Specimen ID suffix (without `wemush:`). The ID is visible in cleartext; don't put sensitive data in it. |
+| `{id}` | Yes | Specimen ID suffix (without `wemush:`), percent-encoded as a single path segment (see below). The ID is visible in cleartext; don't put sensitive data in it. |
 | `e` | Yes | AES-256-GCM ciphertext with the 16-byte authentication tag appended, base64url without padding |
 | `iv` | Yes | 12-byte random IV, base64url without padding. MUST be unique for every encryption under the same key. |
 | `kdf` | Yes | `pbkdf2` (key derived from a passphrase) or `raw` (32-byte key shared out of band) |
 | `salt` | When `kdf=pbkdf2` | At least 16 random bytes generated per label, base64url without padding |
-| `i` | When `kdf=pbkdf2` | PBKDF2 iteration count as a decimal integer |
+| `i` | When `kdf=pbkdf2` | PBKDF2 iteration count, as plain decimal digits (`[0-9]+`). No sign, exponent, hex, or whitespace. |
 | `sig` | No | Detached signature over the URL with the `sig` parameter removed (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
 
 Requirements:
 
-- **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format). The decrypted specimen's `id` MUST equal `wemush:{id}` from the URL path; decoders MUST reject a mismatch.
-- **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST NOT use a fixed or library-wide salt.
+- **ID path segment**: Generators MUST percent-encode the UTF-8 ID suffix as a single RFC 3986 path segment. At minimum they MUST encode `%`, `/`, `?`, `#`, space, `+`, control characters, and all non-ASCII characters. Encoding every character outside the RFC 3986 unreserved set, as `encodeURIComponent` does, is recommended. Decoders MUST percent-decode the segment as UTF-8 before comparing it with the decrypted `id`. They MUST treat `+` as a literal character, and MUST reject malformed escapes or invalid UTF-8. For example, the ID `wemush:Lab A/plate+3%` appears in the URL as `Lab%20A%2Fplate%2B3%25`.
+- **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format), without a byte order mark. Decoders SHOULD reject a plaintext that starts with a byte order mark. The decrypted specimen's `id` MUST equal `wemush:` followed by the percent-decoded `{id}`; decoders MUST reject a mismatch.
+- **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST NOT use a fixed or library-wide salt. This rule compares the decoded salt bytes, not their text encoding.
   - **Passphrase encoding**: Implementations MUST normalize the passphrase to Unicode Normalization Form C (NFC) and then encode it as UTF-8 before derivation, so the same passphrase typed on different platforms produces the same key.
   - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing. Implementations MAY offer a lower setting, down to 100,000, for faster scanning.
-  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000. They MUST check the limit before deriving a key, so a crafted label can't stall a scanner.
+  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000, including values too large for the implementation's integer types. They MUST check the limit before deriving a key, so a crafted label can't stall a scanner. Generators MUST NOT exceed 10,000,000.
+  - **Validation order**: Decoders SHOULD validate every parameter and encoding before deriving the key.
 - **`kdf=raw`**: The key is exactly 32 bytes. `salt` and `i` MUST be omitted.
-- **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Decoders SHOULD also accept padded input.
+- **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Generators MUST emit the canonical form: no padding, and any unused bits in the final character set to zero. Decoders SHOULD also accept padded input.
 - **Field-level encryption**: Implementations that encrypt individual top-level fields inside an embedded label MUST replace each field's value with an object of the form `{ "encrypted": true, "algorithm": "AES-256-GCM", "payload": e, "iv": iv, "kdf": kdf, "salt"?: salt, "iterations"?: i }`. It uses the same encodings and key rules as the URL format, and the plaintext is the UTF-8 JSON serialization of the field value.
   - **Binding**: The AES-GCM additional authenticated data (AAD) MUST be the UTF-8 encoding of the label's full `id`, a line feed (U+000A), and the field name. For example, `wemush:clx1a2b3c4` followed by a line feed and `strain`. This binds each encrypted value to its field and label, so values swapped between fields or copied from another label fail authentication.
   - **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` MUST NOT be encrypted. Decoders MUST reject a label in which any of them is an encrypted object, and MUST NOT substitute a decrypted value for them.
@@ -522,6 +524,13 @@ PATCH /v1/specimens/{id}
 | **Public** | Non-sensitive cultivation data | Embedded JSON | Species, growth stage, harvest date |
 | **Organization** | Internal operational data | Compact + API | Substrate formulas, vendor info |
 | **Research** | Proprietary genetics/methods | Encrypted | Novel strains, trade secrets |
+
+### What Encryption Protects
+
+- **Confidentiality**: Encryption, whether a whole label in the URL format or individual fields, keeps the encrypted values secret from anyone without the key.
+- **Placement**: Field-level AAD binds each encrypted value to its label `id` and field name. A value moved to another field or another label fails to decrypt.
+- **Integrity**: Neither form makes the cleartext parts of a label tamper-evident. Someone who can edit a label can change its cleartext fields, or remove encrypted fields entirely. Use a signature (`sig` or `signature`) when integrity matters.
+- **Visible metadata**: The ID and the presence of encrypted fields are always visible.
 
 ### Cryptographic Signatures
 
@@ -847,7 +856,13 @@ Changes since `1.3.0-rc.1`, from implementation feedback:
 - **Iteration limits**: Generators SHOULD default to 600,000 iterations. Decoders MUST reject more than 10,000,000, checked before any key is derived, including the total for field-level encryption.
 - **Field-level binding**: Field-level encryption uses AAD (`{id}` + line feed + field name), so swapped or copied values fail authentication.
 - **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` can't be encrypted.
-- **Conformance**: Adds `field-encryption.json` and new cases in `encrypted.json`.
+- **ID path encoding**: The ID suffix in an encrypted URL is percent-encoded by generators and percent-decoded by decoders before the id check.
+- **Strict parameters**: `i` must be plain decimal digits. Generators emit canonical unpadded base64url. The plaintext has no byte order mark.
+- **Security note**: Adds "What Encryption Protects", which separates confidentiality, placement, and integrity.
+- **Conformance**:
+  - Adds `field-encryption.json`.
+  - Adds new cases to `encrypted.json`. The existing cases are unchanged.
+  - Adds `SHA256SUMS` for the vector files.
 
 ### Version 1.3.0-rc.1 (Release candidate — November 14, 2026)
 
