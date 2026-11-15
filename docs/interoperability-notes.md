@@ -65,7 +65,7 @@ The WeMush Platform carries the IV in the URL as `?e={payload}&iv={iv}` instead 
 
 ## 3. Specimen IDs
 
-The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. Both libraries validate strictly by default (`wemush:[a-z0-9]+`). The TypeScript `parseSpecimen()` rejects a ULID such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV` unless a different ID mode is configured.
+The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. Both libraries validate strictly by default. The TypeScript `parseSpecimen()` rejects a ULID such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV` unless a different ID mode is configured. The Python validator requires a full-length CUID, so it rejects even the specification's own example ID, `wemush:clx1a2b3c4`. The [conformance vectors](../conformance/README.md) include ID cases for both.
 
 The WeMush Platform puts its human-readable identification code (for example `WM-LC-250114-000001`) in the `id` field **without** the `wemush:` prefix. Both libraries reject these labels, so the platform falls back to lenient parsing when it reads its own labels.
 

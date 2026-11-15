@@ -234,7 +234,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] Supply chain guide
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
-- [ ] Shared conformance test vectors (embedded, compact, and encrypted fixtures) that every reference library must pass
+- [ ] Shared conformance test vectors that every reference library must pass (embedded, PRIMORDIA, generation, and encrypted cases done in [`conformance/`](./conformance/README.md); compact URL cases pending)
 - [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
 
 ### v1.3.0 Success Metrics

@@ -1,0 +1,252 @@
+{
+  "wolsVersion": "1.3.0",
+  "description": "Embedded JSON-LD validation",
+  "specSection": "Core Data Model; ID Format Options",
+  "cases": [
+    {
+      "id": "embedded-minimal",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "Minimal valid specimen",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "embedded-full",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "Specimen with optional core fields",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4d5e6f7g8",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "name": "Blue Oyster PoHu",
+          "generation": "F2",
+          "clonalGeneration": 3
+        },
+        "stage": "COLONIZATION",
+        "created": "2025-12-16T10:30:00Z",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "id-ulid-suffix",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "ULID suffix MUST be accepted",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "id-uuid-suffix",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "UUID suffix MUST be accepted",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:550e8400-e29b-41d4-a716-446655440000",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "id-human-readable-suffix",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "Any non-empty suffix MUST be accepted",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:WM-LC-250114-000001",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "custom-namespace",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "Custom namespaced fields are valid",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "custom": {
+          "acme_labs": {
+            "projectCode": "PROJ-2025-42"
+          }
+        }
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "unknown-top-level-field",
+      "operation": "validate",
+      "requirement": "SHOULD",
+      "description": "Unknown top-level fields do not invalidate a specimen; implementations SHOULD warn and recommend `custom`",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "metadata": {
+          "note": "x"
+        }
+      },
+      "expected": {
+        "valid": true,
+        "warningField": "metadata"
+      }
+    },
+    {
+      "id": "id-missing-prefix",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "IDs MUST start with `wemush:`",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "WM-LC-250114-000001",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "id"
+      }
+    },
+    {
+      "id": "id-empty-suffix",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "The suffix after `wemush:` MUST be non-empty",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "id"
+      }
+    },
+    {
+      "id": "context-wrong",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "`@context` MUST be the WOLS context URL",
+      "input": {
+        "@context": "https://wols.wemush.com/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "@context"
+      }
+    },
+    {
+      "id": "type-invalid",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "`type` MUST be a canonical SpecimenType in serialized labels",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "PRIMORDIA",
+        "species": "Pleurotus ostreatus"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "type"
+      }
+    },
+    {
+      "id": "stage-invalid",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "`stage` MUST be a defined GrowthStage",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "stage": "PINNING"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "stage"
+      }
+    },
+    {
+      "id": "species-missing",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "`species` is required",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE"
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "species"
+      }
+    }
+  ]
+}

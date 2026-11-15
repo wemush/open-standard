@@ -601,6 +601,8 @@ docker run --rm ghcr.io/wemush/specimen-labels-py create \
   --species "Pleurotus ostreatus" --type SUBSTRATE --json
 ```
 
+**Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format) that implementations SHOULD pass.
+
 > **Interoperability note (non-normative):** The 1.2.0 reference libraries do not yet produce byte-compatible compact URLs or encrypted payloads across languages. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
@@ -834,6 +836,7 @@ Normative changes, subject to the public comment period:
 
 - **`PRIMORDIA` type handling**: `PRIMORDIA` supplied as a type now resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`. Implementations warn and never emit `PRIMORDIA` as a type. This replaces the v1.2.0 "MUST reject" rule, which conflicted with the v1.2.0 alias table.
 - **Encrypted format wire specification**: Defines the `iv`, `kdf`, `salt`, and `i` parameters, base64url encoding, a per-label random salt, PBKDF2 minimums, the ID binding check, and field-level encryption objects. `sig` is now an optional detached signature.
+- **Conformance test vectors**: Adds a [`conformance/`](./conformance/README.md) suite with a deterministic generator and an independent verifier.
 - **Generation tracking**: New `strain.transferDepth` field. Clarifies that `generation` is filial only and that `clonalGeneration` counts culture-to-culture subcultures, not expansion transfers.
 
 ### Unreleased (editorial, no normative changes)

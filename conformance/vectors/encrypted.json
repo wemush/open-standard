@@ -1,0 +1,233 @@
+{
+  "wolsVersion": "1.3.0",
+  "description": "Encrypted format wire specification",
+  "specSection": "QR Code Encoding > Encrypted Format",
+  "cases": [
+    {
+      "id": "pbkdf2-intermediates",
+      "operation": "derive",
+      "requirement": "MUST",
+      "description": "PBKDF2-HMAC-SHA256 key derivation (intermediate value for debugging)",
+      "input": {
+        "passphrase": "correct horse battery staple",
+        "saltBase64url": "AAECAwQFBgcICQoLDA0ODw",
+        "iterations": 100000
+      },
+      "expected": {
+        "keyBase64url": "SdScJfWXhGIJ8Nkud3CrZOHHXpS0zmxQkmXuZxddKh4"
+      }
+    },
+    {
+      "id": "decrypt-pbkdf2",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "Decrypt a passphrase-protected label",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": true,
+        "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.3.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"MO-Blue-001\",\"generation\":\"F1\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\"}",
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "created": "2025-12-16T10:30:00Z"
+        }
+      }
+    },
+    {
+      "id": "decrypt-raw",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "Decrypt a raw-key label (no salt or i)",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=I-zhRRNtgLSk5mz1JNaJ9hzUt_nMOX3p96hFTzAF1sjj1KQgTm4Tf7o6W4TWOlHI8e4dPsRv2oriRiKA6QXASzqg138JSGLukkSU5khpnJ8J1a7NzTZw3p1kku7CFXylYPh6AFkHNYA87IW0S26g9I8X1KE2h2aU68RA5bX4-qWZSKCDFk-9-6XWfB3bIYpEA_2i7BpMw7JwrY2kwmadG9bh9i6HIDMM9HlEyEsHeJT4JDHCHIV8liy-WQSCz-OJ-tTlQ3Yb43xTp_MZmIq6X7c3eFGsQ9vISLYrcd90Gs9JhySwTCb0GviiXQzBMjjzSW_kNaE6SOfRC1v8TavG9dHaDApIQzGWDcFoxqB-O0Qzo2eq&iv=ZGVmZ2hpamtsbW5v&kdf=raw",
+        "secret": {
+          "kdf": "raw",
+          "keyBase64url": "yMnKy8zNzs_Q0dLT1NXW19jZ2tvc3d7f4OHi4-Tl5uc"
+        }
+      },
+      "expected": {
+        "success": true,
+        "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.3.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"MO-Blue-001\",\"generation\":\"F1\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\"}",
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "created": "2025-12-16T10:30:00Z"
+        }
+      }
+    },
+    {
+      "id": "decrypt-padded-base64url",
+      "operation": "decrypt",
+      "requirement": "SHOULD",
+      "description": "Decoders SHOULD accept padded base64url",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw==&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": true,
+        "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.3.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"MO-Blue-001\",\"generation\":\"F1\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\"}",
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "F1"
+          },
+          "stage": "COLONIZATION",
+          "created": "2025-12-16T10:30:00Z"
+        }
+      }
+    },
+    {
+      "id": "reject-tampered-ciphertext",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "GCM authentication MUST fail on tampered ciphertext",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kJ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "authentication-failed"
+      }
+    },
+    {
+      "id": "reject-wrong-passphrase",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "A wrong passphrase MUST fail authentication",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "wrong passphrase"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "authentication-failed"
+      }
+    },
+    {
+      "id": "reject-id-mismatch",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "Decrypted id MUST equal wemush:{id} from the URL path",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0xNw4aYZBqRIxYaHhBjOqTHdfaFjORMz3AkpqD7RlJx_LaX7spjVxx25VFtQrvzfG2mGfQ7sdKP3q4_rc00kWniZcHT_E_pMfmx4R7OKqBxeqcB6MWUxL8o3FtDcWeZnSZ8CsSCG4FKA-AMgE7iTkk9ML_HK&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "id-mismatch"
+      }
+    },
+    {
+      "id": "reject-low-iterations",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "Decoders MUST reject fewer than 10,000 PBKDF2 iterations",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=4OFKB71L_Wg184FIXUV25dGr1aiDltWrfi3HGPiUA19yi5B9oMTJjMpT89x0qw5osg5khZp452jDv5VuzhYiisvoo3QPdUT5Qu2fo4wY4OJK8a4lzPXp16oQYME5THAEsNrWFieegUTfwrMwO-7DQ4V2oz4jGUq5YRp5g1H9AAfyNUcmN0Hh3ZHXgcVoDvWfWm6cmvOb-4PzwjrEdxN7a57DBQSgVnVyH18JLgpEgFbi8y579XidA96OdkXX4uXfcaUpc0Ju54FmKXwMBwyeQ9DevxjRdnnHS03YJskPdZt8lN210Ue8TBPbEZzpa2Rroy97jLPgUAkexbz5M0LQtZEMuiF3RNlHPMEjxXytf-VS6bXZ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=9999",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "insufficient-iterations"
+      }
+    },
+    {
+      "id": "reject-pbkdf2-missing-salt",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "`salt` is required when kdf=pbkdf2",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "missing-parameter"
+      }
+    },
+    {
+      "id": "reject-raw-with-salt",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "`salt` and `i` MUST be omitted when kdf=raw",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=I-zhRRNtgLSk5mz1JNaJ9hzUt_nMOX3p96hFTzAF1sjj1KQgTm4Tf7o6W4TWOlHI8e4dPsRv2oriRiKA6QXASzqg138JSGLukkSU5khpnJ8J1a7NzTZw3p1kku7CFXylYPh6AFkHNYA87IW0S26g9I8X1KE2h2aU68RA5bX4-qWZSKCDFk-9-6XWfB3bIYpEA_2i7BpMw7JwrY2kwmadG9bh9i6HIDMM9HlEyEsHeJT4JDHCHIV8liy-WQSCz-OJ-tTlQ3Yb43xTp_MZmIq6X7c3eFGsQ9vISLYrcd90Gs9JhySwTCb0GviiXQzBMjjzSW_kNaE6SOfRC1v8TavG9dHaDApIQzGWDcFoxqB-O0Qzo2eq&iv=ZGVmZ2hpamtsbW5v&kdf=raw&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "raw",
+          "keyBase64url": "yMnKy8zNzs_Q0dLT1NXW19jZ2tvc3d7f4OHi4-Tl5uc"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "unexpected-parameter"
+      }
+    },
+    {
+      "id": "reject-unknown-kdf",
+      "operation": "decrypt",
+      "requirement": "MUST",
+      "description": "Unknown kdf values MUST be rejected",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=scrypt&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": false,
+        "reason": "unsupported-kdf"
+      }
+    }
+  ]
+}
