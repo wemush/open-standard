@@ -61,9 +61,11 @@ The WeMush Platform carries the IV in the URL as `?e={payload}&iv={iv}` instead 
 
 **Today**: Treat encrypted labels as implementation-specific. Don't rely on `sig` being present.
 
+**Resolution (1.3.0 draft)**: The [Encrypted Format](../SPECIFICATION.md#3-encrypted-format-researchcommercial) now defines the wire format: `iv`, `kdf`, a per-label `salt`, `i`, and base64url encoding. Both libraries need updates to conform. The TypeScript changes are smaller: replace the fixed salt and carry `kdf`, `salt`, and `i` in the URL.
+
 ## 3. Specimen IDs
 
-The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. Both libraries validate strictly by default (`wemush:[a-z0-9]+`). The TypeScript `parseSpecimen()` rejects a ULID such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV` unless a different ID mode is configured.
+The specification states that implementations **MUST accept any non-empty suffix** after `wemush:`. Both libraries validate strictly by default. The TypeScript `parseSpecimen()` rejects a ULID such as `wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV` unless a different ID mode is configured. The Python validator requires a full-length CUID, so it rejects even the specification's own example ID, `wemush:clx1a2b3c4`. The [conformance vectors](../conformance/README.md) include ID cases for both.
 
 The WeMush Platform puts its human-readable identification code (for example `WM-LC-250114-000001`) in the `id` field **without** the `wemush:` prefix. Both libraries reject these labels, so the platform falls back to lenient parsing when it reads its own labels.
 
@@ -74,6 +76,8 @@ The WeMush Platform puts its human-readable identification code (for example `WM
 The specification's Type Aliases note says implementations **MUST reject** `PRIMORDIA` as a specimen type. However, the 1.2.0 changelog lists `PRIMORDIA → FRUITING` as an alias and `PRIMORDIA` appears in `WOLS_TO_PLATFORM_MAP`. The libraries disagree: the published `@wemush/wols` 1.2.0 `createSpecimen()` silently resolves `type: "PRIMORDIA"` to `FRUITING`, while Python `create_specimen()` rejects it (its alias table includes the mapping, but creation doesn't apply it).
 
 **Today**: Emit `type: "FRUITING", stage: "PRIMORDIA"`. Never emit `PRIMORDIA` as a type.
+
+**Resolution (1.3.0 draft)**: `PRIMORDIA` supplied as a type resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`, with a warning. The TypeScript library must also set the stage; the Python library must stop rejecting it.
 
 ## 5. `created` and `stage`
 
@@ -104,6 +108,8 @@ The specification defines `EnvironmentalData`, `SubstrateFormula`, and `Circular
 The specification defines `strain.generation` as the *filial* (sexual) generation and `strain.clonalGeneration` as the subculture count. The WeMush Platform increments a single generation counter on every transfer (culture → grain → substrate) and emits it as `strain.generation: "F{n}"`. As a result, platform labels can show `F3` for a third-transfer block of the original strain.
 
 **Today**: Readers shouldn't assume that `F{n}` on a label produced before this note reflects sexual generations. Generators should keep `generation` constant across expansion transfers and record ancestry with `strain.lineage`.
+
+**Resolution (1.3.0 draft)**: The new `strain.transferDepth` field carries a per-transfer counter. Platforms that count transfers must emit it as `transferDepth` instead of `generation` (see [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130)).
 
 ## 10. Scannability with phone cameras
 

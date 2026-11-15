@@ -1,0 +1,84 @@
+{
+  "wolsVersion": "1.3.0",
+  "description": "PRIMORDIA supplied as a specimen type",
+  "specSection": "Type Aliases (Note — PRIMORDIA)",
+  "cases": [
+    {
+      "id": "primordia-no-stage",
+      "operation": "create",
+      "requirement": "MUST",
+      "description": "PRIMORDIA as type resolves to FRUITING and sets stage",
+      "input": {
+        "species": "Pleurotus ostreatus",
+        "type": "PRIMORDIA"
+      },
+      "expected": {
+        "type": "FRUITING",
+        "stage": "PRIMORDIA",
+        "warning": true
+      }
+    },
+    {
+      "id": "primordia-with-stage",
+      "operation": "create",
+      "requirement": "MUST",
+      "description": "A supplied stage MUST NOT be overridden",
+      "input": {
+        "species": "Pleurotus ostreatus",
+        "type": "PRIMORDIA",
+        "stage": "FRUITING"
+      },
+      "expected": {
+        "type": "FRUITING",
+        "stage": "FRUITING",
+        "warning": true
+      }
+    },
+    {
+      "id": "primordia-lowercase",
+      "operation": "create",
+      "requirement": "MUST",
+      "description": "Alias resolution is case-insensitive",
+      "input": {
+        "species": "Pleurotus ostreatus",
+        "type": "primordia"
+      },
+      "expected": {
+        "type": "FRUITING",
+        "stage": "PRIMORDIA",
+        "warning": true
+      }
+    },
+    {
+      "id": "fruiting-primordia-canonical",
+      "operation": "create",
+      "requirement": "MUST",
+      "description": "Canonical form produces no warning",
+      "input": {
+        "species": "Pleurotus ostreatus",
+        "type": "FRUITING",
+        "stage": "PRIMORDIA"
+      },
+      "expected": {
+        "type": "FRUITING",
+        "stage": "PRIMORDIA",
+        "warning": false
+      }
+    },
+    {
+      "id": "pinning-alias",
+      "operation": "create",
+      "requirement": "SHOULD",
+      "description": "Ordinary aliases resolve type only and leave stage unset",
+      "input": {
+        "species": "Pleurotus ostreatus",
+        "type": "PINNING"
+      },
+      "expected": {
+        "type": "FRUITING",
+        "stage": null,
+        "warning": false
+      }
+    }
+  ]
+}

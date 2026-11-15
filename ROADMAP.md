@@ -217,11 +217,11 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2.
    - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table.
    - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL.
-   - **Encrypted format wire specification**: Specify key derivation (algorithm, iterations, and a per-label random salt instead of a fixed library salt), IV/nonce transport (`iv` parameter vs. prefixed), payload encoding (base64url vs. base64), and what `sig` means relative to encryption.
+   - ✅ *In 1.3.0-rc.1 (comment period)* — **Encrypted format wire specification**: Specify key derivation (algorithm, iterations, and a per-label random salt instead of a fixed library salt), IV/nonce transport (`iv` parameter vs. prefixed), payload encoding (base64url vs. base64), and what `sig` means relative to encryption.
    - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional and the TypeScript library never sets `created`.
-   - **`PRIMORDIA` type handling**: Resolve the conflict between "MUST reject `PRIMORDIA` as a type" and the documented `PRIMORDIA → FRUITING` alias.
+   - ✅ *In 1.3.0-rc.1 (comment period)* — **`PRIMORDIA` type handling**: Resolve the conflict between "MUST reject `PRIMORDIA` as a type" and the documented `PRIMORDIA → FRUITING` alias.
    - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks).
-   - **Generation vs. transfer depth**: Clarify whether expansion transfers (culture → grain → substrate) change `clonalGeneration`, and give guidance for labels that encoded transfer depth as `F{n}`.
+   - ✅ *In 1.3.0-rc.1 (comment period)* — **Generation vs. transfer depth**: Adds `strain.transferDepth`, clarifies that expansion transfers don't change `clonalGeneration`, and gives guidance for labels that encoded transfer depth as `F{n}`.
    - **Generation without a named strain**: Let specimens record `generation` and `clonalGeneration` when `strain.name` is unknown.
    - **Extended data attachment**: Define where `EnvironmentalData`, `SubstrateFormula`, and `CircularEconomyData` attach to a specimen, and align the REST example (`metadata`, `observations`) with the core model.
    - **Specimen condition**: Add an optional field for terminal or abnormal states (for example contaminated, disposed, archived). Today implementations must map a contaminated specimen to a growth stage, which loses information.
@@ -234,7 +234,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] Supply chain guide
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
-- [ ] Shared conformance test vectors (embedded, compact, and encrypted fixtures) that every reference library must pass
+- [ ] Shared conformance test vectors that every reference library must pass (embedded, PRIMORDIA, generation, and encrypted cases done in [`conformance/`](./conformance/README.md); compact URL cases pending)
 - [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
 
 ### v1.3.0 Success Metrics

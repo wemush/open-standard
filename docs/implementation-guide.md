@@ -397,7 +397,7 @@ if (!result.valid) {
 
 ### Encrypted Format
 
-For proprietary/sensitive data:
+For proprietary/sensitive data. Libraries MUST produce the wire format defined in [SPECIFICATION.md § Encrypted Format](../SPECIFICATION.md#3-encrypted-format-researchcommercial) (v1.3.0): per-label random salt, `iv`, `kdf`, and base64url encoding.
 
 ```typescript
 // TypeScript - @wemush/wols/crypto
