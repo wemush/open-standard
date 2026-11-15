@@ -139,6 +139,22 @@ Develop and maintain an open, vendor-agnostic specification that enables:
 
 ## Decision-Making Process
 
+### Bootstrap Phase
+
+The structure above describes the project at full strength. Until it gets there, the rules below replace the parts of this document that can't yet be followed. They are temporary and stated openly so that anyone can see how decisions are actually being made.
+
+**When it applies**: While the Steering Committee has fewer than 3 seated members.
+
+**During the bootstrap phase**:
+
+- **Committee decisions** (reviews, recommendations, approvals, votes) are made by the seated members. Each decision is recorded publicly on the pull request or discussion where it is made, with the reasoning.
+- **Maintainer approvals**: Where a process calls for more than one maintainer approval, one approval from a maintainer who did not author the change is enough. If no such maintainer exists, the author may merge after the public comment window for that change type has closed with no unresolved objections.
+- **Specification changes** use the [pre-release process](#pre-releases) in place of the separate RFC, debate, beta, and vote steps of Type 2 and Type 3 changes and of minor and major releases. The [wire-format rule](#wire-format-compatibility) always applies.
+- **Governance changes** (Type 4 and [Amendments](#amendments)) need a pull request open for at least 14 days, announced in Discussions, before merge.
+- **Objections**: Any objection raised during a comment window must get a written response before merge, and the response must say whether the change was adjusted.
+
+**Ending the bootstrap phase**: The phase ends automatically once 3 or more committee seats are filled. The full processes then apply to any change not yet merged, and the committee should review this section within 90 days and either remove it or amend it.
+
 ### Types of Decisions
 
 #### Type 1: Minor Changes
@@ -252,6 +268,19 @@ WOLS uses [Semantic Versioning](https://semver.org/):
 
 ### Release Process
 
+#### Pre-Releases
+
+Minor and major specification versions are published as release candidates before they become final.
+
+1. **Release candidate**: The draft is merged with a pre-release version, such as `1.3.0-rc.1`, in the specification's `**Version**` line, and tagged with that version. Pre-release tags are published as GitHub pre-releases.
+2. **Comment window**: At least 7 days for a minor version and 14 days for a major version, counted from the tag and announced in Discussions. Fixes during the window are published as further candidates (`-rc.2`, and so on). A candidate with substantive changes restarts the window. Editorial changes do not.
+3. **Conformance**: Every new or changed normative requirement must be covered by the [conformance vectors](./conformance/), and at least one maintained library must pass all `MUST` vectors for that version. For a major version, two libraries in different languages must pass.
+4. **Final release**: After the window closes with no unresolved objections, the pre-release suffix is removed, the final version is tagged, and the release is announced.
+
+Implementations may support a release candidate, but labels generated for production use should target a final release. A release candidate's requirements may still change before the final release.
+
+Outside the [bootstrap phase](#bootstrap-phase), the release processes below also apply.
+
 **Patch Releases** (1.0.x):
 
 1. Maintainer proposes patch
@@ -296,6 +325,15 @@ WOLS uses [Semantic Versioning](https://semver.org/):
 - v1.5.0: Field marked deprecated
 - v1.6.0 - v1.x.0: Field still supported
 - v2.0.0: Field removed (with migration guide)
+
+### Wire-Format Compatibility
+
+Printed labels can't be upgraded, so they outlive any single version of the specification or its libraries. For that reason:
+
+- A final release **MUST NOT** make a decoder unable to read a label that an earlier final release allowed generators to produce. This applies to the embedded, compact, and encrypted formats and to ID formats.
+- A release **MAY** stop generators from producing a format. It must keep decoding rules for that format, marked as legacy.
+- A major version may only remove decoding rules for a format if a migration path for existing labels is published with it.
+- Release candidates are exempt. Anything introduced only in a release candidate may change or be removed before the final release.
 
 ## Conflict Resolution
 
@@ -395,6 +433,8 @@ Anticipated expenses:
 
 ## Amendments
 
+During the [bootstrap phase](#bootstrap-phase), the bootstrap rule for governance changes replaces the steps below.
+
 This governance document can be amended:
 
 1. Proposal in Discussions
@@ -452,6 +492,7 @@ This governance document can be amended:
 - **December 2025**: WOLS project launched
 - **December 2025**: Initial governance structure established
 - **December 2025**: First steering committee formed (Mark Beacom, Chair)
+- **November 2026**: Bootstrap phase, pre-release process, and wire-format compatibility rule added
 
 ## Acknowledgments
 
@@ -466,5 +507,5 @@ Thank you to these projects for pioneering open-source governance.
 
 ---
 
-**Last Updated**: December 18, 2025
-**Version**: 1.0.0
+**Last Updated**: November 14, 2026
+**Version**: 1.1.0

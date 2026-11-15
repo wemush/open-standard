@@ -37,6 +37,7 @@ jobs:
         with:
           discussion_category_name: announcements
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             SPECIFICATION.md
             README.md

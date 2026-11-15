@@ -108,6 +108,8 @@ For code, documentation, or specification changes:
 - Extended metadata schemas
 - Integration specifications (IoT, blockchain, etc.)
 
+> **Bootstrap phase**: While the steering committee has fewer than 3 seated members, specification changes follow the [bootstrap rules and pre-release process](./GOVERNANCE.md#bootstrap-phase) in GOVERNANCE.md in place of the steps below.
+
 **Process**:
 
 1. Open GitHub Discussion with RFC (Request for Comments)
@@ -183,6 +185,8 @@ For code, documentation, or specification changes:
 4. 1-2 reviewers approve
 5. Merge
 
+> **Bootstrap phase**: While the steering committee has fewer than 3 seated members, specification changes follow the [bootstrap rules and pre-release process](./GOVERNANCE.md#bootstrap-phase) in GOVERNANCE.md in place of the steps below.
+
 **Medium Changes** (new optional fields, minor additions):
 
 1. Open GitHub Discussion
@@ -215,7 +219,7 @@ WOLS follows [Semantic Versioning](https://semver.org/):
 
 **Must maintain backward compatibility** unless justified by extraordinary circumstances:
 
-- Old labels must still decode in new versions
+- Old labels must still decode in new versions (see [Wire-Format Compatibility](./GOVERNANCE.md#wire-format-compatibility))
 - Deprecated fields must be marked and supported for at least 1 major version
 - Breaking changes require RFC and steering committee approval
 - Migration guides must be provided
