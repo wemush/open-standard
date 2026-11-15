@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Release candidate — public comment period (see [Governance](#governance))
-**Version**: 1.3.0-rc.2
-**Date**: November 14, 2026
+**Status**: Active
+**Version**: 1.3.0
+**Date**: November 15, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -749,8 +749,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.3.0-rc.2 (release candidate; 1.2.0 remains the latest final release until 1.3.0 is final)
-**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
+**Current Version**: 1.3.0
+**Stability**: Active (feedback welcome)
 
 ---
 
@@ -848,7 +848,11 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
-### Version 1.3.0-rc.2 (Release candidate — November 15, 2026)
+### Version 1.3.0 (November 15, 2026)
+
+Final release. It combines the two release candidates below with no further normative changes. Both reference libraries pass every conformance vector: `@wemush/wols` 1.3.0 (TypeScript) and `wols` 1.3.0 (Python).
+
+#### 1.3.0-rc.2 (November 15, 2026)
 
 Changes since `1.3.0-rc.1`, from implementation feedback:
 
@@ -864,9 +868,9 @@ Changes since `1.3.0-rc.1`, from implementation feedback:
   - Adds new cases to `encrypted.json`. The existing cases are unchanged.
   - Adds `SHA256SUMS` for the vector files.
 
-### Version 1.3.0-rc.1 (Release candidate — November 14, 2026)
+#### 1.3.0-rc.1 (November 14, 2026)
 
-Normative changes, subject to the public comment period:
+Normative changes:
 
 - **`PRIMORDIA` type handling**: `PRIMORDIA` supplied as a type now resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`. Implementations warn and never emit `PRIMORDIA` as a type. This replaces the v1.2.0 "MUST reject" rule, which conflicted with the v1.2.0 alias table.
 - **Encrypted format wire specification**: Defines the `iv`, `kdf`, `salt`, and `i` parameters, base64url encoding, a per-label random salt, PBKDF2 minimums, the ID binding check, and field-level encryption objects. `sig` is now an optional detached signature.

@@ -1,6 +1,6 @@
 # WeMush Open Labeling Standard (WOLS)
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/wemush/open-standard/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/wemush/open-standard/releases)
 [![License](https://img.shields.io/badge/license-CC%20BY%204.0-green.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/wemush/open-standard)](https://github.com/wemush/open-standard/discussions)
 [![Stars](https://img.shields.io/github/stars/wemush/open-standard?style=social)](https://github.com/wemush/open-standard/stargazers)
@@ -466,7 +466,7 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Python library released
 - ✅ Field renames for clarity (`batchId`→`batch`, `organizationId`→`organization`)
 
-#### Version 1.2.0 (Jan 2026) — Current
+#### Version 1.2.0 (Jan 2026)
 
 - ✅ Extended growth stages (7 stages: added INCUBATION, PRIMORDIA, SENESCENCE)
 - ✅ Type aliases and generation flexibility (clonalGeneration support)
@@ -474,7 +474,15 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Reference implementation (WeMush platform)
 - ✅ Comprehensive documentation and examples
 
-### Next: Version 1.3.0 (Q2 2026)
+#### Version 1.3.0 (Nov 2026) — Current
+
+- ✅ Encrypted format wire specification: PBKDF2 with per-label salts, `iv` parameter, base64url, NFC passphrases, iteration limits
+- ✅ Field-level encryption bound to its label and field (AES-GCM AAD)
+- ✅ `strain.transferDepth`, distinct from filial `generation` and `clonalGeneration`
+- ✅ `PRIMORDIA` type alias resolves to `FRUITING` with stage `PRIMORDIA`
+- ✅ [Conformance test vectors](./conformance/README.md), passed by both reference libraries
+
+### Next: Version 1.4.0
 
 - 🚧 IoT sensor integration spec
 - 🚧 Blockchain verification option
