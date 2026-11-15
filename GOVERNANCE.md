@@ -272,7 +272,7 @@ WOLS uses [Semantic Versioning](https://semver.org/):
 Normative specification changes are published as release candidates before they become final. Documentation fixes and clarifications that don't change requirements can be released directly as patch versions.
 
 1. **Release candidate**: The change is merged with a pre-release version, such as `1.3.0-rc.1`, in the specification's `**Version**` line, and tagged with that version. Pre-release tags are published as GitHub pre-releases, which announces them in Discussions.
-2. **Feedback**: A release candidate stays open for feedback for at least 3 days for a minor version and 14 days for a major version. Fixes are published as further candidates (`-rc.2`, and so on).
+2. **Feedback**: A release candidate is open for feedback from the moment it is tagged. A minor version has no minimum window and can become final as soon as it meets the conformance requirement. A major version stays open for at least 14 days. Fixes are published as further candidates (`-rc.2`, and so on).
 3. **Conformance**: Every new or changed normative requirement must be covered by the [conformance vectors](./conformance/), and at least one maintained library must pass all `MUST` vectors for that version. For a major version, two libraries in different languages must pass.
 4. **Final release**: The pre-release suffix is removed, and the final version is tagged and announced.
 
