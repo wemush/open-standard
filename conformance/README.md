@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0** (currently release candidate `1.3.0-rc.2`). See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0**. See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 
@@ -93,9 +93,11 @@ node conformance/tools/verify_vectors.mjs
 
 ## Current library status
 
-| Library | `1.3.0-rc.1` vectors | `1.3.0-rc.2` additions |
-| ------- | -------------------- | ---------------------- |
-| `@wemush/wols` 1.3.0 (TypeScript, merged as `d17da64`, not yet published) | All pass: embedded 12/12, primordia 4/4, generation 9/9, encrypted 10/10 (`MUST`), plus 4/4 `SHOULD` | Not yet run |
-| `wols` 1.3.0 (Python, [specimen-labels-py#8](https://github.com/wemush/specimen-labels-py/pull/8), not yet published) | All pass | Partly implemented in [specimen-labels-py#9](https://github.com/wemush/specimen-labels-py/pull/9) |
+Results against the `1.3.0` vectors, November 2026:
 
-`1.3.0` becomes final once one library passes every `MUST` vector in this directory. See [GOVERNANCE.md](../GOVERNANCE.md#pre-releases).
+| Library | embedded | primordia | generation | encrypted | field-encryption |
+| ------- | -------- | --------- | ---------- | --------- | ---------------- |
+| [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) 1.3.0 (TypeScript) | 12/12 + 1/1 | 4/4 + 1/1 | 9/9 + 1/1 | 19/19 + 2/2 | 6/6 |
+| [`wols`](https://github.com/wemush/specimen-labels-py) 1.3.0 (Python) | 12/12 + 1/1 | 4/4 + 1/1 | 9/9 + 1/1 | 19/19 + 2/2 | 6/6 |
+
+Each cell shows `MUST` cases passed, then `SHOULD` cases passed. Both libraries vendor these vectors with matching `SHA256SUMS`.
