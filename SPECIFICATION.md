@@ -57,7 +57,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix (e.g., "wemush:clx1a2b3c4")
-  version: string;               // Spec version (e.g., "1.2.0")
+  version: string;               // Spec version (e.g., "1.3.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name (e.g., "Pleurotus ostreatus")
 
@@ -249,7 +249,7 @@ Embedded format uses JSON-LD for semantic interoperability:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -474,7 +474,7 @@ PATCH /v1/specimens/{id}
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -569,7 +569,7 @@ Organizations can add custom fields under reserved namespaces:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "species": "Hericium erinaceus",
   "custom": {
     "mushoh": {
@@ -850,7 +850,7 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ### Version 1.3.0 (November 15, 2026)
 
-Final release. It combines the two release candidates below with no further normative changes. Both reference libraries pass every conformance vector: `@wemush/wols` 1.3.0 (TypeScript) and `wols` 1.3.0 (Python).
+Final release. It combines the two release candidates below with no further normative changes. Both reference libraries pass every conformance vector: `@wemush/wols` 1.3.0 (TypeScript) and `wols` 1.3.0 (Python). Example labels now use `"version": "1.3.0"`.
 
 #### 1.3.0-rc.2 (November 15, 2026)
 

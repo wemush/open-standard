@@ -158,7 +158,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix
-  version: string;               // Spec version (e.g., "1.2.0")
+  version: string;               // Spec version (e.g., "1.3.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name
 
@@ -199,7 +199,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {

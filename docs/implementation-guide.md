@@ -73,7 +73,7 @@ interface Specimen {
 
   // Required Fields
   id: string;                    // Format: "wemush:{cuid}" e.g., "wemush:clx1a2b3c4"
-  version: string;               // Semver, e.g., "1.2.0"
+  version: string;               // Semver, e.g., "1.3.0"
   type: SpecimenType;
   species: string;               // Scientific name
 
@@ -482,7 +482,7 @@ class WolsEncryptionError(WolsError):
 ```json
 {
   "name": "@wemush/wols",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Official WOLS (WeMush Open Labeling Standard) library",
   "type": "module",
   "main": "./dist/index.js",
