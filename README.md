@@ -214,7 +214,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 **Encrypted** (proprietary strains):
 
 ```bash
-wemush://v1/encrypted/clx1a2b3c4?e={payload}&sig={signature}
+wemush://v1/encrypted/clx1a2b3c4?e={ciphertext}&iv={iv}&kdf=pbkdf2&salt={salt}&i=100000
 ```
 
 [📖 Read Full Specification →](./SPECIFICATION.md)

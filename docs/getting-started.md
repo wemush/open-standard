@@ -204,7 +204,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 **3. Encrypted** (proprietary data):
 
 ```bash
-wemush://v1/encrypted/clx1a2b3c4?e={payload}&sig={signature}
+wemush://v1/encrypted/clx1a2b3c4?e={ciphertext}&iv={iv}&kdf=pbkdf2&salt={salt}&i=100000
 ```
 
 ## Common Workflows
@@ -224,7 +224,8 @@ Track a complete grow cycle:
      strain: {
        name: "Blue Oyster",
        generation: "P",      // original/parental culture
-       clonalGeneration: 1,  // first agar plate
+       clonalGeneration: 0,  // the original culture, not a subculture
+       transferDepth: 0,
      },
      stage: "COLONIZATION",
    });
@@ -239,6 +240,8 @@ Track a complete grow cycle:
      strain: {
        name: "Blue Oyster",
        generation: "P",          // same genetics: grain expansion is not a new generation
+       clonalGeneration: 0,      // culture to grain is not a subculture
+       transferDepth: 1,         // one transfer from the original culture
        lineage: culture.id,      // link to parent specimen
      },
      stage: "INOCULATION",
@@ -254,6 +257,8 @@ Track a complete grow cycle:
      strain: {
        name: "Blue Oyster",
        generation: "P",
+       clonalGeneration: 0,
+       transferDepth: 2,
        lineage: spawn.id,
      },
      stage: "INOCULATION",
@@ -270,7 +275,7 @@ Track a complete grow cycle:
    };
    ```
 
-   > **Generation vs. lineage**: `strain.generation` is the *filial* (sexual) generation and only changes when a new strain is bred (e.g., spores from a fruit → F1). `strain.clonalGeneration` counts agar-to-agar subcultures. Expanding a culture to grain and substrate keeps the same generation; record ancestry with `strain.lineage`.
+   > **Generation, subculture, and transfer depth**: `strain.generation` is the *filial* (sexual) generation and only changes when a new strain is bred (e.g., spores from a fruit → F1). `strain.clonalGeneration` counts culture-to-culture subcultures. `strain.transferDepth` (v1.3.0) counts every transfer from the original culture. Record ancestry with `strain.lineage`. See [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130).
 
 5. **Harvest and record yields**
 

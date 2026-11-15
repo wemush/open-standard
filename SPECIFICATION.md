@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Active
-**Version**: 1.2.0
-**Date**: January 26, 2026
+**Status**: Draft — public comment period (see [Governance](#governance))
+**Version**: 1.3.0
+**Date**: November 14, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -65,7 +65,8 @@ interface SpecimenLabel {
   strain?: {
     name: string;                // Strain name or identifier
     generation?: string;         // Filial generation (e.g., "F1", "F2", "P")
-    clonalGeneration?: number;   // Subculture/clone count (e.g., 1, 2, 3...)
+    clonalGeneration?: number;   // Culture-to-culture subculture count (0 = original culture)
+    transferDepth?: number;      // Total transfers from the original culture, any kind (v1.3.0)
     lineage?: string;            // Parent specimen ID reference
     source?: string;             // "spore", "tissue", "agar", "liquid"
   };
@@ -130,7 +131,14 @@ Implementations SHOULD support common type aliases to improve usability:
 | FLUSH, PINNING, FRUIT, FIRST_FLUSH | FRUITING |
 | FRESH, DRIED, PROCESSED, EXTRACT | HARVEST |
 
-**Note**: `PRIMORDIA` is a `GrowthStage` value (not a `SpecimenType`), representing the pin initiation phase. A `FRUITING` type specimen progresses through stages including `PRIMORDIA` → `FRUITING` → `SENESCENCE`. Implementations MUST reject `PRIMORDIA` as a specimen type and SHOULD provide a helpful error message directing users to use `stage: "PRIMORDIA"` instead. See Extended Growth Stages below.
+**Note — `PRIMORDIA` (v1.3.0)**: `PRIMORDIA` is a `GrowthStage` value (not a `SpecimenType`), representing the pin initiation phase. A `FRUITING` type specimen progresses through stages including `PRIMORDIA` → `FRUITING` → `SENESCENCE`. Because users commonly supply it as a type, `PRIMORDIA` is a reserved type alias with special handling. When `PRIMORDIA` is supplied as a specimen type, implementations:
+
+- MUST resolve the type to `FRUITING`
+- MUST set `stage` to `PRIMORDIA` if no stage was supplied, and MUST NOT override a stage that was supplied
+- SHOULD emit a warning recommending `type: "FRUITING", stage: "PRIMORDIA"`
+- MUST NOT emit `PRIMORDIA` as a `type` value in any serialized label
+
+This replaces the v1.2.0 requirement to reject `PRIMORDIA` as a type. That requirement conflicted with the v1.2.0 alias table. See Extended Growth Stages below.
 
 Custom aliases can be registered via library functions. Alias resolution is case-insensitive.
 
@@ -168,6 +176,25 @@ The `strain.generation` field accepts multiple formats:
 | Numeric | 1, 2, 3 | Simplified format |
 
 Implementations SHOULD normalize to filial notation (F{n}) by default.
+
+### Generation, Subculture, and Transfer Tracking (v1.3.0)
+
+The `strain` object carries three independent counters. Implementations MUST NOT use one to represent another.
+
+| Field | Meaning | Changes when |
+| ----- | ------- | ------------ |
+| `generation` | Filial (sexual) generation of the strain | A new strain is bred from spores or a cross (e.g., P → F1). It does **not** change on any transfer of the same genetics. |
+| `clonalGeneration` | Culture-to-culture subculture count. The original culture is `0`. | Mycelium is transferred from one culture to another culture medium (agar to agar, agar to liquid culture, liquid culture to agar). Expansion to grain or substrate does not increment it. |
+| `transferDepth` | Total transfers from the original culture of this strain, of any kind | Any transfer: subculture, culture to grain, grain to grain, grain to substrate. The original culture is `0`. |
+
+Rules:
+
+- `transferDepth`, when present, MUST be a non-negative integer, and SHOULD be at least `clonalGeneration` when both are present.
+- Specimens produced by expansion (grain spawn, substrate, fruiting blocks) SHOULD carry the same `generation` and `clonalGeneration` as their source culture, and SHOULD record ancestry with `lineage`.
+- Implementations that track a single per-transfer counter MUST encode it as `transferDepth`, not as `generation`.
+- Parsers SHOULD treat `F{n}` values on labels created before v1.3.0 by systems known to count transfers as transfer depth, not filial generation.
+
+**Example**: A grain spawn bag made from the third agar subculture of an original F1 culture, with one grain-to-grain transfer, has `generation: "F1"`, `clonalGeneration: 3`, and `transferDepth: 5` (three subcultures, culture to grain, grain to grain).
 
 ### ID Format Options (v1.2.0)
 
@@ -242,11 +269,32 @@ Embedded format uses JSON-LD for semantic interoperability:
 #### 3. Encrypted Format (Research/Commercial)
 
 **Use Case**: Proprietary strains, sensitive research
-**Encryption**: AES-256-GCM with shared key or public key
+**Encryption**: AES-256-GCM with a shared key, either supplied directly or derived from a passphrase
 
 ```bash
-wemush://v1/encrypted/{id}?e={encrypted_payload}&sig={signature}
+wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iterations}][&sig={signature}]
 ```
+
+**Wire format (v1.3.0)**:
+
+| Parameter | Required | Value |
+| --------- | -------- | ----- |
+| `{id}` | Yes | Specimen ID suffix (without `wemush:`). The ID is visible in cleartext; don't put sensitive data in it. |
+| `e` | Yes | AES-256-GCM ciphertext with the 16-byte authentication tag appended, base64url without padding |
+| `iv` | Yes | 12-byte random IV, base64url without padding. MUST be unique for every encryption under the same key. |
+| `kdf` | Yes | `pbkdf2` (key derived from a passphrase) or `raw` (32-byte key shared out of band) |
+| `salt` | When `kdf=pbkdf2` | At least 16 random bytes generated per label, base64url without padding |
+| `i` | When `kdf=pbkdf2` | PBKDF2 iteration count as a decimal integer |
+| `sig` | No | Detached signature over the URL with the `sig` parameter removed (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
+
+Requirements:
+
+- **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format). The decrypted specimen's `id` MUST equal `wemush:{id}` from the URL path; decoders MUST reject a mismatch.
+- **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the UTF-8 passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST use at least 100,000 iterations. Decoders MUST reject iteration counts below 10,000. Generators MUST NOT use a fixed or library-wide salt.
+- **`kdf=raw`**: The key is exactly 32 bytes. `salt` and `i` MUST be omitted.
+- **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Decoders SHOULD also accept padded input.
+- **Field-level encryption**: Implementations that encrypt individual fields inside an embedded label MUST replace each field's value with an object of the form `{ "encrypted": true, "algorithm": "AES-256-GCM", "payload": e, "iv": iv, "kdf": kdf, "salt"?: salt, "iterations"?: i }` using the same encodings, where the plaintext is the UTF-8 JSON serialization of the field value.
+- **Legacy labels**: Encrypted URLs without a `kdf` parameter predate v1.3.0 and are implementation-specific. Decoders MAY support them but MUST NOT generate them.
 
 ---
 
@@ -683,8 +731,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.2.0
-**Stability**: Active (feedback welcome)
+**Current Version**: 1.3.0 (Draft; 1.2.0 remains the latest released version until this draft is ratified)
+**Stability**: Draft (feedback welcome)
 
 ---
 
@@ -779,6 +827,14 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.3.0 (Draft — November 14, 2026)
+
+Normative changes, subject to the public comment period:
+
+- **`PRIMORDIA` type handling**: `PRIMORDIA` supplied as a type now resolves to `FRUITING` and defaults `stage` to `PRIMORDIA`. Implementations warn and never emit `PRIMORDIA` as a type. This replaces the v1.2.0 "MUST reject" rule, which conflicted with the v1.2.0 alias table.
+- **Encrypted format wire specification**: Defines the `iv`, `kdf`, `salt`, and `i` parameters, base64url encoding, a per-label random salt, PBKDF2 minimums, the ID binding check, and field-level encryption objects. `sig` is now an optional detached signature.
+- **Generation tracking**: New `strain.transferDepth` field. Clarifies that `generation` is filial only and that `clonalGeneration` counts culture-to-culture subcultures, not expansion transfers.
 
 ### Unreleased (editorial, no normative changes)
 
