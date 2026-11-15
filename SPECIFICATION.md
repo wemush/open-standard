@@ -746,7 +746,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 2. Discuss in community forum
 3. Submit PR with proposed changes
 4. Merge and tag as a release candidate (for example, `1.3.0-rc.1`)
-5. Public comment period (7 days for minor versions, 14 days for major versions)
+5. Feedback period (at least 3 days for minor versions, 14 days for major versions)
 6. Final release once the [conformance vectors](./conformance/README.md) pass in at least one library
 
 See [GOVERNANCE.md](./GOVERNANCE.md#pre-releases) for the full pre-release process.
