@@ -46,6 +46,7 @@ Develop and maintain an open, vendor-agnostic specification that enables:
 | Name | Affiliation | Role | Term |
 | ---- | ------------- | ------ | ------ |
 | Mark Beacom | WeMush Foundation | Chair | 2025-2027 |
+| Amy Beacom | WeMush Foundation | Co-Chair | 2025-2027 |
 | [Open] | Commercial Industry | Industry Rep | TBD |
 | [Open] | Academic Institution | Research Rep | TBD |
 | [Open] | Open Source Community | Community Rep | TBD |
@@ -138,6 +139,20 @@ Develop and maintain an open, vendor-agnostic specification that enables:
 - Eligible for maintainer/committee roles
 
 ## Decision-Making Process
+
+### Founding Phase
+
+WOLS is currently run by its two founders, Mark Beacom and Amy Beacom of the WeMush Foundation, who act as the Steering Committee and the maintainers. The structure described elsewhere in this document is where the project is headed. Until it is in place, the rules in this section replace any process in this document that calls for committee votes, multiple maintainer approvals, or fixed waiting periods. They exist so the specification can evolve quickly while it is young, and they are written down so anyone can see how decisions are made.
+
+**How decisions are made**:
+
+- Either founder may approve and merge any change, including specification, governance, and documentation changes.
+- Decisions are made in public pull requests or discussions. A change that affects the specification or this document says why in its pull request.
+- Community feedback is welcome on every change. An objection raised before merge gets a written response. An objection raised after merge can be addressed in a later release.
+- Changes to the specification's normative requirements follow the [pre-release process](#pre-releases).
+- The [wire-format compatibility](#wire-format-compatibility) rule always applies. It is the one rule that speed does not override, because printed labels can't be recalled.
+
+**Ending the founding phase**: The founding phase ends when the Steering Committee has at least 3 seated members, at least one of whom is not affiliated with the WeMush Foundation. The new committee then decides which of the full processes to adopt. The founders will also review this section publicly at least once a year while it is in effect.
 
 ### Types of Decisions
 
@@ -252,6 +267,19 @@ WOLS uses [Semantic Versioning](https://semver.org/):
 
 ### Release Process
 
+#### Pre-Releases
+
+Normative specification changes are published as release candidates before they become final. Documentation fixes and clarifications that don't change requirements can be released directly as patch versions.
+
+1. **Release candidate**: The change is merged with a pre-release version, such as `1.3.0-rc.1`, in the specification's `**Version**` line, and tagged with that version. Pre-release tags are published as GitHub pre-releases, which announces them in Discussions.
+2. **Feedback**: A release candidate stays open for feedback for at least 3 days for a minor version and 14 days for a major version. Fixes are published as further candidates (`-rc.2`, and so on).
+3. **Conformance**: Every new or changed normative requirement must be covered by the [conformance vectors](./conformance/), and at least one maintained library must pass all `MUST` vectors for that version. For a major version, two libraries in different languages must pass.
+4. **Final release**: The pre-release suffix is removed, and the final version is tagged and announced.
+
+Implementations may support a release candidate, but labels generated for production use should target a final release. A release candidate's requirements may still change before the final release.
+
+Once the [founding phase](#founding-phase) ends, the release processes below also apply.
+
 **Patch Releases** (1.0.x):
 
 1. Maintainer proposes patch
@@ -296,6 +324,15 @@ WOLS uses [Semantic Versioning](https://semver.org/):
 - v1.5.0: Field marked deprecated
 - v1.6.0 - v1.x.0: Field still supported
 - v2.0.0: Field removed (with migration guide)
+
+### Wire-Format Compatibility
+
+Printed labels can't be upgraded, so they outlive any single version of the specification or its libraries. For that reason:
+
+- A final release **MUST NOT** make a decoder unable to read a label that an earlier final release allowed generators to produce. This applies to the embedded, compact, and encrypted formats and to ID formats.
+- A release **MAY** stop generators from producing a format. It must keep decoding rules for that format, marked as legacy.
+- A major version may only remove decoding rules for a format if a migration path for existing labels is published with it.
+- Release candidates are exempt. Anything introduced only in a release candidate may change or be removed before the final release.
 
 ## Conflict Resolution
 
@@ -395,6 +432,8 @@ Anticipated expenses:
 
 ## Amendments
 
+During the [founding phase](#founding-phase), the founders may amend this document directly, and the steps below do not apply.
+
 This governance document can be amended:
 
 1. Proposal in Discussions
@@ -452,6 +491,7 @@ This governance document can be amended:
 - **December 2025**: WOLS project launched
 - **December 2025**: Initial governance structure established
 - **December 2025**: First steering committee formed (Mark Beacom, Chair)
+- **November 2026**: Founding phase, pre-release process, and wire-format compatibility rule added
 
 ## Acknowledgments
 
@@ -466,5 +506,5 @@ Thank you to these projects for pioneering open-source governance.
 
 ---
 
-**Last Updated**: December 18, 2025
-**Version**: 1.0.0
+**Last Updated**: November 14, 2026
+**Version**: 1.1.0

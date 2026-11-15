@@ -108,6 +108,8 @@ For code, documentation, or specification changes:
 - Extended metadata schemas
 - Integration specifications (IoT, blockchain, etc.)
 
+> **Founding phase**: Until a broader steering committee is in place, the founders review and merge changes directly, and normative specification changes ship as release candidates. See the [founding phase](./GOVERNANCE.md#founding-phase) and [pre-release process](./GOVERNANCE.md#pre-releases) in GOVERNANCE.md. The steps below describe the full process that will apply afterwards.
+
 **Process**:
 
 1. Open GitHub Discussion with RFC (Request for Comments)
@@ -183,6 +185,8 @@ For code, documentation, or specification changes:
 4. 1-2 reviewers approve
 5. Merge
 
+> **Founding phase**: Until a broader steering committee is in place, the founders review and merge changes directly, and normative specification changes ship as release candidates. See the [founding phase](./GOVERNANCE.md#founding-phase) and [pre-release process](./GOVERNANCE.md#pre-releases) in GOVERNANCE.md. The steps below describe the full process that will apply afterwards.
+
 **Medium Changes** (new optional fields, minor additions):
 
 1. Open GitHub Discussion
@@ -215,7 +219,7 @@ WOLS follows [Semantic Versioning](https://semver.org/):
 
 **Must maintain backward compatibility** unless justified by extraordinary circumstances:
 
-- Old labels must still decode in new versions
+- Old labels must still decode in new versions (see [Wire-Format Compatibility](./GOVERNANCE.md#wire-format-compatibility))
 - Deprecated fields must be marked and supported for at least 1 major version
 - Breaking changes require RFC and steering committee approval
 - Migration guides must be provided
