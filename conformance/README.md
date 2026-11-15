@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0 (Draft)**. See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0** (currently release candidate `1.3.0-rc.1`). See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 

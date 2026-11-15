@@ -2,8 +2,8 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Draft — public comment period (see [Governance](#governance))
-**Version**: 1.3.0
+**Status**: Release candidate — public comment period (see [Governance](#governance))
+**Version**: 1.3.0-rc.1
 **Date**: November 14, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
@@ -733,8 +733,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.3.0 (Draft; 1.2.0 remains the latest released version until this draft is ratified)
-**Stability**: Draft (feedback welcome)
+**Current Version**: 1.3.0-rc.1 (release candidate; 1.2.0 remains the latest final release until 1.3.0 is final)
+**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
 
@@ -745,9 +745,11 @@ This specification uses [Semantic Versioning](https://semver.org/):
 1. Submit issue on [GitHub](https://github.com/wemush/open-standard)
 2. Discuss in community forum
 3. Submit PR with proposed changes
-4. Review by steering committee
-5. Public comment period (14 days)
-6. Merge and release
+4. Merge and tag as a release candidate (for example, `1.3.0-rc.1`)
+5. Public comment period (7 days for minor versions, 14 days for major versions)
+6. Final release once the [conformance vectors](./conformance/README.md) pass in at least one library
+
+See [GOVERNANCE.md](./GOVERNANCE.md#pre-releases) for the full pre-release process.
 
 ### Steering Committee
 
@@ -830,7 +832,7 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
-### Version 1.3.0 (Draft — November 14, 2026)
+### Version 1.3.0-rc.1 (Release candidate — November 14, 2026)
 
 Normative changes, subject to the public comment period:
 
