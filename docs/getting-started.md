@@ -24,22 +24,22 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 2. **Generate your first label**:
 
    ```typescript
-   import { generateLabel } from '@wemush/wols';
+   import { createSpecimen, toQRCodeDataURL } from '@wemush/wols';
 
-   const label = await generateLabel({
+   const specimen = createSpecimen({
      species: "Pleurotus ostreatus",
-     strain: {
-       name: "Blue Oyster",
-     },
+     strain: "Blue Oyster",
      type: "SUBSTRATE",
      stage: "COLONIZATION",
-     created: new Date().toISOString(),
    });
+   specimen.created = new Date().toISOString();
+
+   const qrDataUrl = await toQRCodeDataURL(specimen);
    ```
 
 3. **Print the QR code**:
    - Use any label printer (Brother, Dymo, Rollo)
-   - Print `label.qrDataUrl` as image
+   - Print `qrDataUrl` as an image
    - Stick on your grow bag or container
 
 4. **Scan and track**:
@@ -47,7 +47,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
    - View specimen history
    - Log observations and yields
 
-**Next steps**: [Home Cultivator Guide](./use-cases/home-cultivator.md)
+**Next steps**: [Home Cultivator Example](../examples/home-cultivator.md)
 
 ### For Commercial Growers
 
@@ -73,7 +73,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
    - Scanning and data entry
    - Quality checks and verification
 
-**Next steps**: [Commercial Implementation Guide](./implementation.md)
+**Next steps**: [Commercial Traceability Example](../examples/commercial-traceability.md)
 
 ### For Developers
 
@@ -99,30 +99,31 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 3. **Generate a label**:
 
    ```typescript
-   import { generateLabel } from '@wemush/wols';
+   import { createSpecimen, serializeSpecimen, toCompactUrl, toQRCodeDataURL } from '@wemush/wols';
 
-   const label = await generateLabel({
+   const specimen = createSpecimen({
      species: "Pleurotus ostreatus",
      type: "SUBSTRATE",
      stage: "COLONIZATION",
-     created: "2025-12-18T00:00:00Z",
    });
+   specimen.created = "2025-12-18T00:00:00Z"; // createSpecimen() does not set `created`
 
-   console.log(label.json); // Full specimen data
-   console.log(label.qrDataUrl); // QR code image
+   console.log(serializeSpecimen(specimen));        // Embedded JSON-LD
+   console.log(toCompactUrl(specimen));             // Compact wemush:// URL
+   console.log(await toQRCodeDataURL(specimen));    // QR code image (PNG data URL)
    ```
 
 4. **Parse a label**:
 
    ```python
-   from wols import parse_label
+   from wols import parse_specimen
 
-   specimen = parse_label(qr_code_data)
+   specimen = parse_specimen(qr_code_data)  # embedded JSON-LD text
    print(f"Species: {specimen.species}")
    print(f"Stage: {specimen.stage}")
    ```
 
-**Next steps**: [Developer Guide](./implementation.md)
+**Next steps**: [Implementation Guide](./implementation-guide.md)
 
 ### For Researchers
 
@@ -148,7 +149,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
    - Enable others to replicate your work
    - Export data for analysis
 
-**Next steps**: [Research Use Cases](./use-cases/research-reproducibility.md)
+**Next steps**: [Research Use Cases](../SPECIFICATION.md#3-research-reproducibility)
 
 ## Core Concepts
 
@@ -215,11 +216,15 @@ Track a complete grow cycle:
 1. **Create culture** (agar plate):
 
    ```typescript
-   const culture = generateLabel({
+   import { createSpecimen } from '@wemush/wols';
+
+   const culture = createSpecimen({
      type: "CULTURE",
      species: "Pleurotus ostreatus",
      strain: {
        name: "Blue Oyster",
+       generation: "P",      // original/parental culture
+       clonalGeneration: 1,  // first agar plate
      },
      stage: "COLONIZATION",
    });
@@ -228,47 +233,44 @@ Track a complete grow cycle:
 2. **Transfer to spawn**:
 
    ```typescript
-   const spawn = generateLabel({
+   const spawn = createSpecimen({
      type: "SPAWN",
      species: "Pleurotus ostreatus",
      strain: {
        name: "Blue Oyster",
-       generation: "F1",
-       lineage: culture.id, // Link to parent
+       generation: "P",          // same genetics: grain expansion is not a new generation
+       lineage: culture.id,      // link to parent specimen
      },
-     stage: "COLONIZATION",
+     stage: "INOCULATION",
    });
    ```
 
 3. **Inoculate substrate**:
 
    ```typescript
-   const substrate = generateLabel({
+   const substrate = createSpecimen({
      type: "SUBSTRATE",
      species: "Pleurotus ostreatus",
      strain: {
        name: "Blue Oyster",
-       generation: "F2",
+       generation: "P",
        lineage: spawn.id,
      },
      stage: "INOCULATION",
    });
    ```
 
-4. **Move to fruiting**:
+4. **Move to fruiting** (the same block advances through stages):
 
    ```typescript
-   const fruiting = generateLabel({
-     type: "FRUITING",
-     species: "Pleurotus ostreatus",
-     strain: {
-       name: "Blue Oyster",
-       generation: "F3",
-       lineage: substrate.id,
-     },
-     stage: "PRIMORDIA",
-   });
+   const fruiting = {
+     ...substrate,
+     type: "FRUITING" as const,
+     stage: "PRIMORDIA" as const, // PRIMORDIA is a stage, never a type
+   };
    ```
+
+   > **Generation vs. lineage**: `strain.generation` is the *filial* (sexual) generation and only changes when a new strain is bred (e.g., spores from a fruit → F1). `strain.clonalGeneration` counts agar-to-agar subcultures. Expanding a culture to grain and substrate keeps the same generation; record ancestry with `strain.lineage`.
 
 5. **Harvest and record yields**
 
@@ -379,16 +381,16 @@ Share reproducible experiment data:
 ## Next Steps
 
 **Beginners**: Start with a simple label and grow from there
-**Commercial**: Review [Implementation Guide](./implementation.md)
-**Developers**: Explore [API Documentation](./api/javascript.md)
-**Researchers**: Read [Research Use Cases](./use-cases/research-reproducibility.md)
+**Commercial**: Review [Implementation Guide](./implementation-guide.md)
+**Developers**: Explore [API Documentation](https://github.com/wemush/specimen-labels-js#readme)
+**Researchers**: Read [Research Use Cases](../SPECIFICATION.md#3-research-reproducibility)
 
 ## Additional Resources
 
 - 📘 [Full Specification](../SPECIFICATION.md)
-- 🔧 [Implementation Guide](./implementation.md)
-- 🔐 [Security & Privacy](./security.md)
-- 💡 [Use Cases](./use-cases.md)
+- 🔧 [Implementation Guide](./implementation-guide.md)
+- 🔐 [Security & Privacy](../SPECIFICATION.md#privacy--security)
+- 💡 [Use Cases](../SPECIFICATION.md#use-cases)
 - ❓ [FAQ](./faq.md)
 - 💬 [Community Discussions](https://github.com/wemush/open-standard/discussions)
 

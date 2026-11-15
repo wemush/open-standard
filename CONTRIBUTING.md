@@ -280,31 +280,32 @@ We maintain official libraries in multiple languages. Each must:
 **Sample Test Structure**:
 
 ```typescript
-describe('generateLabel', () => {
-  it('should create valid minimal label', () => {
-    const label = generateLabel({
+import { createSpecimen, validateSpecimen, WOLS_VERSION } from '@wemush/wols';
+
+describe('createSpecimen', () => {
+  it('should create a valid minimal specimen', () => {
+    const specimen = createSpecimen({
       species: 'Pleurotus ostreatus',
       type: 'SUBSTRATE',
       stage: 'COLONIZATION',
-      created: '2025-12-18T00:00:00Z',
     });
 
-    expect(label).toBeDefined();
-    expect(label.version).toBe('1.0.0');
-    expect(validateLabel(label)).toBe(true);
+    expect(specimen.id).toMatch(/^wemush:/);
+    expect(specimen.version).toBe(WOLS_VERSION);
+    expect(validateSpecimen(specimen).valid).toBe(true);
   });
 
   it('should handle all specimen types', () => {
     const types = ['CULTURE', 'SPAWN', 'SUBSTRATE', 'FRUITING', 'HARVEST'];
     types.forEach(type => {
-      const label = generateLabel({ /* ... */ type });
-      expect(label.type).toBe(type);
+      const specimen = createSpecimen({ species: 'Pleurotus ostreatus', type });
+      expect(specimen.type).toBe(type);
     });
   });
 
-  it('should reject invalid data', () => {
-    expect(() => generateLabel({ /* invalid */ }))
-      .toThrow('Invalid species');
+  it('should reject an invalid specimen type', () => {
+    expect(() => createSpecimen({ species: 'Pleurotus ostreatus', type: 'NOT_A_TYPE' }))
+      .toThrow('Invalid specimen type');
   });
 });
 ```
@@ -332,7 +333,7 @@ describe('generateLabel', () => {
 - Use active voice: "The library validates" not "The data is validated"
 - Use present tense: "The function returns" not "The function will return"
 - Use examples: Show, don't just tell
-- Use consistent terminology: Refer to the [Glossary](./docs/glossary.md)
+- Use consistent terminology: Follow the terms defined in [SPECIFICATION.md](./SPECIFICATION.md)
 - Use headers: Break content into scannable sections
 - Use lists: Bulleted or numbered lists for multiple items
 - Use code blocks: Format code properly with syntax highlighting

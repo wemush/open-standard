@@ -353,8 +353,8 @@ Long-term commitment. As long as there's community interest, WOLS will be mainta
 
 - [Getting Started](./getting-started.md)
 - [Full Specification](../SPECIFICATION.md)
-- [Implementation Guide](./implementation.md)
-- [Use Cases](./use-cases.md)
+- [Implementation Guide](./implementation-guide.md)
+- [Use Cases](../SPECIFICATION.md#use-cases)
 
 ---
 
