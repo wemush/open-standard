@@ -884,6 +884,7 @@ Normative changes:
 - Expanded reference implementation install options (Python extras, container CLI usage)
 - Added non-normative [Interoperability Notes](./docs/interoperability-notes.md) documenting known divergences between implementations
 - Refreshed Next Steps
+- Updated Next Steps for the released 1.3.0: marked cross-implementation interoperability and 1.3.0 complete, and added 1.4.0
 
 ### Version 1.2.0 (January 26, 2026)
 
@@ -924,5 +925,6 @@ Normative changes:
 1. Community feedback period (December 2025) — Complete
 2. Reference implementation release (January 2026) — Complete ([npm](https://www.npmjs.com/package/@wemush/wols), [PyPI](https://pypi.org/project/wols/), [container](https://github.com/wemush/specimen-labels-py/pkgs/container/specimen-labels-py))
 3. WOLS v1.2.0 released (January 26, 2026) — Complete
-4. Cross-implementation interoperability — In progress; see [Interoperability Notes](./docs/interoperability-notes.md)
-5. Version 1.3.0 — See [ROADMAP.md](./ROADMAP.md) for scope and proposals
+4. Cross-language interoperability for embedded and encrypted labels — Complete in 1.3.0, with conformance vectors that both reference libraries pass; compact URLs still differ (see [Interoperability Notes](./docs/interoperability-notes.md))
+5. WOLS v1.3.0 released (November 15, 2026) — Complete
+6. Version 1.4.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals

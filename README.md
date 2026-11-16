@@ -482,19 +482,20 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ `PRIMORDIA` type alias resolves to `FRUITING` with stage `PRIMORDIA`
 - ✅ [Conformance test vectors](./conformance/README.md), passed by both reference libraries
 
-### Next: Version 1.4.0
+### Next: Version 1.4.0 (not yet scheduled)
 
+- 🚧 Compact URL and species code registries, with compact URL conformance vectors
+- 🚧 HTTPS resolver form that phone cameras can open
 - 🚧 IoT sensor integration spec
-- 🚧 Blockchain verification option
-- 🚧 Image metadata standard
-- 🚧 Multi-language translations
+- 🚧 Advanced analytics schema
+- 🚧 Supply chain integration
 
-### Future: Version 2.0.0 (Q3-Q4 2026)
+### Future: Version 2.0.0
 
-- 📋 Extended field data support
-- 📋 Advanced genetic encoding
-- 📋 Supply chain integration
-- 📋 Carbon tracking standard
+- 📋 Performance-optimized encoding
+- 📋 Blockchain verification
+- 📋 Standards body alignment (ANSI/ISO, GS1)
+- 📋 Advanced field data
 
 [📋 View Full Roadmap →](./ROADMAP.md)
 
