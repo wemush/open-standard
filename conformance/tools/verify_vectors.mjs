@@ -20,7 +20,7 @@ const TYPES = ['CULTURE', 'SPAWN', 'SUBSTRATE', 'FRUITING', 'HARVEST'];
 const STAGES = ['INOCULATION', 'INCUBATION', 'COLONIZATION', 'PRIMORDIA', 'FRUITING', 'SENESCENCE', 'HARVEST'];
 const ALIASES = { PINNING: 'FRUITING', FLUSH: 'FRUITING', FRUIT: 'FRUITING', FIRST_FLUSH: 'FRUITING' };
 const KNOWN = new Set(['@context', '@type', 'id', 'version', 'type', 'species', 'strain', 'stage', 'created',
-  'batch', 'organization', 'creator', 'custom', '_meta', 'signature']);
+  'batch', 'organization', 'creator', 'custom', '_meta', 'signature', 'kid']);
 const GENERATION = /^(P|P\d+|F\d+|G\d+|\d+)$/;
 
 // --- Validation -------------------------------------------------------------
@@ -158,6 +158,105 @@ async function decryptFields(label, secret) {
   return { success: true, specimen: out };
 }
 
+// --- Signatures (1.4.0-rc.1) --------------------------------------------------
+const SIGNING_CONTEXT = new TextEncoder().encode('WOLS-SIG-1\n');
+const KID = /^[A-Za-z0-9._~:-]{1,128}$/;
+const SIG = /^[A-Za-z0-9_-]{85}[AQgw]$/; // 64 bytes, unpadded, unused bits zero
+
+// RFC 8785: JSON.stringify already produces ECMAScript numbers and JCS string escapes;
+// default sort() compares UTF-16 code units, as JCS requires.
+function jcs(v) {
+  if (Array.isArray(v)) return `[${v.map(jcs).join(',')}]`;
+  if (v !== null && typeof v === 'object') {
+    return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${jcs(v[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v);
+}
+
+// Minimal scan for duplicate member names (JSON.parse silently keeps the last one).
+function hasDuplicateMembers(text) {
+  let i = 0;
+  const ws = () => { while (' \t\n\r'.includes(text[i])) i++; };
+  const str = () => { const s = i; i++; while (text[i] !== '"') i += text[i] === '\\' ? 2 : 1; i++; return JSON.parse(text.slice(s, i)); };
+  const val = () => {
+    ws();
+    if (text[i] === '{') {
+      i++; const seen = new Set(); ws();
+      if (text[i] === '}') { i++; return false; }
+      for (;;) {
+        ws(); const k = str(); if (seen.has(k)) return true; seen.add(k);
+        ws(); i++; if (val()) return true; ws();
+        if (text[i++] === '}') return false;
+      }
+    }
+    if (text[i] === '[') {
+      i++; ws();
+      if (text[i] === ']') { i++; return false; }
+      for (;;) { if (val()) return true; ws(); if (text[i++] === ']') return false; }
+    }
+    if (text[i] === '"') { str(); return false; }
+    while (i < text.length && !',]} \t\n\r'.includes(text[i])) i++;
+    return false;
+  };
+  return val();
+}
+
+async function ed25519Verify(publicKeyB64url, sigB64url, payload) {
+  const key = await subtle.importKey('raw', fromB64url(publicKeyB64url), { name: 'Ed25519' }, false, ['verify']);
+  const msg = new Uint8Array([...SIGNING_CONTEXT, ...payload]);
+  return subtle.verify({ name: 'Ed25519' }, key, fromB64url(sigB64url), msg);
+}
+
+async function ed25519Sign(seedB64url, payload) {
+  const pkcs8 = Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), fromB64url(seedB64url)]);
+  const key = await subtle.importKey('pkcs8', pkcs8, { name: 'Ed25519' }, true, ['sign']);
+  const sig = await subtle.sign({ name: 'Ed25519' }, key, new Uint8Array([...SIGNING_CONTEXT, ...payload]));
+  const jwk = await subtle.exportKey('jwk', key);
+  return { signature: Buffer.from(sig).toString('base64url'), publicKey: jwk.x };
+}
+
+const embeddedPayload = (label) => {
+  const { signature, ...rest } = label;
+  return new TextEncoder().encode(jcs(rest));
+};
+
+async function verifyLabel(form, text, trustStore) {
+  let kid, sig, payload;
+  if (form === 'embedded') {
+    const label = JSON.parse(text);
+    if (!('kid' in label)) return 'unsigned'; // no signature, or an opaque pre-1.4 one
+    if (hasDuplicateMembers(text)) return 'malformed';
+    kid = label.kid; sig = label.signature;
+    if (typeof kid !== 'string' || !KID.test(kid) || typeof sig !== 'string' || !SIG.test(sig)) return 'malformed';
+    payload = embeddedPayload(label);
+  } else {
+    const q = text.indexOf('?');
+    const params = q < 0 ? [] : text.slice(q + 1).split('&').map((p) => [p.split('=')[0], p.slice(p.indexOf('=') + 1)]);
+    const kids = params.filter(([n]) => n === 'kid'), sigs = params.filter(([n]) => n === 'sig');
+    if (kids.length === 0) return 'unsigned';
+    if (!/^[\x21-\x7e]+$/.test(text) || text.includes('#') || kids.length !== 1 || sigs.length !== 1 ||
+        params[params.length - 1][0] !== 'sig') return 'malformed';
+    [[, kid]] = kids; [[, sig]] = sigs;
+    if (!KID.test(kid) || !SIG.test(sig)) return 'malformed';
+    payload = new TextEncoder().encode(text.slice(0, text.lastIndexOf('&sig=')));
+  }
+  if (!Object.hasOwn(trustStore, kid)) return 'unknown-kid';
+  return (await ed25519Verify(trustStore[kid], sig, payload)) ? 'valid' : 'invalid';
+}
+
+async function signLabel(input) {
+  if (input.form === 'embedded') {
+    const { signature, kid, ...rest } = input.label;
+    const label = { ...rest, kid: input.kid };
+    const payload = embeddedPayload(label);
+    const { signature: s, publicKey } = await ed25519Sign(input.privateKeyBase64url, payload);
+    return { payload: new TextDecoder().decode(payload), signature: s, label: { ...label, signature: s }, publicKey };
+  }
+  const base = `${input.url}&kid=${input.kid}`;
+  const { signature: s, publicKey } = await ed25519Sign(input.privateKeyBase64url, new TextEncoder().encode(base));
+  return { payload: base, signature: s, url: `${base}&sig=${s}`, publicKey };
+}
+
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
@@ -167,6 +266,13 @@ for (const line of readFileSync(join(VECTORS, 'SHA256SUMS'), 'utf8').trim().spli
   const [hash, name] = line.split(/\s+/);
   const actual = createHash('sha256').update(readFileSync(join(VECTORS, name))).digest('hex');
   if (actual === hash) pass++; else { fail++; console.log(`FAIL SHA256SUMS ${name}`); }
+}
+
+// The test keys: every private key must produce the listed public key.
+const testKeys = JSON.parse(readFileSync(join(VECTORS, '..', 'keys', 'test-keys.json'), 'utf8'));
+for (const k of testKeys.keys) {
+  const { publicKey } = await ed25519Sign(k.privateKeyBase64url, new Uint8Array());
+  if (publicKey === k.publicKeyBase64url) pass++; else { fail++; console.log(`FAIL test-keys.json ${k.kid}`); }
 }
 
 for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort()) {
@@ -196,6 +302,16 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       const r = await decryptFields(c.input.specimen, c.input.secret);
       ok = x.success ? r.success && eq(r.specimen, x.specimen) : !r.success && r.reason === x.reason;
       detail = JSON.stringify({ success: r.success, reason: r.reason });
+    } else if (c.operation === 'verify') {
+      const outcome = await verifyLabel(c.input.form, c.input.label, c.input.trustStore);
+      ok = outcome === x.outcome;
+      detail = JSON.stringify({ outcome });
+    } else if (c.operation === 'sign') {
+      const r = await signLabel(c.input);
+      const key = testKeys.keys.find((k) => k.kid === c.input.kid);
+      ok = r.payload === x.payload && r.signature === x.signature && key?.publicKeyBase64url === r.publicKey &&
+        (c.input.form === 'embedded' ? eq(r.label, x.label) : r.url === x.url);
+      detail = JSON.stringify({ payload: r.payload, signature: r.signature });
     } else {
       ok = false; detail = `unknown operation ${c.operation}`;
     }

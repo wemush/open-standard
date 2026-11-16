@@ -1,0 +1,27 @@
+{
+  "description": "TEST KEYS ONLY. These Ed25519 keys are the published RFC 8032 test vectors, so their private keys are public. Never trust them outside the conformance suite.",
+  "algorithm": "Ed25519",
+  "keys": [
+    {
+      "kid": "example.org:test-1",
+      "source": "RFC 8032 §7.1 TEST 1",
+      "trusted": true,
+      "privateKeyBase64url": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+      "publicKeyBase64url": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+    },
+    {
+      "kid": "example.org:test-2",
+      "source": "RFC 8032 §7.1 TEST 3",
+      "trusted": true,
+      "privateKeyBase64url": "xaqN9D-fg3vtt0QvMdy3sWbThTUHbwlLhc46LgtEWPc",
+      "publicKeyBase64url": "_FHNjmIYoaONpH7QAjDwWAgW7RO6MwOsXeuRFUiQgCU"
+    },
+    {
+      "kid": "attacker.example:k1",
+      "source": "RFC 8032 §7.1 TEST 2",
+      "trusted": false,
+      "privateKeyBase64url": "TM0Imyj_ltqdtsNG7BFOD1uKMZ81q6Yk2oz27U-4pvs",
+      "publicKeyBase64url": "PUAXw-hDiVqStwqnTRt-vJyYLM8uxJaMwM1V8Sr0Zgw"
+    }
+  ]
+}

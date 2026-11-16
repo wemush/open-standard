@@ -63,7 +63,7 @@ The WeMush Platform carries the IV in the URL as `?e={payload}&iv={iv}` instead 
 
 **Effect**: Encrypted labels made by the 1.2.0 libraries cannot be decrypted across implementations, even with the same shared secret.
 
-**Today**: Generate encrypted labels with a 1.3.0 library. The 1.3.0 libraries never generate the legacy formats; decoding them is available only behind an explicit option. Don't rely on `sig` being present.
+**Today**: Generate encrypted labels with a 1.3.0 library. The 1.3.0 libraries never generate the legacy formats; decoding them is available only behind an explicit option. Don't rely on `sig`: the 1.3.0 libraries preserve it but never verify it. [1.4.0-rc.1](../SPECIFICATION.md#cryptographic-signatures) defines signatures (Ed25519, with a `kid` the verifier resolves itself); a `sig` without `kid` stays opaque and unverified.
 
 ## 3. Specimen IDs
 

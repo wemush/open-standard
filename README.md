@@ -482,8 +482,9 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ `PRIMORDIA` type alias resolves to `FRUITING` with stage `PRIMORDIA`
 - ✅ [Conformance test vectors](./conformance/README.md), passed by both reference libraries
 
-### Next: Version 1.4.0 (not yet scheduled)
+### Next: Version 1.4.0 (in progress)
 
+- 🚧 Label signatures (Ed25519, key identified by `kid` and resolved by the verifier), in [1.4.0-rc.1](./SPECIFICATION.md#cryptographic-signatures)
 - 🚧 Compact URL and species code registries, with compact URL conformance vectors
 - 🚧 HTTPS resolver form that phone cameras can open
 - 🚧 IoT sensor integration spec

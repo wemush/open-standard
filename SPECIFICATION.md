@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Active
-**Version**: 1.3.0
-**Date**: November 15, 2026
+**Status**: Release candidate — public comment period (see [Governance](#governance))
+**Version**: 1.4.0-rc.1
+**Date**: November 16, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -92,8 +92,9 @@ interface SpecimenLabel {
     [key: string]: unknown;      // Extensible for implementation use
   };
 
-  // Verification (Optional)
-  signature?: string;            // Cryptographic signature for authenticity
+  // Verification (Optional, v1.4.0; see Cryptographic Signatures)
+  kid?: string;                  // Identifier of the signing key, resolved by the verifier, never from the label
+  signature?: string;            // Ed25519 signature, base64url without padding
 }
 ```
 
@@ -272,7 +273,7 @@ Embedded format uses JSON-LD for semantic interoperability:
 **Encryption**: AES-256-GCM with a shared key, either supplied directly or derived from a passphrase
 
 ```bash
-wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iterations}][&sig={signature}]
+wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iterations}][&kid={kid}&sig={signature}]
 ```
 
 **Wire format (v1.3.0)**:
@@ -285,7 +286,8 @@ wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iter
 | `kdf` | Yes | `pbkdf2` (key derived from a passphrase) or `raw` (32-byte key shared out of band) |
 | `salt` | When `kdf=pbkdf2` | At least 16 random bytes generated per label, base64url without padding |
 | `i` | When `kdf=pbkdf2` | PBKDF2 iteration count, as plain decimal digits (`[0-9]+`). No sign, exponent, hex, or whitespace. |
-| `sig` | No | Detached signature over the URL with the `sig` parameter removed (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
+| `kid` | With `sig` (v1.4.0) | Identifier of the signing key. The verifier looks it up in its own trust store (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
+| `sig` | No | Ed25519 signature over the URL bytes before `&sig=`, base64url without padding. It MUST be the last parameter (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
 
 Requirements:
 
@@ -293,8 +295,9 @@ Requirements:
 - **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format), without a byte order mark. Decoders SHOULD reject a plaintext that starts with a byte order mark. The decrypted specimen's `id` MUST equal `wemush:` followed by the percent-decoded `{id}`; decoders MUST reject a mismatch.
 - **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST NOT use a fixed or library-wide salt. This rule compares the decoded salt bytes, not their text encoding.
   - **Passphrase encoding**: Implementations MUST normalize the passphrase to Unicode Normalization Form C (NFC) and then encode it as UTF-8 before derivation, so the same passphrase typed on different platforms produces the same key.
-  - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing. Implementations MAY offer a lower setting, down to 100,000, for faster scanning.
-  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000, including values too large for the implementation's integer types. They MUST check the limit before deriving a key, so a crafted label can't stall a scanner. Generators MUST NOT exceed 10,000,000.
+  - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing (see [What Encryption Protects](#what-encryption-protects)). Implementations MAY offer a lower setting, down to 100,000, for faster scanning. At 100,000 iterations an attacker tests six times as many guesses per second as at 600,000. Implementations that offer the lower setting SHOULD use it only with high-entropy passphrases, and SHOULD say so where the setting is chosen. For anything else, use the default or `kdf=raw`.
+  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000, including values too large for the implementation's integer types. They MUST check the limit before deriving a key. The limit bounds the work a crafted label can cause; it doesn't make that work small. 10,000,000 iterations is about 17 times the 600,000 default, which can take seconds on a desktop computer and much longer on a low-end phone. Generators MUST NOT exceed 10,000,000.
+  - **Responsiveness**: Interactive decoders SHOULD derive keys off the user-interface thread (for example in a Web Worker or a background thread), SHOULD let the user cancel a derivation, and MAY ask for confirmation before deriving a key whose iteration count is above a local threshold. A local threshold MUST NOT lower the limits above: a label within them MUST still decode once the user confirms.
   - **Validation order**: Decoders SHOULD validate every parameter and encoding before deriving the key.
 - **`kdf=raw`**: The key is exactly 32 bytes. `salt` and `i` MUST be omitted.
 - **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Generators MUST emit the canonical form: no padding, and any unused bits in the final character set to zero. Decoders SHOULD also accept padded input.
@@ -303,6 +306,7 @@ Requirements:
   - **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` MUST NOT be encrypted. Decoders MUST reject a label in which any of them is an encrypted object, and MUST NOT substitute a decrypted value for them.
   - **Total cost**: Before deriving any key, decoders MUST add up the iterations of each distinct `salt` and `iterations` pair in the label, and reject the label if the total exceeds 10,000,000.
   - Each encrypted field MUST use its own IV.
+- **Signature parameters (v1.4.0)**: `kid` and `sig` don't affect decryption. Decoders MUST ignore them when decrypting, and MUST decrypt a label whether or not it is signed. A `sig` without `kid` predates v1.4.0 and is opaque: decoders MUST preserve it and MUST NOT treat it as verified. Generators MUST NOT emit `sig` without `kid`.
 - **Legacy labels**: Encrypted URLs without a `kdf` parameter predate v1.3.0 and are implementation-specific. Decoders MAY support them but MUST NOT generate them.
 
 ---
@@ -529,32 +533,71 @@ PATCH /v1/specimens/{id}
 
 - **Confidentiality**: Encryption, whether a whole label in the URL format or individual fields, keeps the encrypted values secret from anyone without the key.
 - **Placement**: Field-level AAD binds each encrypted value to its label `id` and field name. A value moved to another field or another label fails to decrypt.
-- **Integrity**: Neither form makes the cleartext parts of a label tamper-evident. Someone who can edit a label can change its cleartext fields, or remove encrypted fields entirely. Use a signature (`sig` or `signature`) when integrity matters.
-- **Visible metadata**: The ID and the presence of encrypted fields are always visible.
+- **Not rollback**: AAD doesn't bind a value to a point in time. An older ciphertext of the same field of the same label, made with the same key, still decrypts, so someone who kept an earlier version of a label can put an old value back. A [signature](#cryptographic-signatures) detects one value swapped into a newer label. It doesn't stop someone from presenting a whole earlier signed label again.
+- **Integrity**: Neither form makes the cleartext parts of a label tamper-evident. Someone who can edit a label can change its cleartext fields, or remove encrypted fields entirely. Use a [signature](#cryptographic-signatures) when integrity matters.
+- **Visible metadata**: The ID and the presence of encrypted fields are always visible. AES-GCM doesn't hide length: each ciphertext is exactly 16 bytes longer than its plaintext, so anyone holding the label learns the length of every encrypted value (for example, a short strain name from a long one). WOLS defines no padding.
+- **Offline guessing**: Anyone who holds a label, or a photo of it, holds the ciphertext and can try passphrases offline, as fast as their hardware allows, with no rate limit and no way for you to notice. PBKDF2 iterations only slow each guess by a constant factor. A passphrase that a person could guess, or that appears in a password list, won't stay secret. Use a high-entropy passphrase (for example, five or more words chosen at random from a large word list, or a random string from a password manager), or use `kdf=raw` with a random 32-byte key.
 
 ### Cryptographic Signatures
 
-For authenticity verification:
+*New in v1.4.0. This section is normative. It replaces the v1.3.0 sketch, which verified a label against a public key carried in the label itself and signed non-canonical JSON. That sketch was never safe to implement.*
 
-```typescript
-interface SignedSpecimen extends SpecimenLabel {
-  signature: string;            // ECDSA signature
-  publicKey: string;            // Organization's public key
-  algorithm: "ECDSA-SHA256";
-}
+A signature lets a scanner check that a label was issued by a key the scanner already trusts and hasn't been changed since. It doesn't hide anything, and it doesn't say who the issuer is: the verifier's trust store does.
 
-// Verification
-async function verifySpecimen(specimen: SignedSpecimen): Promise<boolean> {
-  const payload = JSON.stringify(omit(specimen, ['signature']));
-  const verified = await crypto.subtle.verify(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    specimen.publicKey,
-    specimen.signature,
-    payload
-  );
-  return verified;
-}
-```
+#### Algorithm and encodings
+
+- **Algorithm**: Ed25519 (RFC 8032, "pure" Ed25519, no context or pre-hash). It is the only algorithm in this version. Signers and verifiers MUST support it. The algorithm is a property of the key in the verifier's trust store; labels don't name it.
+- **Signing input**: The bytes signed and verified are the ASCII string `WOLS-SIG-1` followed by a line feed (U+000A), then the payload bytes defined below for each form. The prefix keeps a signature made for another protocol from verifying as a WOLS signature, and the reverse. Signing keys SHOULD still be used only for WOLS labels.
+- **`sig` / `signature` encoding**: The 64-byte Ed25519 signature, as base64url (RFC 4648 §5) without padding: exactly 86 characters from `A`–`Z`, `a`–`z`, `0`–`9`, `-`, `_`, with the unused low 4 bits of the last character set to zero. Unlike other WOLS binary values, padded or non-canonical forms MUST NOT be accepted.
+- **`kid` syntax**: 1 to 128 characters from `A`–`Z`, `a`–`z`, `0`–`9`, `-`, `.`, `_`, `~`, `:`. It appears literally in both forms, with no percent-encoding or escapes. Issuers SHOULD use `{domain}:{name}`, where `{domain}` is a DNS name they control, for example `example.org:2026-a`, so identifiers from different issuers don't collide.
+
+#### Embedded labels
+
+An embedded label is signed with two top-level members: `kid`, a string, and `signature`, a string holding the encoded signature.
+
+- **Payload**: The UTF-8 encoding of the RFC 8785 (JSON Canonicalization Scheme, JCS) serialization of the label object with the top-level `signature` member removed. Every other member is covered, including `kid`, `custom`, `_meta`, unknown members, and field-level encryption objects. A member named `signature` that isn't at the top level, for example inside `custom`, is covered like any other.
+- **Canonicalization**: JCS sorts member names by their UTF-16 code units, writes numbers in the ECMAScript form, and escapes strings minimally. It doesn't normalize Unicode: an `id` in NFC and the same `id` in NFD are different labels. Verifiers MUST compute the payload from the parsed label, not from the scanned text, so whitespace and member order in the label text don't matter.
+- **I-JSON**: Signed labels MUST be I-JSON (RFC 7493): no duplicate member names, numbers that an IEEE 754 double represents exactly, and well-formed Unicode. Verifiers SHOULD report `malformed` for a label with duplicate member names. A verifier whose JSON parser can't detect them MUST canonicalize the object it actually uses.
+- **Signing**: Remove any existing `kid` and `signature`, set `kid`, compute the payload, sign it, and set `signature`. Signing MUST be the last change to a label, after field-level encryption and after adding `_meta`. Any later change, including adding `_meta` on import, invalidates the signature.
+- **Encrypted plaintexts**: The plaintext of an encrypted URL is an embedded label and MAY carry its own `kid` and `signature`. It is verified as an embedded label after decryption.
+
+#### Encrypted URLs
+
+An encrypted URL is signed with two parameters: `kid`, then `sig`.
+
+- **Payload**: The URL exactly as generated, from its first character up to, but not including, the `&` that starts the final `&sig=`. It includes the scheme, the percent-encoded ID segment exactly as encoded, every parameter in its original order, and `&kid=…`. Verifiers MUST NOT decode, re-encode, reorder, or otherwise normalize the URL. A URL whose ID segment was re-encoded (for example, `%2F` rewritten as `%2f`) still decrypts to the same specimen but doesn't verify.
+- **Structure**: `kid` and `sig` MUST each appear exactly once, and `sig` MUST be the last parameter. Signed URLs MUST NOT contain a fragment, and MUST consist only of printable ASCII characters (U+0021 to U+007E). Before parsing or verifying, a decoder MAY remove leading and trailing ASCII whitespace from the scanned text, which a generator never emits.
+- **Signing**: Remove any existing `kid` and `sig` from the unsigned URL, append `&kid={kid}`, sign the result, and append `&sig={signature}`.
+- **Scheme**: The scheme is signed. Generators MUST sign the `wemush://` form. A protocol handler that receives a rewritten URL (for example, `web+wemush://`) MUST verify the URL as it was printed, or report the label as unverified.
+- **Compact URLs**: Signing compact URLs is not defined in this version. It will be defined with the compact URL parameter registry.
+
+#### Key identification and trust
+
+- **Never trust a key in the label**: Verifiers MUST obtain the public key for a `kid` from a trust store that the verifier's operator configured. They MUST NOT use any key, certificate, URL, or other key material carried in the label, and MUST NOT fetch a key from a location named or derived from the label. A label that carries a public key gains nothing: that member is just more signed data.
+- **Trust store**: A trust store maps each `kid` to one Ed25519 public key (32 bytes). Verifiers MUST support a local trust store. Verifiers MUST NOT try other keys when the `kid` isn't found or when verification fails.
+- **Published key sets (optional)**: An issuer MAY publish its public keys at `https://{domain}/.well-known/wols-keys.json`, as `{ "keys": [ { "kid": "{domain}:{name}", "alg": "Ed25519", "publicKey": "{base64url, 32 bytes}" } ] }`. A verifier MAY load such a set into its trust store, but only for domains its operator chose to trust in advance, never because a label's `kid` names that domain. It MUST ignore entries whose `kid` doesn't start with `{domain}:` for the domain it fetched, and entries whose `alg` isn't `Ed25519`.
+- **Identity**: A `valid` result means "signed by the key the trust store holds for this `kid`." Verifiers SHOULD show the signer as the trust store names it, not as the label's `organization`, `creator`, or other fields claim.
+- **Rotation and revocation**: To retire a key, an issuer stops signing with it and removes it from its published set. A verifier treats a `kid` it no longer trusts as `unknown-kid`. Labels have no trustworthy time of signing, so a revoked key revokes every label it signed.
+
+#### Verification outcomes
+
+Verifiers MUST report exactly one of these outcomes. They MUST determine it in this order and stop at the first that applies:
+
+| Order | Outcome | When | Decoders |
+| ----- | ------- | ---- | -------- |
+| 1 | `unsigned` | No `kid`. This includes a label with no signature at all, and a pre-1.4 `signature` or `sig` without `kid`. | MUST decode the label as usual. MUST NOT present it as verified. MUST preserve a pre-1.4 `signature` or `sig` unchanged, and MUST NOT try to verify it. |
+| 2 | `malformed` | `kid` is present, but the label breaks a rule above: `signature`/`sig` missing or not exactly 86 canonical base64url characters, `kid` not a string or not matching the `kid` syntax, a duplicated `kid` or `sig`, `sig` not last, a URL with a `#` or a character outside U+0021 to U+007E, or (SHOULD) an embedded label with duplicate member names. | MUST NOT present the label as verified. SHOULD show that its signature is broken. MAY still show its contents as unverified. |
+| 3 | `unknown-kid` | Well-formed, but the trust store has no key for `kid`. | MUST NOT present the label as verified. SHOULD show that the signer isn't trusted. MAY still show its contents as unverified. |
+| 4 | `invalid` | The trust store has a key for `kid`, and Ed25519 verification of the signing input fails, including for a signature with a non-canonical scalar (RFC 8032 §5.1.7). | MUST NOT present the label as verified. SHOULD warn that the label was changed after signing or wasn't signed by that key. |
+| 5 | `valid` | Ed25519 verification succeeds. | MAY present the label as verified by the signer the trust store names. |
+
+Removing `kid` and `signature` from a signed label leaves an `unsigned` label, which decodes normally. Signatures only help a verifier that knows to expect them, so applications that need authenticity MUST treat every outcome except `valid` as failure. Verification doesn't need a decryption key and SHOULD be done before decryption. A signed URL also has to decrypt and pass the ID check; a `valid` signature doesn't excuse a decryption failure.
+
+#### Compatibility
+
+- Signed labels decode with 1.3.0 decoders. `kid` in a URL is an extra parameter they ignore, and `kid` in an embedded label is an unknown top-level member, which they accept with a warning in their default (non-strict) validation mode.
+- 1.3.0 allowed an opaque `signature` or `sig` with no defined meaning. Those labels still decode, and their signatures are reported as `unsigned` (outcome 1), not `malformed`.
+- Producers MUST NOT emit a `kid` unless the label is signed as defined here, and MUST NOT emit a `signature` or `sig` without `kid`.
 
 ---
 
@@ -617,9 +660,9 @@ docker run --rm ghcr.io/wemush/specimen-labels-py create \
   --species "Pleurotus ostreatus" --type SUBSTRATE --json
 ```
 
-**Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format) that implementations SHOULD pass.
+**Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format, signatures) that implementations SHOULD pass.
 
-> **Interoperability note (non-normative):** The 1.3.0 reference libraries pass every conformance vector, so embedded and encrypted labels interoperate across languages. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
+> **Interoperability note (non-normative):** The 1.3.0 reference libraries pass every 1.3.0 conformance vector, so embedded and encrypted labels interoperate across languages. They don't sign or verify signatures yet; the `signatures` vectors are new in 1.4.0-rc.1. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
 
@@ -749,8 +792,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.3.0
-**Stability**: Active (feedback welcome)
+**Current Version**: 1.4.0-rc.1 (release candidate; 1.3.0 remains the latest final release until 1.4.0 is final)
+**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
 
@@ -834,6 +877,11 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 3. QR Code Specification (ISO/IEC 18004)
 4. JSON Schema Specification
 5. OAuth 2.0 Authorization Framework
+6. RFC 3986 - Uniform Resource Identifier (URI): Generic Syntax
+7. RFC 4648 - The Base16, Base32, and Base64 Data Encodings
+8. RFC 7493 - The I-JSON Message Format
+9. RFC 8032 - Edwards-Curve Digital Signature Algorithm (EdDSA)
+10. RFC 8785 - JSON Canonicalization Scheme (JCS)
 
 ---
 
@@ -847,6 +895,26 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.4.0-rc.1 (Release candidate — November 16, 2026)
+
+Normative changes:
+
+- **Cryptographic signatures**: Replaces the v1.3.0 sketch, which trusted a public key carried in the label and signed non-canonical JSON. Signatures now use Ed25519 only, encoded as unpadded base64url. Embedded labels sign the RFC 8785 (JCS) form of the label without `signature`; encrypted URLs sign the exact URL bytes before the final `&sig=`. Both carry a `kid` that verifiers resolve only through their own trust store, never from the label. Verifiers report one of five outcomes: `valid`, `invalid`, `unknown-kid`, `malformed`, or `unsigned`. A pre-1.4 `signature` or `sig` without `kid` still decodes, is preserved, and is reported as `unsigned`.
+- **Encrypted URL `kid` parameter**: Signed encrypted URLs carry `&kid=…&sig=…`, with `sig` last. Both are ignored for decryption.
+- **Key derivation responsiveness**: Interactive decoders SHOULD derive keys off the user-interface thread and let the user cancel.
+- **100,000-iteration setting**: Implementations that offer it SHOULD use it only with high-entropy passphrases.
+
+Clarifications (no change to 1.3.0 decoding):
+
+- **What Encryption Protects**: Adds that AES-GCM reveals each value's plaintext length, that field-level AAD doesn't prevent rollback to an older ciphertext of the same field, and that anyone holding a label can guess passphrases offline.
+- **Decoder limits**: States what the 10,000,000-iteration limit bounds, instead of saying a crafted label can't stall a scanner.
+- **Wire-format compatibility** ([GOVERNANCE.md](./GOVERNANCE.md#wire-format-compatibility)): The rule applies from 1.3.0 onward. The 1.2.0 encrypted format was never fully specified.
+
+Conformance:
+
+- Adds `signatures.json` (`sign` and `verify` operations) and the Ed25519 test keys in `conformance/keys/test-keys.json`.
+- The 1.3.0 vector files are unchanged.
 
 ### Version 1.3.0 (November 15, 2026)
 
@@ -927,4 +995,4 @@ Normative changes:
 3. WOLS v1.2.0 released (January 26, 2026) — Complete
 4. Cross-language interoperability for embedded and encrypted labels — Complete in 1.3.0, with conformance vectors that both reference libraries pass; compact URLs still differ (see [Interoperability Notes](./docs/interoperability-notes.md))
 5. WOLS v1.3.0 released (November 15, 2026) — Complete
-6. Version 1.4.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals
+6. Version 1.4.0 — In progress: 1.4.0-rc.1 (November 16, 2026) specifies signatures; see [ROADMAP.md](./ROADMAP.md) for the rest of the scope

@@ -2,8 +2,8 @@
 
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
-**Current Version**: 1.3.0
-**Last Updated**: November 15, 2026
+**Current Version**: 1.3.0 (1.4.0-rc.1 in comment period)
+**Last Updated**: November 16, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -40,7 +40,8 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 └─ Transfer depth (strain.transferDepth)
 └─ Language-neutral conformance vectors
 
-Next: v1.4.0 📋 IoT, Analytics & Interoperability
+Next: v1.4.0 🚧 IoT, Analytics & Interoperability
+└─ Label signatures (Ed25519) — in 1.4.0-rc.1
 └─ Compact URL and species code registries
 └─ HTTPS resolver form
 └─ IoT sensor specs
@@ -213,7 +214,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 
 ## Next: v1.4.0
 
-### Status: 📋 PLANNED
+### Status: 🚧 IN PROGRESS (1.4.0-rc.1 in comment period)
 
 ### Theme: **IoT & Analytics**
 
@@ -237,6 +238,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - Wholesale/retail integration specs
 
 4. **Enhanced Security Features**
+   - ✅ *In 1.4.0-rc.1 (comment period)* — **Label signatures**: Ed25519 signatures over the JCS form of embedded labels and the exact bytes of encrypted URLs, a `kid` resolved only through the verifier's trust store, and five verification outcomes. Replaces the unsafe v1.3.0 sketch. Signing compact URLs waits for the compact URL parameter registry.
    - Blockchain-ready verification hooks
    - Multi-signature support for supply chains
 
@@ -261,7 +263,10 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] Supply chain guide
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
+- [x] Signature specification and `signatures` conformance vectors (1.4.0-rc.1) ✅ DONE
+- [ ] `sign` / `verify` in `@wemush/wols` and `wols`, passing the `signatures` vectors
 - [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
+- [ ] Species code registry and HTTPS resolver form (see Interoperability & Conformance above)
 - [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
 
 ### v1.4.0 Success Metrics
@@ -273,7 +278,10 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
 ### v1.4.0 Timeline
 
-Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+
+- **November 2026**: 1.4.0-rc.1 (signatures, plus security clarifications) 🚧
+- Compact URL vectors, the species code registry, and the HTTPS resolver form remain planned for 1.4.0 and will ship in later release candidates.
 
 ## Long-Term: v2.0.0
 
@@ -516,7 +524,7 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: November 15, 2026
+**Last Updated**: November 16, 2026
 **Next Review**: February 2027
 **Version**: 1.3.0 (Roadmap document version)
 

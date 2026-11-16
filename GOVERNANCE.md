@@ -333,6 +333,7 @@ Printed labels can't be upgraded, so they outlive any single version of the spec
 - A release **MAY** stop generators from producing a format. It must keep decoding rules for that format, marked as legacy.
 - A major version may only remove decoding rules for a format if a migration path for existing labels is published with it.
 - Release candidates are exempt. Anything introduced only in a release candidate may change or be removed before the final release.
+- **Scope**: This rule applies to labels allowed by 1.3.0 and later final releases. The encrypted format before 1.3.0 was never fully specified: 1.2.0 named the `e` and `sig` parameters but not the key derivation, IV transport, or encoding, so each library made its own choices, and the two 1.2.0 libraries can't read each other's labels. That is why [SPECIFICATION.md](./SPECIFICATION.md#3-encrypted-format-researchcommercial) makes decoding encrypted labels without `kdf` a MAY, and why each library decodes only the legacy format it generated.
 
 ## Conflict Resolution
 
