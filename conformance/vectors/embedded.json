@@ -120,6 +120,24 @@
       }
     },
     {
+      "id": "signed-label-valid",
+      "operation": "validate",
+      "requirement": "MUST",
+      "description": "A label carrying a 1.4.0 `signature` validates like any other label: validation never verifies it (added in 1.4.0-rc.1)",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "signature": "mushoh-2026.z7ngc1DdEc9czsKODAW-8qEy6-jmyVvw2K90R0NchAQrHSqPYgY8dcvV5F7FlGRZjYR7w6zZ7R22hBl3D4srAQ"
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
       "id": "unknown-top-level-field",
       "operation": "validate",
       "requirement": "SHOULD",

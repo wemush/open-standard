@@ -1,0 +1,953 @@
+{
+  "wolsVersion": "1.4.0",
+  "description": "Ed25519 signatures over embedded labels and encrypted URLs",
+  "specSection": "Privacy & Security > Cryptographic Signatures",
+  "signingDomain": "WOLS-SIG-v1",
+  "testKeys": {
+    "mushoh-2026": {
+      "seedBase64url": "nmZ96bzKA4895n6UU0TsUATfSUVyfH30brZ5FSlpRvM",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to",
+      "trusted": true
+    },
+    "acme-lab-1": {
+      "seedBase64url": "I2201tuO06DmTUNv8hg37THu1TIkAuCpjLHyhRtn2Bk",
+      "publicKeyBase64url": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA",
+      "trusted": true
+    },
+    "attacker-1": {
+      "seedBase64url": "qc1vDaTu20DOXJ4Y8bManNasd0PKY2IHy_bWnRQ9qpg",
+      "publicKeyBase64url": "HBM5fYMP0BenkRfYgtn3h6wj-deDwAk6Eltkb0PWfr4",
+      "trusted": false
+    }
+  },
+  "trustStore": {
+    "mushoh-2026": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+    },
+    "mushoh-alias": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+    },
+    "acme-lab-1": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+    }
+  },
+  "cases": [
+    {
+      "id": "sign-embedded",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Sign an embedded label: JCS of the label without `signature`, after the domain prefix",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}",
+        "signature": "mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ"
+      }
+    },
+    {
+      "id": "sign-embedded-replaces-signature",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signing ignores an existing `signature` member, so re-signing gives the same token",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"old-value\"}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}",
+        "signature": "mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ"
+      }
+    },
+    {
+      "id": "sign-encrypted-url",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Sign an encrypted URL: its exact bytes, then `&sig=` is appended",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nmushoh-2026\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "signature": "mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      }
+    },
+    {
+      "id": "sign-encrypted-url-percent-encoded-id",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Percent-encoding in the path is signed exactly as written",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nmushoh-2026\nwemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "signature": "mushoh-2026.unjI7Y4kDVk_pW4Eme5lhJHVmn4ou8s7g1V-_a6qJM5vdLiCbQN1sVFvUOm838943YN-XwdB2wzzx8DiXunPBQ",
+        "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.unjI7Y4kDVk_pW4Eme5lhJHVmn4ou8s7g1V-_a6qJM5vdLiCbQN1sVFvUOm838943YN-XwdB2wzzx8DiXunPBQ"
+      }
+    },
+    {
+      "id": "sign-jcs-key-order",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "JCS sorts member names by UTF-16 code units, not code points: U+1F344 (surrogates D83C DF44) sorts before U+FB01",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"b\":1,\"a\":2,\"A\":3,\"_\":4,\"10\":5,\"9\":6,\"é\":7,\"ﬁ\":8,\"🍄\":9,\"\":10}}}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"\":10,\"10\":5,\"9\":6,\"A\":3,\"_\":4,\"a\":2,\"b\":1,\"é\":7,\"🍄\":9,\"ﬁ\":8}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}",
+        "signature": "mushoh-2026.Mf-ReLny_gVSpngNminml7XEkMgLHDGHqGSOs9RDvaPNp-QWdsA-jkrhuW88U2EdSXlJXCRw023uZFELEKsUBg"
+      }
+    },
+    {
+      "id": "sign-jcs-strings",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "JCS string escaping: only `\"`, `\\\\`, and control characters are escaped (short forms where they exist, else lowercase \\u00xx); `/`, U+2028, DEL, and non-ASCII are literal UTF-8",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"s\":\"Pilz-ü 🍄 \\u0001\\t\\n\\r\\b\\f \\\" \\\\ /   \"}}}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"s\":\"Pilz-ü 🍄 \\u0001\\t\\n\\r\\b\\f \\\" \\\\ /   \"}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}",
+        "signature": "mushoh-2026.BRLNYuvjQOjkllNzeU4bPAUI0chdWpFUnJCeWDT5qSY91lX_dQM5oqoWR_2roF0IH6zi2_zOOwuCd_I2L1XhDQ"
+      }
+    },
+    {
+      "id": "sign-jcs-numbers",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "JCS numbers use the ECMAScript Number-to-String rules on IEEE 754 doubles: 1.0 is 1, -0 is 0, 1e21 is 1e+21, integers above 2^53 round to the nearest double",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"n\":[1.0,100,-0,1E21,1e20,1e-7,0.0000010,1.5,5e-324,1.7976931348623157e308,9007199254740993,0.1,333333333.33333329,-1.25e-10,4.50]}}}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"n\":[1,100,0,1e+21,100000000000000000000,1e-7,0.000001,1.5,5e-324,1.7976931348623157e+308,9007199254740992,0.1,333333333.3333333,-1.25e-10,4.5]}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}",
+        "signature": "mushoh-2026.Br4vzGd2XFAd78NAm7MpqsUo50t8XXZjK0ykGLpExgHNTJrsvMM7qHl7RoPW7aXv5IYq1-AoKyT1w4CtOQWaBg"
+      }
+    },
+    {
+      "id": "verify-embedded-valid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A label signed by a trusted kid verifies",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-embedded-reordered",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Member order and whitespace don't matter: the verifier canonicalizes the parsed label",
+      "input": {
+        "form": "embedded",
+        "label": "{\n  \"signature\": \"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\",\n  \"organization\": \"org_mushoh\",\n  \"batch\": \"batch_2025_12_001\",\n  \"created\": \"2025-12-16T10:30:00Z\",\n  \"stage\": \"COLONIZATION\",\n  \"strain\": {\n    \"name\": \"Blue Oyster PoHu\",\n    \"generation\": \"F2\",\n    \"clonalGeneration\": 3\n  },\n  \"species\": \"Pleurotus ostreatus\",\n  \"type\": \"SUBSTRATE\",\n  \"version\": \"1.4.0\",\n  \"id\": \"wemush:clx1a2b3c4\",\n  \"@type\": \"Specimen\",\n  \"@context\": \"https://wemush.com/wols/v1\"\n}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-embedded-escaped-strings",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "String escapes don't matter: \\u0050leurotus and \\/ parse to the same values",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https:\\/\\/wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"\\u0050leurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-jcs-key-order",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Verifies the key-order label from members in a different order",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"\\ud83c\\udf44\":9,\"\":10,\"\\ufb01\":8,\"9\":6,\"10\":5,\"_\":4,\"A\":3,\"a\":2,\"b\":1,\"\\u00e9\":7}},\"signature\":\"mushoh-2026.Mf-ReLny_gVSpngNminml7XEkMgLHDGHqGSOs9RDvaPNp-QWdsA-jkrhuW88U2EdSXlJXCRw023uZFELEKsUBg\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"\":10,\"10\":5,\"9\":6,\"A\":3,\"_\":4,\"a\":2,\"b\":1,\"é\":7,\"🍄\":9,\"ﬁ\":8}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-jcs-strings",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Verifies the string label written with different escapes",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"s\":\"Pilz\\u002D\\u00FC\\u0020\\uD83C\\uDF44\\u0020\\u0001\\u0009\\u000A\\u000D\\u0008\\u000C\\u0020\\u0022\\u0020\\u005C\\u0020\\/\\u0020\\u2028\\u007F\\u00A0\"}},\"signature\":\"mushoh-2026.BRLNYuvjQOjkllNzeU4bPAUI0chdWpFUnJCeWDT5qSY91lX_dQM5oqoWR_2roF0IH6zi2_zOOwuCd_I2L1XhDQ\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"s\":\"Pilz-ü 🍄 \\u0001\\t\\n\\r\\b\\f \\\" \\\\ /   \"}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-jcs-numbers",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Verifies the number label written with different number spellings",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"jcs\":{\"n\":[1,1.00e2,-0.0,1e+21,100000000000000000000,0.0000001,1e-6,15e-1,4.9406564584124654e-324,1.7976931348623157E+308,9007199254740992,1e-1,333333333.3333333,-0.000000000125,4.5]}},\"signature\":\"mushoh-2026.Br4vzGd2XFAd78NAm7MpqsUo50t8XXZjK0ykGLpExgHNTJrsvMM7qHl7RoPW7aXv5IYq1-AoKyT1w4CtOQWaBg\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"custom\":{\"jcs\":{\"n\":[1,100,0,1e+21,100000000000000000000,1e-7,0.000001,1.5,5e-324,1.7976931348623157e+308,9007199254740992,0.1,333333333.3333333,-1.25e-10,4.5]}},\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-embedded-not-unicode-normalized",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "JCS does not normalize Unicode: the same name in NFD form is different bytes",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Pilz-ü\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.BYLGqHrf5JIoHX9JJMc3JbAkMv0NbWso42NJeL7mFKOuuyvt3LkYMXz8FXwiR5mgBDNycl5PezOqadW_zjl9Bw\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-tampered-field",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed top-level field fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-tampered-nested",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed nested field fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":4},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-added-field",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "An added field fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\",\"creator\":\"someone-else\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-removed-field",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A removed field fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-number-type",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A number replaced with the equal string fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":\"3\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-untrusted-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Edited and re-signed with a key that isn't in the trust store (its public key is even embedded in the label): the verifier ignores the embedded key",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"publicKey\":\"HBM5fYMP0BenkRfYgtn3h6wj-deDwAk6Eltkb0PWfr4\",\"signature\":\"attacker-1.RNhrUOJcuZVXSaoQzFTFpXz8vL1Qsym12eJ7YxVrseP2ZpC42F8uX9kxk7P104jxE7CZy2D3s5_qZlMIoQ-rBg\"}"
+      },
+      "expected": {
+        "status": "unknown-kid"
+      }
+    },
+    {
+      "id": "verify-embedded-untrusted-key-trusted-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Edited and re-signed with an untrusted key that claims a trusted kid fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"publicKey\":\"HBM5fYMP0BenkRfYgtn3h6wj-deDwAk6Eltkb0PWfr4\",\"signature\":\"mushoh-2026.Ki9daCN3yNlRem57f-HlpWzSXzJW95ypXRvTtWkibFYknPA79PoV2XlT8zw0mmibI8HUum04HqbZWZanOl6jBA\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-wrong-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Signed by one trusted key, labelled with another trusted kid: fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"acme-lab-1.cxrelwWeQHIv3YoyQUY-Zpk3nek7vKTccBIQ74J-YxV9jE-flLa931aRT5EW3hlcJOhQxxBNRqTZpU9HWKnVBg\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-kid-swapped",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "The kid is part of the signed bytes: replacing it with another kid for the same key fails",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-alias.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-unsigned",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A label without `signature` is unsigned, not invalid",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}"
+      },
+      "expected": {
+        "status": "unsigned"
+      }
+    },
+    {
+      "id": "verify-embedded-reserved-1-3-signature",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A pre-1.4.0 `signature` string that isn't a 1.4.0 token is malformed, never valid",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"MEUCIQDx+b0/sketch==\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-padding",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (padding)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ==\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-non-base64url-character",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (non-base64url-character)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5Nhxt+/\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-short",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (short)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5Nhxt\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-long",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (long)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQA\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-non-canonical-bits",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (non-canonical-bits)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDR\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-no-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (no-kid)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-empty-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (empty-kid)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\".jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-kid-bad-character",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (kid-bad-character)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh 2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-kid-too-long",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (kid-too-long)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-extra-dot",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (extra-dot)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh.2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-whitespace",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Malformed signature token (whitespace)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\" mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-not-a-string",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A `signature` that isn't a string is malformed",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":{\"kid\":\"mushoh-2026\",\"sig\":\"jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-lone-surrogate",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A label with a lone surrogate isn't I-JSON and can't be canonicalized",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_\\ud800\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-not-an-object",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A label that isn't a JSON object is malformed",
+      "input": {
+        "form": "embedded",
+        "label": "[{\"@context\": \"https://wemush.com/wols/v1\", \"@type\": \"Specimen\", \"id\": \"wemush:clx1a2b3c4\", \"version\": \"1.4.0\", \"type\": \"SUBSTRATE\", \"species\": \"Pleurotus ostreatus\", \"strain\": {\"name\": \"Blue Oyster PoHu\", \"generation\": \"F2\", \"clonalGeneration\": 3}, \"stage\": \"COLONIZATION\", \"created\": \"2025-12-16T10:30:00Z\", \"batch\": \"batch_2025_12_001\", \"organization\": \"org_mushoh\", \"signature\": \"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}]"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-non-canonical-s",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Verifiers MUST reject S >= L (RFC 8032 section 5.1.7): S + L is a malleated copy",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdOrfQSyswJrdPumeyVgF_iG8L-06VNx54jYfI5NhxtHQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-url-signature-replayed",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature taken from a signed URL doesn't verify on an embedded label",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-missing-domain-prefix",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature over the canonical JSON without the domain prefix fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.vR-HDqznghFZdgS3D4WPDFyqW3k7MC1iMuAvej3v5942Ga0q3R0Yh6JPKIRZOO4o75j4orRWrfMO11Nb97_GAQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-wrong-form-prefix",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature made with the encrypted-url prefix doesn't verify as embedded",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.PKj6b2LATfygzRQmCY9DabMtfaJdqr45foYmslgkyU7ueAMs_rwQ-EFi-ZjR31tp9jVDQjIHz6kLoKtOPaQcBQ\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-embedded-field-encrypted",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature over a label with field-level encryption covers the encrypted objects as printed, and verifies without any decryption key",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"encrypted\":true,\"algorithm\":\"AES-256-GCM\",\"payload\":\"lO9XBAGm8SCuIKgru1CnVJQY601KITpdOsyUJihbaUeG1r1B7VIUx8L5Z8RsdEX_VH4s6SHmHmPNplcMb_tlAdMgCAKi3QEce2ZLqlGnBbiP8g\",\"iv\":\"MjM0NTY3ODk6Ozw9\",\"kdf\":\"raw\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.ev2s8XD5GVd0t-K3upGHsCGBqx_qeGlAqAcaS80FsJJhx1K_zQnqnWjan7FyXw6h1dfIgPN8V0YslhTG2uhOAg\"}"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"algorithm\":\"AES-256-GCM\",\"encrypted\":true,\"iv\":\"MjM0NTY3ODk6Ozw9\",\"kdf\":\"raw\",\"payload\":\"lO9XBAGm8SCuIKgru1CnVJQY601KITpdOsyUJihbaUeG1r1B7VIUx8L5Z8RsdEX_VH4s6SHmHmPNplcMb_tlAdMgCAKi3QEce2ZLqlGnBbiP8g\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+      }
+    },
+    {
+      "id": "verify-embedded-field-encrypted-tampered",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Changing an encrypted field object fails verification",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"encrypted\":true,\"algorithm\":\"AES-256-GCM\",\"payload\":\"lO9XBAGm8SCuIKgru1CnVJQY601KITpdOsyUJihbaUeG1r1B7VIUx8L5Z8RsdEX_VH4s6SHmHmPNplcMb_tlAdMgCAKi3QEce2ZLqlGnBbiP8g\",\"iv\":\"MzQ1Njc4OTo7PD0-\",\"kdf\":\"raw\"},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.ev2s8XD5GVd0t-K3upGHsCGBqx_qeGlAqAcaS80FsJJhx1K_zQnqnWjan7FyXw6h1dfIgPN8V0YslhTG2uhOAg\"}"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-valid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed pbkdf2 URL verifies",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nmushoh-2026\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+      }
+    },
+    {
+      "id": "verify-url-valid-raw",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed raw-key URL verifies",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=I-zhRRNtgLSk5mz1JNaJ9hzUt_nMOX3p96hFTzAF1sjj1KQgTm4Tf7o6W4TWOlHI8e4dPsRv2oriRiKA6QXASzqg138JSGLukkSU5khpnJ8J1a7NzTZw3p1kku7CFXylYPh6AFkHNYA87IW0S26g9I8X1KE2h2aU68RA5bX4-qWZSKCDFk-9-6XWfB3bIYpEA_2i7BpMw7JwrY2kwmadG9bh9i6HIDMM9HlEyEsHeJT4JDHCHIV8liy-WQSCz-OJ-tTlQ3Yb43xTp_MZmIq6X7c3eFGsQ9vISLYrcd90Gs9JhySwTCb0GviiXQzBMjjzSW_kNaE6SOfRC1v8TavG9dHaDApIQzGWDcFoxqB-O0Qzo2eq&iv=ZGVmZ2hpamtsbW5v&kdf=raw&sig=mushoh-2026.QgEDbrDkjbVNwGj_R-W7TDska40z2V1RbIsafQgGQr6GRzQK-F_0sGgcb8S8I4nqrN_SuhDCB_le6uf2Adw8Ag"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nmushoh-2026\nwemush://v1/encrypted/clx1a2b3c4?e=I-zhRRNtgLSk5mz1JNaJ9hzUt_nMOX3p96hFTzAF1sjj1KQgTm4Tf7o6W4TWOlHI8e4dPsRv2oriRiKA6QXASzqg138JSGLukkSU5khpnJ8J1a7NzTZw3p1kku7CFXylYPh6AFkHNYA87IW0S26g9I8X1KE2h2aU68RA5bX4-qWZSKCDFk-9-6XWfB3bIYpEA_2i7BpMw7JwrY2kwmadG9bh9i6HIDMM9HlEyEsHeJT4JDHCHIV8liy-WQSCz-OJ-tTlQ3Yb43xTp_MZmIq6X7c3eFGsQ9vISLYrcd90Gs9JhySwTCb0GviiXQzBMjjzSW_kNaE6SOfRC1v8TavG9dHaDApIQzGWDcFoxqB-O0Qzo2eq&iv=ZGVmZ2hpamtsbW5v&kdf=raw"
+      }
+    },
+    {
+      "id": "verify-url-valid-percent-encoded-id",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed URL with a percent-encoded ID verifies",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.unjI7Y4kDVk_pW4Eme5lhJHVmn4ou8s7g1V-_a6qJM5vdLiCbQN1sVFvUOm838943YN-XwdB2wzzx8DiXunPBQ"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nmushoh-2026\nwemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+      }
+    },
+    {
+      "id": "verify-url-percent-encoding-case",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Verifiers don't re-normalize: %2F rewritten as %2f decodes the same but fails",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/Lab%20A%2fplate%2B3%25?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0yVr-b9hEPYIhoSH3ViC5HPdMeYgZElyggk_qHuG19dtNauKk6P29m3CIk0nwI34OU2xUUmzdOqlnoDnY0xpFC-6PH75FeddamstW-LS-ApLvNJsMXMxH_EJOPf7IZ1IIr4t_jiNKaxfyP-mrR71RxeUoS2orZwAq8OUEEptKA1Ij-tmC2L160Xl5-fp7tSKYJ8QptPZqz6BiySc0MmuhRecEIv-kydckqIHlfIPfllieL488e9Y9mfNmiBn6r52XgAQEnNknesWgewDDlAgnQ&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.unjI7Y4kDVk_pW4Eme5lhJHVmn4ou8s7g1V-_a6qJM5vdLiCbQN1sVFvUOm838943YN-XwdB2wzzx8DiXunPBQ"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-tampered-ciphertext",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed ciphertext fails verification",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=BZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-tampered-iterations",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed `i` fails verification",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=600000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-tampered-id",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed ID path segment fails verification",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c5?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-reordered-parameters",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Parameter order is part of the signed bytes: swapping `e` and `iv` fails",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?iv=ZGVmZ2hpamtsbW5v&e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-added-parameter",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A parameter added before `sig` fails verification",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&x=1&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-parameter-after-sig",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`sig` MUST be the last parameter",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw&x=1"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-duplicate-sig",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`sig` MUST appear once",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-percent-encoded-token",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "The token is never percent-decoded",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026%2EnZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-fragment",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed URL with a fragment is malformed",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw#x"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-non-ascii",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed URL must be ASCII (non-ASCII is percent-encoded)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/Pilz-ü?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0zlj9-UN_DpGy9KUkxnUrzCRZblwJg4uwhsnpmjcnYk4Nb2KtI_EwBuqQUo3oPKOGHyAdwL6Jbvv2bPiY0o5QXmfIzvjFPxbenl5QeKEpk1ZvNV-ejExVv5ZN__4ZoUJIp0Dvh_DZus_t-LV40eyDULK9X3l-5IKq4TcU3g1ZR5Gl7pUWyft5V200MnCxLj5GJ0Lo9PZwEjivB-2_5_nw1bUV9i6xHZTmbIYlPZuYlhqZr8wle4y7inqNiIG2Y0kTZryKb1_8FQ5&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.B7dxwt_0mK9WTMTtH7VUjiu3Ia53YeaTiaT5BDFfBM_vGGsXSlT1T3u7VH7XCtyEhjnXSgCvJqzQ1BMz2gJtDg"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-other-scheme",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Only `wemush://v1/encrypted/` URLs can be verified",
+      "input": {
+        "form": "encrypted-url",
+        "url": "web+wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-untrusted-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A URL re-signed with a key not in the trust store",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100001&sig=attacker-1.IhwKnlq8hGkM_SU8LgYNnKrqQzM-XwwYyndvZ_SlqcAgTpqw54mBVmRfsKFkpHJuB9uRPkIhRVkpbeSzWnKeCg"
+      },
+      "expected": {
+        "status": "unknown-kid"
+      }
+    },
+    {
+      "id": "verify-url-wrong-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Signed by one trusted key, labelled with another trusted kid",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.0-DVqzxGAL_6VGvZ9lljBfdCGde4MocwI9fy6KU1fSJBIkWXOWQffBflrWigbjrzsLUz9WJvCmrbrr6gFVO2DA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-unsigned",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A URL without `sig` is unsigned",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+      },
+      "expected": {
+        "status": "unsigned"
+      }
+    },
+    {
+      "id": "verify-url-reserved-1-3-sig",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "The reserved 1.3.1 `sig` value (64 bytes, no kid) is malformed, never valid",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0-Pw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-malformed-padding",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A padded signature is malformed",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw=="
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-url-embedded-signature-replayed",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Cross-form replay: an embedded label's signature doesn't verify on a URL",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-url-wrong-form-prefix",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature over the URL bytes made with the embedded prefix fails verification",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.51uncmokxCS6fUCh7ZGySNTborPCPatuO0VLTN3uSsaEW1ruPOdqG3a-kvyN6JRoLxAT0Ew3S4hQiaogc9WhAg"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    }
+  ]
+}

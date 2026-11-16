@@ -9,7 +9,7 @@
  * Usage: node conformance/tools/verify_vectors.mjs
  */
 import { readFileSync, readdirSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createHash, createPrivateKey, createPublicKey, sign as edSign, verify as edVerify } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -161,6 +161,100 @@ async function decryptFields(label, secret) {
   return { success: true, specimen: out };
 }
 
+// --- Signatures (1.4.0) -----------------------------------------------------
+// Ed25519 through node:crypto (OpenSSL), keys imported as JWK from raw bytes.
+const ENCRYPTED_PREFIX = 'wemush://v1/encrypted/';
+const KID = /^[A-Za-z0-9_-]{1,64}$/;
+const SIG = /^[A-Za-z0-9_-]{86}$/;
+class Malformed extends Error {}
+
+function jcs(v) {
+  if (v === null || typeof v === 'boolean') return JSON.stringify(v);
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) throw new Malformed('non-finite number');
+    return JSON.stringify(v); // Number::toString; -0 becomes "0"
+  }
+  if (typeof v === 'string') {
+    if (!v.isWellFormed()) throw new Malformed('lone surrogate');
+    return JSON.stringify(v); // escapes exactly what RFC 8785 escapes
+  }
+  if (Array.isArray(v)) return `[${v.map(jcs).join(',')}]`;
+  // Array.prototype.sort compares UTF-16 code units, as RFC 8785 requires.
+  const keys = Object.keys(v).sort();
+  return `{${keys.map((k) => `${jcs(k)}:${jcs(v[k])}`).join(',')}}`;
+}
+
+function signingInput(form, kid, body) {
+  return Buffer.concat([Buffer.from(`WOLS-SIG-v1\n${form}\n${kid}\n`, 'ascii'), Buffer.from(body, 'utf8')]);
+}
+
+function parseToken(tok) {
+  if (typeof tok !== 'string') throw new Malformed('not a string');
+  const parts = tok.split('.');
+  if (parts.length !== 2 || !KID.test(parts[0]) || !SIG.test(parts[1])) throw new Malformed('bad token');
+  const raw = Buffer.from(parts[1], 'base64url');
+  if (raw.length !== 64 || raw.toString('base64url') !== parts[1]) throw new Malformed('non-canonical');
+  return { kid: parts[0], raw };
+}
+
+const pubKey = (b64) => createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: b64 }, format: 'jwk' });
+
+function check(kid, raw, message, store) {
+  const entry = Object.hasOwn(store, kid) ? store[kid] : undefined;
+  if (!entry || entry.alg !== 'Ed25519') return 'unknown-kid';
+  return edVerify(null, message, pubKey(entry.publicKeyBase64url), raw) ? 'valid' : 'invalid';
+}
+
+function verifySignature(input, store) {
+  let kid, raw, message;
+  try {
+    if (input.form === 'embedded') {
+      let label;
+      try { label = JSON.parse(input.label); } catch { throw new Malformed('not JSON'); }
+      if (label === null || typeof label !== 'object' || Array.isArray(label)) throw new Malformed('not an object');
+      if (!Object.hasOwn(label, 'signature')) return { status: 'unsigned' };
+      ({ kid, raw } = parseToken(label.signature));
+      const { signature: _, ...body } = label;
+      message = signingInput('embedded', kid, jcs(body));
+    } else if (input.form === 'encrypted-url') {
+      const url = input.url;
+      const q = url.indexOf('?');
+      const params = q === -1 ? [] : url.slice(q + 1).split('&');
+      const names = params.map((p) => p.split('=')[0]);
+      if (!names.includes('sig')) return { status: 'unsigned' };
+      if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#') || !url.startsWith(ENCRYPTED_PREFIX)) throw new Malformed('url');
+      if (names.filter((n) => n === 'sig').length !== 1 || names.at(-1) !== 'sig' || params.length < 2 ||
+          !params.at(-1).startsWith('sig=')) throw new Malformed('sig position');
+      const last = params.at(-1);
+      ({ kid, raw } = parseToken(last.slice(4)));
+      message = signingInput('encrypted-url', kid, url.slice(0, url.length - last.length - 1));
+    } else {
+      throw new Malformed('unknown form');
+    }
+  } catch (e) {
+    if (e instanceof Malformed) return { status: 'malformed' };
+    throw e;
+  }
+  const status = check(kid, raw, message, store);
+  return status === 'valid' ? { status, kid, signingInput: message.toString('utf8') } : { status };
+}
+
+function signSignature(input, keys) {
+  const k = keys[input.key];
+  const priv = createPrivateKey({ key: { kty: 'OKP', crv: 'Ed25519', d: k.seedBase64url, x: k.publicKeyBase64url }, format: 'jwk' });
+  let message;
+  if (input.form === 'embedded') {
+    const { signature: _, ...body } = JSON.parse(input.label);
+    message = signingInput('embedded', input.kid, jcs(body));
+  } else {
+    message = signingInput('encrypted-url', input.kid, input.url);
+  }
+  const signature = `${input.kid}.${edSign(null, message, priv).toString('base64url')}`;
+  const out = { signingInput: message.toString('utf8'), signature };
+  if (input.form === 'encrypted-url') out.url = `${input.url}&sig=${signature}`;
+  return out;
+}
+
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
@@ -200,6 +294,19 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       const r = await decryptFields(c.input.specimen, c.input.secret);
       ok = x.success ? r.success && eq(r.specimen, x.specimen) : !r.success && r.reason === x.reason;
       detail = JSON.stringify({ success: r.success, reason: r.reason });
+    } else if (c.operation === 'verify') {
+      const r = verifySignature(c.input, doc.trustStore);
+      ok = eq(r, x);
+      detail = JSON.stringify(r.status);
+    } else if (c.operation === 'sign') {
+      const r = signSignature(c.input, doc.testKeys);
+      ok = eq(r, x);
+      // A signature this verifier made must also verify.
+      const back = c.input.form === 'embedded'
+        ? verifySignature({ form: 'embedded', label: JSON.stringify({ ...JSON.parse(c.input.label), signature: r.signature }) }, doc.trustStore)
+        : verifySignature({ form: 'encrypted-url', url: r.url }, doc.trustStore);
+      ok = ok && back.status === 'valid';
+      detail = JSON.stringify(r);
     } else {
       ok = false; detail = `unknown operation ${c.operation}`;
     }
