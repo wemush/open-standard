@@ -106,7 +106,7 @@ print(f"Created: {specimen.created}")
 
 - **Public data option**: Share openly for research
 - **Encrypted data option**: Protect proprietary strains
-- **Cryptographic signatures**: Verify authenticity
+- **Cryptographic signatures** *(planned for 1.4.0; reserved in 1.3.x)*: Verify authenticity
 
 ### 📈 Research-Grade
 
@@ -180,7 +180,7 @@ interface SpecimenLabel {
   organization?: string;         // Organization ID
   custom?: Record<string, any>;  // Extensible fields
   _meta?: Record<string, any>;   // Implementation metadata (v1.2.0)
-  signature?: string;            // Cryptographic signature
+  signature?: string;            // Reserved for signatures (planned for 1.4.0); not verified in 1.3.x
 }
 ```
 

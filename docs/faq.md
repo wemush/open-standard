@@ -37,7 +37,7 @@ WOLS can encode:
 - Harvest yields
 - Parent-child lineage
 - Custom fields for your specific needs
-- Cryptographic signatures for verification
+- Cryptographic signatures for verification (reserved in 1.3.x; a signature scheme is planned for 1.4.0)
 
 ### What QR code format does WOLS use?
 

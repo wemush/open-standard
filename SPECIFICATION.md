@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Active
-**Version**: 1.3.0
-**Date**: November 15, 2026
+**Status**: Release candidate — public comment period (see [Governance](#governance))
+**Version**: 1.3.1-rc.1
+**Date**: November 16, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -92,8 +92,8 @@ interface SpecimenLabel {
     [key: string]: unknown;      // Extensible for implementation use
   };
 
-  // Verification (Optional)
-  signature?: string;            // Cryptographic signature for authenticity
+  // Verification (Optional, reserved: see Cryptographic Signatures)
+  signature?: string;            // Reserved for a future signature scheme; not verified in 1.3.x
 }
 ```
 
@@ -285,7 +285,7 @@ wemush://v1/encrypted/{id}?e={ciphertext}&iv={iv}&kdf={kdf}[&salt={salt}&i={iter
 | `kdf` | Yes | `pbkdf2` (key derived from a passphrase) or `raw` (32-byte key shared out of band) |
 | `salt` | When `kdf=pbkdf2` | At least 16 random bytes generated per label, base64url without padding |
 | `i` | When `kdf=pbkdf2` | PBKDF2 iteration count, as plain decimal digits (`[0-9]+`). No sign, exponent, hex, or whitespace. |
-| `sig` | No | Detached signature over the URL with the `sig` parameter removed (see [Cryptographic Signatures](#cryptographic-signatures)). It is not part of decryption. |
+| `sig` | No | Reserved for a detached signature. 1.3.x defines no signature algorithm, encoding, or key discovery, and `sig` is not part of decryption (see [Cryptographic Signatures](#cryptographic-signatures)). |
 
 Requirements:
 
@@ -293,8 +293,9 @@ Requirements:
 - **Plaintext**: The UTF-8 embedded JSON-LD serialization of the specimen (see Embedded Format), without a byte order mark. Decoders SHOULD reject a plaintext that starts with a byte order mark. The decrypted specimen's `id` MUST equal `wemush:` followed by the percent-decoded `{id}`; decoders MUST reject a mismatch.
 - **`kdf=pbkdf2`**: PBKDF2-HMAC-SHA256 over the passphrase and the per-label `salt`, producing a 256-bit key. Generators MUST NOT use a fixed or library-wide salt. This rule compares the decoded salt bytes, not their text encoding.
   - **Passphrase encoding**: Implementations MUST normalize the passphrase to Unicode Normalization Form C (NFC) and then encode it as UTF-8 before derivation, so the same passphrase typed on different platforms produces the same key.
-  - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing. Implementations MAY offer a lower setting, down to 100,000, for faster scanning.
-  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000, including values too large for the implementation's integer types. They MUST check the limit before deriving a key, so a crafted label can't stall a scanner. Generators MUST NOT exceed 10,000,000.
+  - **Iterations**: Generators MUST use at least 100,000 and SHOULD default to 600,000, following current OWASP guidance. Labels carry their ciphertext publicly, so the default favors resistance to offline guessing. Implementations MAY offer a lower setting, down to 100,000, for faster scanning. At 100,000 iterations each passphrase guess costs an attacker one sixth as much as at the default, so implementations that offer a lower setting SHOULD tell the user that it weakens resistance to guessing, and SHOULD recommend a high-entropy passphrase or `kdf=raw` alongside it (see Offline guessing in [What Encryption Protects](#what-encryption-protects)).
+  - **Decoder limits**: Decoders MUST reject iteration counts below 10,000 or above 10,000,000, including values too large for the implementation's integer types. They MUST check the limit before deriving a key. The limit bounds the work a crafted label can force, but the bound isn't small: 10,000,000 iterations of PBKDF2-HMAC-SHA256 is about 17 times the 600,000 default. As a rough guide, that is under a second on a current desktop CPU with a native implementation, several seconds on many phones, and much longer with a non-native (pure script) implementation. The cost is paid on every decryption attempt, including each retry with a different passphrase. Generators MUST NOT exceed 10,000,000.
+  - **Responsiveness**: Implementations SHOULD run key derivation off the UI thread (for example, in a Web Worker or a background thread), so that a label at the iteration limit doesn't freeze a scanning app.
   - **Validation order**: Decoders SHOULD validate every parameter and encoding before deriving the key.
 - **`kdf=raw`**: The key is exactly 32 bytes. `salt` and `i` MUST be omitted.
 - **Encoding**: All binary parameters use base64url (RFC 4648 §5) without padding. Generators MUST emit the canonical form: no padding, and any unused bits in the final character set to zero. Decoders SHOULD also accept padded input.
@@ -303,7 +304,9 @@ Requirements:
   - **Identifying fields**: `@context`, `@type`, `id`, `version`, `type`, and `species` MUST NOT be encrypted. Decoders MUST reject a label in which any of them is an encrypted object, and MUST NOT substitute a decrypted value for them.
   - **Total cost**: Before deriving any key, decoders MUST add up the iterations of each distinct `salt` and `iterations` pair in the label, and reject the label if the total exceeds 10,000,000.
   - Each encrypted field MUST use its own IV.
+- **`sig`**: The `sig` parameter is reserved. Decoders MUST preserve a `sig` value they receive, so that it is still available to the caller and to anything that re-serializes the label, and MUST NOT reject a label because it carries one. Decoders MUST NOT treat `sig` as verified, and MUST NOT report a label as signed, authentic, or unmodified because it carries one.
 - **Legacy labels**: Encrypted URLs without a `kdf` parameter predate v1.3.0 and are implementation-specific. Decoders MAY support them but MUST NOT generate them.
+  - WOLS 1.2.0 named the encrypted URL but never fully specified it: it defined no key derivation, IV transport, or payload encoding. Each 1.2.0 library chose its own, so there is no single legacy format a decoder could be required to read. That is why legacy decoding is a MAY, and why each 1.3.x library reads only the legacy format that its own 1.2.0 release produced (see [Interoperability Notes](./docs/interoperability-notes.md#2-encrypted-format)). The [wire-format compatibility](./GOVERNANCE.md#wire-format-compatibility) rule covers the encrypted format as specified from 1.3.0 onward.
 
 ---
 
@@ -529,14 +532,22 @@ PATCH /v1/specimens/{id}
 
 - **Confidentiality**: Encryption, whether a whole label in the URL format or individual fields, keeps the encrypted values secret from anyone without the key.
 - **Placement**: Field-level AAD binds each encrypted value to its label `id` and field name. A value moved to another field or another label fails to decrypt.
-- **Integrity**: Neither form makes the cleartext parts of a label tamper-evident. Someone who can edit a label can change its cleartext fields, or remove encrypted fields entirely. Use a signature (`sig` or `signature`) when integrity matters.
-- **Visible metadata**: The ID and the presence of encrypted fields are always visible.
+- **Rollback**: The AAD binds a value to its label and field, not to a point in time. Someone holding an older copy of the same label can replace an encrypted field with the older ciphertext of that same field, and it decrypts normally. Neither form detects replacing a whole label with an older one.
+- **Integrity**: Neither form makes the cleartext parts of a label tamper-evident. Someone who can edit a label can change its cleartext fields, or remove encrypted fields entirely. 1.3.x defines no signature scheme that detects this (see [Cryptographic Signatures](#cryptographic-signatures)).
+- **Visible metadata**: The ID and the presence of encrypted fields are always visible. AES-GCM doesn't hide length, so each ciphertext also reveals the exact byte length of its plaintext. For field-level encryption that is the length of each field's JSON value, which can be enough to tell short values apart (for example, which of a few known strain names a field holds). 1.3.x defines no padding, so don't rely on encryption to hide how long a value is.
+- **Offline guessing**: The ciphertext, salt, and iteration count are printed on the label, so anyone holding the label can try passphrases offline, as fast as their hardware allows, with no rate limit and no way for the owner to notice. PBKDF2 iterations only slow each guess down; they can't protect a guessable passphrase. Use a high-entropy passphrase (for example, a randomly generated passphrase of five or more words, or a long random string) or `kdf=raw` with a randomly generated 32-byte key. Don't use a short, reused, or human-chosen passphrase for labels that leave your control.
 
 ### Cryptographic Signatures
 
-For authenticity verification:
+> **Reserved.** 1.3.x does not define a signature scheme, and this section is non-normative except for this paragraph. The embedded `signature` field and the encrypted URL's `sig` parameter are reserved. Decoders MUST preserve them and MUST NOT treat them as verified (for `sig`, see the [Encrypted Format](#3-encrypted-format-researchcommercial) requirements). A full signature scheme is planned for 1.4.0.
+
+The sketch below shows the intended shape only. It is **not safe to implement** as written:
+
+- **The embedded public key proves nothing.** It verifies against `specimen.publicKey`, which comes from the signed object itself. Anyone can edit a label, generate their own key pair, re-sign it, and embed their own public key, and the check still passes. A verifier must get the signer's key from a source it already trusts, outside the label.
+- **There are no canonical bytes.** `JSON.stringify` has no canonical form: key order, whitespace, and number and string escaping can differ between implementations, or after a parse and re-serialize, so a valid signature can fail to verify elsewhere.
 
 ```typescript
+// NON-NORMATIVE SKETCH. Do not use: see the warnings above.
 interface SignedSpecimen extends SpecimenLabel {
   signature: string;            // ECDSA signature
   publicKey: string;            // Organization's public key
@@ -749,8 +760,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.3.0
-**Stability**: Active (feedback welcome)
+**Current Version**: 1.3.1-rc.1 (release candidate; 1.3.0 remains the latest final release until 1.3.1 is final)
+**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
 
@@ -847,6 +858,22 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.3.1-rc.1 (Release candidate — November 16, 2026)
+
+Clarifications to 1.3.0, from a review of what the 1.3.0 text and vectors actually guarantee. Nothing here changes the 1.3.0 wire format or which labels decode: every label that 1.3.0 allowed decodes the same way, and generator limits (including the 100,000-iteration minimum) are unchanged.
+
+Normative clarifications, subject to the public comment period:
+
+- **Signatures reserved**: `sig` and the embedded `signature` field are reserved. Decoders MUST preserve them and MUST NOT treat them as verified. The Cryptographic Signatures sketch is now marked non-normative, with warnings that a public key embedded in the label proves nothing and that `JSON.stringify` has no canonical form. A full signature scheme is planned for 1.4.0.
+- **Key derivation responsiveness**: Implementations SHOULD run key derivation off the UI thread. Implementations that offer fewer than the default 600,000 iterations SHOULD tell the user that it weakens resistance to guessing, and SHOULD recommend a high-entropy passphrase or `kdf=raw`.
+
+Editorial:
+
+- **Decoder limits**: Replaces "can't stall a scanner" with the actual bound that the 10,000,000-iteration limit gives.
+- **What Encryption Protects**: Adds that AES-GCM reveals each value's plaintext length, that field binding doesn't prevent rollback to an older ciphertext of the same field, and that anyone holding a label can guess passphrases offline.
+- **Legacy labels**: Explains why decoding pre-1.3.0 encrypted labels is a MAY: 1.2.0 never fully specified the format, so each library reads only its own. [GOVERNANCE.md](./GOVERNANCE.md#wire-format-compatibility) now says the wire-format compatibility rule applies from 1.3.0 onward.
+- **Conformance**: Adds `decrypt-with-sig` to `encrypted.json`: a label with a `sig` parameter decrypts, and the decoder keeps `sig` without verifying it. The existing cases are unchanged.
 
 ### Version 1.3.0 (November 15, 2026)
 

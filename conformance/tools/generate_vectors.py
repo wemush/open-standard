@@ -227,14 +227,20 @@ def encrypted_cases() -> list[dict]:
     nfc_ct = AESGCM(derive(nfc_pass, salt, iterations)).encrypt(iv, plaintext.encode(), None)
     raw_ct = AESGCM(raw_key).encrypt(iv, plaintext.encode(), None)
 
-    def url(id_suffix, ct, kdf, s=None, n=None, *, pad=False):
+    def url(id_suffix, ct, kdf, s=None, n=None, *, pad=False, sig=None):
         enc = b64url_padded if pad else b64url
         q = f"e={enc(ct)}&iv={enc(iv)}&kdf={kdf}"
         if s is not None:
             q += f"&salt={enc(s)}"
         if n is not None:
             q += f"&i={n}"
+        if sig is not None:
+            q += f"&sig={sig}"
         return f"wemush://v1/encrypted/{id_suffix}?{q}"
+
+    # `sig` is reserved in 1.3.x: no algorithm is defined, so this is arbitrary bytes that are
+    # not a valid signature over anything. Decoders keep it and never verify it.
+    reserved_sig = b64url(bytes(range(64)))
 
     pb_secret = {"kdf": "pbkdf2", "passphrase": passphrase}
     raw_secret = {"kdf": "raw", "keyBase64url": b64url(raw_key)}
@@ -326,6 +332,11 @@ def encrypted_cases() -> list[dict]:
              "A label encrypted with an NFC passphrase decrypts with the same passphrase typed in NFD form",
              url("clx1a2b3c4", nfc_ct, "pbkdf2", salt, iterations),
              {"kdf": "pbkdf2", "passphrase": unicodedata.normalize("NFD", nfc_pass)}, ok),
+        case("decrypt-with-sig",
+             "A reserved `sig` parameter does not affect decryption; decoders MUST preserve it and "
+             "MUST NOT treat it as verified (added in 1.3.1-rc.1)",
+             url("clx1a2b3c4", pb_ct, "pbkdf2", salt, iterations, sig=reserved_sig), pb_secret,
+             {**ok, "sig": reserved_sig, "sigVerified": False}),
     ]
 
 

@@ -116,7 +116,10 @@ async function decrypt(url, secret) {
     return { success: false, reason: 'invalid-plaintext' };
   }
   if (specimen.id !== `wemush:${id}`) return { success: false, reason: 'id-mismatch' };
-  return { success: true, plaintext, specimen };
+  // `sig` is reserved: preserved as received, never verified.
+  const result = { success: true, plaintext, specimen };
+  if (q.has('sig')) Object.assign(result, { sig: q.get('sig'), sigVerified: false });
+  return result;
 }
 
 // --- Field-level encryption -------------------------------------------------
@@ -189,7 +192,8 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       ok = Buffer.from(k).toString('base64url') === x.keyBase64url;
     } else if (c.operation === 'decrypt') {
       const r = await decrypt(c.input.url, c.input.secret);
-      ok = x.success ? r.success && r.plaintext === x.plaintext && eq(r.specimen, x.specimen)
+      ok = x.success ? r.success && r.plaintext === x.plaintext && eq(r.specimen, x.specimen) &&
+                       (x.sig === undefined || (r.sig === x.sig && r.sigVerified === x.sigVerified))
                      : !r.success && r.reason === x.reason;
       detail = JSON.stringify({ success: r.success, reason: r.reason });
     } else if (c.operation === 'decryptFields') {
