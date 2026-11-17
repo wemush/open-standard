@@ -948,6 +948,258 @@
       "expected": {
         "status": "invalid"
       }
+    },
+    {
+      "id": "verify-embedded-malformed-unsigned-duplicate-member",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Duplicate member names make the text malformed, even without a signature",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-unsigned-duplicate-nested",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A duplicate member name in a nested object is malformed, even without a signature",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3,\"clonalGeneration\":4},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-signed-duplicate-member",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed label with a duplicate top-level member name is malformed, not valid or invalid",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-signed-duplicate-nested",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed label with a duplicate nested member name is malformed",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3,\"clonalGeneration\":4},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-duplicate-escaped-name",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Member names are compared after unescaping: `stage` and `\\u0073tage` are duplicates",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"\\u0073tage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-unsigned-lone-surrogate",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A lone surrogate makes the text malformed, even without a signature",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_\\ud800\",\"organization\":\"org_mushoh\"}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-unsigned-nan",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`NaN` isn't JSON, so the text is malformed, even without a signature",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"x\":NaN}}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-unsigned-number-overflow",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A number that overflows a double (1e400) isn't I-JSON: malformed, even without a signature",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"custom\":{\"x\":1e400}}"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-embedded-malformed-not-json",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Text that isn't JSON at all is malformed (it has no URI scheme, so it takes the JSON rules)",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\","
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "sign-refuse-url-no-query",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse an encrypted URL with no query",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-url-empty-query",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse an encrypted URL with an empty query",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-url-already-signed",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a URL that already has `sig`; remove it before re-signing",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-ZSVbl7QMGDP8pgDzsbysyLn8DZIWsN3DqyuO_UHx_ZnnxgCLEciw1HFOmrUYlPIXYl4EZL8wlu5S_GSngm1nboy7IdKYJ-os_WOxH7Sf&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-embedded-duplicate-member",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse label text with duplicate member names",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"stage\":\"FRUITING\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-embedded-lone-surrogate",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse label text with a lone surrogate",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_\\ud800\",\"organization\":\"org_mushoh\"}",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "verify-trust-store-off-curve-key",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A trust-store entry with a 32-byte key that doesn't decode to an Ed25519 point is a configuration error. If it reaches verification the result is invalid, not unknown-kid; rejecting the entry when the trust store is built also conforms",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}",
+        "trustStore": {
+          "mushoh-2026": {
+            "alg": "Ed25519",
+            "publicKeyBase64url": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          }
+        }
+      },
+      "expected": {
+        "status": "invalid",
+        "configError": true
+      }
+    },
+    {
+      "id": "verify-trust-store-wrong-length-key",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A trust-store entry with a 31-byte key is a configuration error. If it reaches verification the result is invalid, not unknown-kid; rejecting the entry when the trust store is built also conforms",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}",
+        "trustStore": {
+          "mushoh-2026": {
+            "alg": "Ed25519",
+            "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2g"
+          }
+        }
+      },
+      "expected": {
+        "status": "invalid",
+        "configError": true
+      }
+    },
+    {
+      "id": "verify-trust-store-wrong-alg",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A trust-store entry with an algorithm other than Ed25519 is a configuration error. If it reaches verification the result is invalid, not unknown-kid; rejecting the entry when the trust store is built also conforms",
+      "input": {
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}",
+        "trustStore": {
+          "mushoh-2026": {
+            "alg": "Ed448",
+            "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+          }
+        }
+      },
+      "expected": {
+        "status": "invalid",
+        "configError": true
+      }
     }
   ]
 }

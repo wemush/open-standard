@@ -596,33 +596,66 @@ def parse_token(tok: object) -> tuple[str, bytes]:
     return kid, raw
 
 
-def trust_store() -> dict[str, bytes]:
-    return {kid: public_raw(name) for kid, name in TRUSTED.items()}
+def trust_store() -> dict[str, dict]:
+    return {kid: {"alg": "Ed25519", "publicKey": public_raw(name)} for kid, name in TRUSTED.items()}
 
 
-def _check(kid: str, raw: bytes, message: bytes) -> str:
-    store = trust_store()
+ED25519_P = 2**255 - 19
+ED25519_D = (-121665 * pow(121666, -1, ED25519_P)) % ED25519_P
+
+
+def on_curve(encoded: bytes) -> bool:
+    """RFC 8032 section 5.1.3 point decoding, without computing the point."""
+    if len(encoded) != 32:
+        return False
+    y = int.from_bytes(encoded, "little") & ((1 << 255) - 1)
+    x_sign = encoded[31] >> 7
+    if y >= ED25519_P:
+        return False
+    u, v = (y * y - 1) % ED25519_P, (ED25519_D * y * y + 1) % ED25519_P
+    x2 = u * pow(v, -1, ED25519_P) % ED25519_P
+    if x2 == 0:
+        return x_sign == 0
+    return pow(x2, (ED25519_P - 1) // 2, ED25519_P) == 1
+
+
+def usable_entry(entry: dict) -> bool:
+    return entry.get("alg") == "Ed25519" and on_curve(entry.get("publicKey", b""))
+
+
+def _check(kid: str, raw: bytes, message: bytes, store: dict[str, dict] | None = None) -> str:
+    store = trust_store() if store is None else store
     if kid not in store:
         return "unknown-kid"
+    entry = store[kid]
+    if not usable_entry(entry):
+        return "invalid"  # configuration error: the kid was found, but no signature can verify
     try:
-        Ed25519PublicKey.from_public_bytes(store[kid]).verify(raw, message)
-    except InvalidSignature:
+        Ed25519PublicKey.from_public_bytes(entry["publicKey"]).verify(raw, message)
+    except (InvalidSignature, ValueError):
         return "invalid"
     return "valid"
 
 
-def verify_embedded(text: str) -> tuple[str, bytes | None]:
+def parse_ijson_object(text: str) -> dict:
+    """Parse label text; anything that isn't an I-JSON object is malformed."""
+    label = parse_label(text)
+    if not isinstance(label, dict):
+        raise Malformed("label is not a JSON object")
+    jcs(label)  # rejects lone surrogates and non-finite numbers (including overflow to infinity)
+    return label
+
+
+def verify_embedded(text: str, store: dict[str, dict] | None = None) -> tuple[str, bytes | None]:
     try:
-        label = parse_label(text)
-        if not isinstance(label, dict):
-            raise Malformed("label is not a JSON object")
+        label = parse_ijson_object(text)
         if "signature" not in label:
             return "unsigned", None
         kid, raw = parse_token(label["signature"])
         message = signing_input(FORM_EMBEDDED, kid, embedded_body(label))
     except Malformed:
         return "malformed", None
-    return _check(kid, raw, message), message
+    return _check(kid, raw, message, store), message
 
 
 def split_signed_url(url: str) -> tuple[str, str] | None:
@@ -646,7 +679,7 @@ def split_signed_url(url: str) -> tuple[str, str] | None:
     return url[: len(url) - len(last) - 1], last[4:]
 
 
-def verify_url(url: str) -> tuple[str, bytes | None]:
+def verify_url(url: str, store: dict[str, dict] | None = None) -> tuple[str, bytes | None]:
     try:
         split = split_signed_url(url)
         if split is None:
@@ -656,7 +689,36 @@ def verify_url(url: str) -> tuple[str, bytes | None]:
         message = signing_input(FORM_URL, kid, body.encode("ascii"))
     except Malformed:
         return "malformed", None
-    return _check(kid, raw, message), message
+    return _check(kid, raw, message, store), message
+
+
+URI_SCHEME_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
+
+
+def detect_form(text: str) -> str:
+    """A string that starts with a URI scheme takes the URL rules; anything else is JSON."""
+    return FORM_URL if URI_SCHEME_RE.match(text) else FORM_EMBEDDED
+
+
+def check_signable_url(url: str) -> None:
+    """Raise Malformed when a signer must refuse to sign this URL."""
+    q = url.find("?")
+    if q == -1 or q == len(url) - 1:
+        raise Malformed("no query")
+    if any(p.split("=", 1)[0] == "sig" for p in url[q + 1:].split("&")):
+        raise Malformed("already signed")
+    if any(ord(c) < 0x21 or ord(c) > 0x7E for c in url) or "#" in url:
+        raise Malformed("not ASCII, or has a fragment")
+    if not url.startswith(ENCRYPTED_PREFIX):
+        raise Malformed("not an encrypted URL")
+
+
+def off_curve_key() -> bytes:
+    """The smallest y (sign bit clear) whose encoding is not an Ed25519 point."""
+    y = 2
+    while on_curve(y.to_bytes(32, "little")):
+        y += 1
+    return y.to_bytes(32, "little")
 
 
 def signature_cases() -> list[dict]:
@@ -954,12 +1016,106 @@ def signature_cases() -> list[dict]:
           "A signature over the URL bytes made with the embedded prefix fails verification",
           sign_url(u_pb, "mushoh-2026", form=FORM_EMBEDDED), "invalid")
 
+    # --- 1.4.0-rc.1 review: parse-level malformed, sign refusals, unusable trust-store entries ---
+    unsigned_text = emb_text(label)
+    signed_text = emb_text(signed)
+
+    def dup_top(text: str, value: str = "FRUITING") -> str:
+        return text.replace('"stage":"COLONIZATION"', f'"stage":"COLONIZATION","stage":"{value}"')
+
+    def dup_nested(text: str) -> str:
+        return text.replace('"clonalGeneration":3', '"clonalGeneration":3,"clonalGeneration":4')
+
+    v_emb("verify-embedded-malformed-unsigned-duplicate-member",
+          "Duplicate member names make the text malformed, even without a signature",
+          dup_top(unsigned_text), "malformed")
+    v_emb("verify-embedded-malformed-unsigned-duplicate-nested",
+          "A duplicate member name in a nested object is malformed, even without a signature",
+          dup_nested(unsigned_text), "malformed")
+    v_emb("verify-embedded-malformed-signed-duplicate-member",
+          "A signed label with a duplicate top-level member name is malformed, not valid or invalid",
+          dup_top(signed_text), "malformed")
+    v_emb("verify-embedded-malformed-signed-duplicate-nested",
+          "A signed label with a duplicate nested member name is malformed",
+          dup_nested(signed_text), "malformed")
+    v_emb("verify-embedded-malformed-duplicate-escaped-name",
+          "Member names are compared after unescaping: `stage` and `\\u0073tage` are duplicates",
+          signed_text.replace('"stage":"COLONIZATION"', '"stage":"COLONIZATION","\\u0073tage":"FRUITING"'),
+          "malformed")
+    v_emb("verify-embedded-malformed-unsigned-lone-surrogate",
+          "A lone surrogate makes the text malformed, even without a signature",
+          unsigned_text.replace('"batch_2025_12_001"', '"batch_\\ud800"'), "malformed")
+    v_emb("verify-embedded-malformed-unsigned-nan",
+          "`NaN` isn't JSON, so the text is malformed, even without a signature",
+          unsigned_text[:-1] + ',"custom":{"x":NaN}}', "malformed")
+    v_emb("verify-embedded-malformed-unsigned-number-overflow",
+          "A number that overflows a double (1e400) isn't I-JSON: malformed, even without a signature",
+          unsigned_text[:-1] + ',"custom":{"x":1e400}}', "malformed")
+    v_emb("verify-embedded-malformed-not-json",
+          "Text that isn't JSON at all is malformed (it has no URI scheme, so it takes the JSON rules)",
+          unsigned_text[:60], "malformed")
+
+    def refuse(cid, desc, inp):
+        cases.append({"id": cid, "operation": "sign", "requirement": "MUST", "description": desc,
+                      "input": {**inp, "kid": "mushoh-2026", "key": "mushoh-2026"},
+                      "expected": {"refused": True}})
+
+    refuse("sign-refuse-url-no-query", "Signers MUST refuse an encrypted URL with no query",
+           {"form": FORM_URL, "url": u_pb.split("?", 1)[0]})
+    refuse("sign-refuse-url-empty-query", "Signers MUST refuse an encrypted URL with an empty query",
+           {"form": FORM_URL, "url": u_pb.split("?", 1)[0] + "?"})
+    refuse("sign-refuse-url-already-signed",
+           "Signers MUST refuse a URL that already has `sig`; remove it before re-signing",
+           {"form": FORM_URL, "url": s_pb})
+    refuse("sign-refuse-embedded-duplicate-member",
+           "Signers MUST refuse label text with duplicate member names",
+           {"form": FORM_EMBEDDED, "label": dup_top(unsigned_text)})
+    refuse("sign-refuse-embedded-lone-surrogate", "Signers MUST refuse label text with a lone surrogate",
+           {"form": FORM_EMBEDDED, "label": unsigned_text.replace('"batch_2025_12_001"', '"batch_\\ud800"')})
+
+    good_pub = b64url(public_raw("mushoh-2026"))
+    for name, entry, desc in [
+        ("off-curve-key", {"alg": "Ed25519", "publicKeyBase64url": b64url(off_curve_key())},
+         "a 32-byte key that doesn't decode to an Ed25519 point"),
+        ("wrong-length-key", {"alg": "Ed25519", "publicKeyBase64url": b64url(public_raw("mushoh-2026")[:31])},
+         "a 31-byte key"),
+        ("wrong-alg", {"alg": "Ed448", "publicKeyBase64url": good_pub}, "an algorithm other than Ed25519"),
+    ]:
+        cases.append({
+            "id": f"verify-trust-store-{name}", "operation": "verify", "requirement": "MUST",
+            "description": f"A trust-store entry with {desc} is a configuration error. If it reaches "
+                           "verification the result is invalid, not unknown-kid; rejecting the entry "
+                           "when the trust store is built also conforms",
+            "input": {"form": FORM_EMBEDDED, "label": signed_text, "trustStore": {"mushoh-2026": entry}},
+            "expected": {"status": "invalid", "configError": True},
+        })
+
     # Self-check: every verify case must compute the status it claims.
     for c in cases:
-        if c["operation"] != "verify":
+        if c["operation"] == "sign":
+            if c["expected"].get("refused"):
+                try:
+                    if c["input"]["form"] == FORM_URL:
+                        check_signable_url(c["input"]["url"])
+                    else:
+                        parse_ijson_object(c["input"]["label"])
+                except Malformed:
+                    continue
+                raise SystemExit(f"{c['id']}: signer did not refuse")
+            if c["input"]["form"] == FORM_URL:
+                check_signable_url(c["input"]["url"])
+            else:
+                parse_ijson_object(c["input"]["label"])
             continue
+        text = c["input"].get("label") or c["input"].get("url")
+        if detect_form(text) != c["input"]["form"]:
+            raise SystemExit(f"{c['id']}: form detection disagrees with input.form")
+        store = None
+        if "trustStore" in c["input"]:
+            store = {k: {"alg": v["alg"], "publicKey": base64.urlsafe_b64decode(v["publicKeyBase64url"] + "==")}
+                     for k, v in c["input"]["trustStore"].items()}
         fn = verify_embedded if c["input"]["form"] == FORM_EMBEDDED else verify_url
-        status, msg = fn(c["input"].get("label") or c["input"].get("url"))
+        status, msg = fn(text, store)
         if status != c["expected"]["status"]:
             raise SystemExit(f"{c['id']}: computed {status}, expected {c['expected']['status']}")
         if status == "valid":

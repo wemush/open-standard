@@ -107,22 +107,25 @@ Each case's `input.form` is `"embedded"` or `"encrypted-url"`. Embedded labels a
   - For `embedded`, put the token in the label's top-level `signature` member. Member position isn't checked.
   - `sign-embedded-replaces-signature` gives a label that already has a `signature`. The signer ignores it, so the token is the same as for `sign-embedded`.
   - The `sign-jcs-*` cases exercise RFC 8785 member ordering, string escaping, and number formatting. Their `signingInput` shows the canonical form.
-- **`verify`**: Input is `{ form, label | url }`. Verify against the file's `trustStore`.
+  - **Refusals**: When `expected` is `{ "refused": true }`, the signer must refuse and produce no signature. Report it however the library reports errors (a thrown error, an error result); only the refusal is checked. The `sign-refuse-*` cases cover a URL with no query, a URL with an empty query, an already-signed URL, and label text that isn't I-JSON.
+- **`verify`**: Input is `{ form, label | url }`, plus an optional `trustStore`. Verify against `input.trustStore` when it is present, and against the file's `trustStore` otherwise.
+  - `input.form` is explicit, but it always agrees with the rule for a single string input: text that starts with a URI scheme (`[A-Za-z][A-Za-z0-9+.-]*:`) is a URL, and anything else is embedded label JSON. A library with one string entry point must reach the same status by detecting the form.
   - `expected.status` is one of `valid`, `invalid`, `unknown-kid`, `malformed`, `unsigned`, and must match exactly.
   - When the status is `valid`, `expected.kid` is the kid to report. `expected.signingInput` is the input that verified, for debugging.
-  - Statuses are checked in a fixed order (`unsigned`, then every `malformed` rule, then the trust store lookup, then the signature). So a case that breaks several rules has exactly one correct status.
+  - Statuses are checked in a fixed order: parse the embedded label text as I-JSON (`malformed`, signed or not), then `unsigned`, then the token and URL rules (`malformed`), then the trust store lookup (`unknown-kid`), then the signature (`invalid` or `valid`). So a case that breaks several rules has exactly one correct status.
+  - **Unusable trust-store entries**: The `verify-trust-store-*` cases supply an `input.trustStore` whose only entry has an off-curve key, a 31-byte key, or the algorithm `Ed448`, and they set `expected.configError: true`. The expected status is `invalid`. An implementation that rejects the entry when the trust store is built, as the specification recommends, also passes, provided it reports that rejection as a configuration error. `configError` is a marker for test harnesses, not part of the verification result.
 
 To implement `signSpecimen` and `verifySpecimen` from this file:
 
 1. **Signing input**: `"WOLS-SIG-v1\n" + form + "\n" + kid + "\n"` followed by the body.
-2. **Embedded body**: Parse the label text, remove only the top-level `signature`, and produce the RFC 8785 (JCS) canonical form, encoded as UTF-8. A label that isn't an object, or that contains a lone surrogate or a non-finite number, is `malformed`.
+2. **Embedded body**: First parse the label text as an I-JSON object. It is `malformed`, signed or not, if it isn't JSON, isn't an object, has duplicate member names in any object (compared after unescaping; `JSON.parse` and Python's `json.loads` silently keep the last one, so detect them separately), has a lone surrogate, or has a non-finite or overflowing number (`NaN`, `Infinity`, `1e400`). Then, if there's no top-level `signature`, it is `unsigned`. Otherwise remove only the top-level `signature`, and produce the RFC 8785 (JCS) canonical form, encoded as UTF-8.
 3. **URL body**: The URL up to, but not including, its final `&sig=…` parameter, byte for byte, with nothing decoded or re-encoded. A URL without a parameter named exactly `sig` is `unsigned`. The URL is `malformed` if any of these hold:
    - `sig` is not the last parameter, or appears more than once.
    - The URL has a fragment.
    - The URL has a character outside `!` through `~`.
    - The URL doesn't start with `wemush://v1/encrypted/`.
 4. **Token**: Matches `^[A-Za-z0-9_-]{1,64}\.[A-Za-z0-9_-]{86}$`, and the signature part decodes to 64 bytes whose base64url re-encoding is identical (the unused bits are zero). Anything else is `malformed`.
-5. **Kid**: Not in the trust store means `unknown-kid`. Never fall back to a key in the label: the `*-untrusted-*` cases carry an attacker's `publicKey` in the label.
+5. **Kid**: Not in the trust store means `unknown-kid`. Never fall back to a key in the label: the `*-untrusted-*` cases carry an attacker's `publicKey` in the label. A kid whose entry is unusable (not `Ed25519`, not 32 bytes, or not a curve point) gives `invalid`.
 6. **Signature**: Ed25519 verification (RFC 8032 §5.1.7, rejecting `S ≥ L`) gives `valid` or `invalid`.
 
 Signed labels must also keep decoding. `encrypted.json` has `decrypt-signed-url` and `embedded.json` has `signed-label-valid`. A 1.3.x decoder passes both, because it treats the token as the reserved value it preserves.
@@ -161,4 +164,4 @@ Each cell shows `MUST` cases passed, then `SHOULD` cases passed. Both libraries 
 
 `1.3.1-rc.1` adds one `MUST` case, `decrypt-with-sig`, to `encrypted.json` (20 `MUST` cases in total). Both 1.3.0 libraries already preserve `sig` without verifying it, but neither has yet run this case against its vendored vectors.
 
-`1.4.0-rc.1` adds `signatures.json` (67 `MUST` cases), plus `decrypt-signed-url` in `encrypted.json` and `signed-label-valid` in `embedded.json`. Neither library implements signing or verification yet. Run against the 1.3.0 libraries, the two decoding cases pass: both decrypt a signed URL and keep its `sig` token unchanged, and both validate a signed embedded label.
+`1.4.0-rc.1` adds `signatures.json` (84 `MUST` cases), plus `decrypt-signed-url` in `encrypted.json` and `signed-label-valid` in `embedded.json`. Signing and verification are in progress in both libraries (`specimen-labels-js` #15, `specimen-labels-py` #13) and haven't been released. Run against the 1.3.0 libraries, the two decoding cases pass: both decrypt a signed URL and keep its `sig` token unchanged, and both validate a signed embedded label.

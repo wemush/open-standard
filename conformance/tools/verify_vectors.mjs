@@ -200,18 +200,62 @@ function parseToken(tok) {
 const pubKey = (b64) => createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: b64 }, format: 'jwk' });
 
 function check(kid, raw, message, store) {
-  const entry = Object.hasOwn(store, kid) ? store[kid] : undefined;
-  if (!entry || entry.alg !== 'Ed25519') return 'unknown-kid';
-  return edVerify(null, message, pubKey(entry.publicKeyBase64url), raw) ? 'valid' : 'invalid';
+  if (!Object.hasOwn(store, kid)) return 'unknown-kid';
+  const entry = store[kid];
+  // An unusable entry is a configuration error: the kid was found, so the result is invalid.
+  if (entry.alg !== 'Ed25519' || Buffer.from(entry.publicKeyBase64url, 'base64url').length !== 32) return 'invalid';
+  try {
+    return edVerify(null, message, pubKey(entry.publicKeyBase64url), raw) ? 'valid' : 'invalid';
+  } catch {
+    return 'invalid'; // the key doesn't decode to a point
+  }
+}
+
+// Parse label text as an I-JSON object: JSON.parse, then reject duplicate member names (which
+// JSON.parse silently collapses), lone surrogates, and numbers that overflowed to Infinity.
+function parseIJsonObject(text) {
+  let label;
+  try { label = JSON.parse(text); } catch { throw new Malformed('not JSON'); }
+  if (label === null || typeof label !== 'object' || Array.isArray(label)) throw new Malformed('not an object');
+  // The text is valid JSON here, so a small scanner can find object member names.
+  const stack = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '{') stack.push({ keys: new Set(), expectKey: true });
+    else if (ch === '[') stack.push(null);
+    else if (ch === '}' || ch === ']') stack.pop();
+    else if (ch === ',') { if (stack.at(-1)) stack.at(-1).expectKey = true; }
+    else if (ch === ':') stack.at(-1).expectKey = false;
+    else if (ch === '"') {
+      let j = i + 1;
+      while (text[j] !== '"') j += text[j] === '\\' ? 2 : 1;
+      const top = stack.at(-1);
+      if (top && top.expectKey) {
+        const name = JSON.parse(text.slice(i, j + 1));
+        if (top.keys.has(name)) throw new Malformed('duplicate member name');
+        top.keys.add(name);
+      }
+      i = j;
+    }
+  }
+  jcs(label); // lone surrogates, non-finite numbers
+  return label;
+}
+
+const detectForm = (text) => (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(text) ? 'encrypted-url' : 'embedded');
+
+function signableUrl(url) {
+  const q = url.indexOf('?');
+  if (q === -1 || q === url.length - 1) return false;
+  if (url.slice(q + 1).split('&').some((p) => p.split('=')[0] === 'sig')) return false;
+  return /^[\x21-\x7e]*$/.test(url) && !url.includes('#') && url.startsWith(ENCRYPTED_PREFIX);
 }
 
 function verifySignature(input, store) {
   let kid, raw, message;
   try {
     if (input.form === 'embedded') {
-      let label;
-      try { label = JSON.parse(input.label); } catch { throw new Malformed('not JSON'); }
-      if (label === null || typeof label !== 'object' || Array.isArray(label)) throw new Malformed('not an object');
+      const label = parseIJsonObject(input.label);
       if (!Object.hasOwn(label, 'signature')) return { status: 'unsigned' };
       ({ kid, raw } = parseToken(label.signature));
       const { signature: _, ...body } = label;
@@ -244,9 +288,15 @@ function signSignature(input, keys) {
   const priv = createPrivateKey({ key: { kty: 'OKP', crv: 'Ed25519', d: k.seedBase64url, x: k.publicKeyBase64url }, format: 'jwk' });
   let message;
   if (input.form === 'embedded') {
-    const { signature: _, ...body } = JSON.parse(input.label);
+    let parsed;
+    try { parsed = parseIJsonObject(input.label); } catch (e) {
+      if (e instanceof Malformed) return { refused: true };
+      throw e;
+    }
+    const { signature: _, ...body } = parsed;
     message = signingInput('embedded', input.kid, jcs(body));
   } else {
+    if (!signableUrl(input.url)) return { refused: true };
     message = signingInput('encrypted-url', input.kid, input.url);
   }
   const signature = `${input.kid}.${edSign(null, message, priv).toString('base64url')}`;
@@ -295,12 +345,19 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       ok = x.success ? r.success && eq(r.specimen, x.specimen) : !r.success && r.reason === x.reason;
       detail = JSON.stringify({ success: r.success, reason: r.reason });
     } else if (c.operation === 'verify') {
-      const r = verifySignature(c.input, doc.trustStore);
-      ok = eq(r, x);
+      // A case may supply its own trust store (unusable-entry cases); otherwise use the file's.
+      const r = verifySignature(c.input, c.input.trustStore ?? doc.trustStore);
+      const { configError: _, ...want } = x;
+      // Callers that take a single string pick the form by its URI scheme; it must agree.
+      ok = eq(r, want) && detectForm(c.input.label ?? c.input.url) === c.input.form;
       detail = JSON.stringify(r.status);
     } else if (c.operation === 'sign') {
       const r = signSignature(c.input, doc.testKeys);
       ok = eq(r, x);
+      if (x.refused) {
+        if (ok) pass++; else { fail++; console.log(`FAIL ${file} ${c.id}: ${JSON.stringify(r)}`); }
+        continue;
+      }
       // A signature this verifier made must also verify.
       const back = c.input.form === 'embedded'
         ? verifySignature({ form: 'embedded', label: JSON.stringify({ ...JSON.parse(c.input.label), signature: r.signature }) }, doc.trustStore)

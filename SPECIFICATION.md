@@ -546,7 +546,7 @@ A signature lets a verifier check two things: the label's bytes were signed with
 - **Embedded labels** (JSON-LD), in the top-level `signature` member
 - **Encrypted URLs**, in the `sig` parameter
 
-**Compact URLs can't be signed in 1.4.0.** Their parameter set and code registries aren't normative yet (see [ROADMAP.md](./ROADMAP.md)), so there are no fixed bytes to sign. Compact signing will be defined together with the compact URL conformance vectors.
+**Compact URLs can't be signed in 1.4.0.** Their parameter set and code registries aren't normative yet (see [ROADMAP.md](./ROADMAP.md)), so there are no fixed bytes to sign. Compact signing will be defined together with the compact URL conformance vectors. See [Not in 1.4.0](#not-in-140) for the other deliberate limits.
 
 Signing and verifying are separate operations from decoding. Nothing in this section changes how a label decodes (see [Decoding and compatibility](#decoding-and-compatibility)).
 
@@ -605,14 +605,14 @@ JCS works on parsed values. Member order, whitespace, and how strings or numbers
 - **Strings**: Only `"`, `\`, and U+0000 through U+001F are escaped. Use `\b`, `\t`, `\n`, `\f`, and `\r` where they exist, and lowercase `\u00xx` for the other control characters. Everything else is written as literal UTF-8, including `/`, U+007F, U+2028, and non-ASCII characters.
 - **Unicode**: JCS doesn't normalize Unicode. The NFC and NFD forms of a name are different bodies.
 - **Numbers**: Every number is an IEEE 754 double, written with the ECMAScript `Number.prototype.toString` rules. So `1.0` is `1`, `-0` is `0`, `1E21` is `1e+21`, and `0.0000001` is `1e-7`. Integers beyond 2^53 are rounded to the nearest double first.
+  - **Precision caveat**: Because of that rounding, two labels whose numbers differ only beyond double precision (for example `9007199254740993` and `9007199254740992`) have the same body and share a signature. Generators SHOULD keep every number within the I-JSON safe range, with integers within ±(2^53 − 1). Values that need more precision belong in strings. Applications SHOULD display a signed number as canonicalized, not as spelled in the label text.
 
-A label is **malformed** for verification, and signers MUST refuse to sign it, if any of these hold:
+Label text must be an [I-JSON](https://www.rfc-editor.org/rfc/rfc7493) object. If it isn't, the label is **malformed** for verification, **whether or not it carries a signature**, and signers MUST refuse to sign it. That is the case if any of these hold:
 
-- It isn't a JSON object.
-- Any member name or string value contains a lone surrogate (it isn't [I-JSON](https://www.rfc-editor.org/rfc/rfc7493)).
-- It contains a non-finite number. Some parsers accept `NaN` or `Infinity`.
-
-Verifiers SHOULD also treat a label with duplicate member names in any object as malformed, and signers MUST NOT produce one. Different JSON parsers keep different duplicates, so a duplicated member could display one value and verify another.
+- The text isn't JSON, or it isn't a JSON object.
+- Any object, at any depth, has two members with the same name. Names are compared after unescaping, so `"stage"` and `"\u0073tage"` are the same name. Verifiers MUST detect this even when their JSON parser silently keeps one of the duplicates. Different parsers keep different duplicates, so a duplicated member could display one value and verify another.
+- Any member name or string value contains a lone surrogate.
+- It contains a non-finite number: `NaN` or `Infinity` (which some parsers accept), or a number too large for a double, such as `1e400`.
 
 The body covers every member except the top-level `signature`, including `version`, `custom`, `_meta`, and members the verifier doesn't recognize. Field-level encryption objects are covered as printed, as ciphertext.
 
@@ -657,6 +657,8 @@ To also authenticate the plaintext to key holders, sign the embedded label first
 - **Keys come from outside the label.** Verifiers MUST resolve the kid only through the trust store. They MUST NOT use a key, key URL, certificate, or key hint carried in the label, whether in `publicKey`, `custom`, `_meta`, `organization`, or anywhere else. Whoever edits a label controls all of its contents.
 - **Kids aren't globally unique.** A kid is unique only within a trust store; there is no global registry. Issuers SHOULD choose kids that are unlikely to collide with other issuers' kids, such as an organization prefix plus a key generation (`mushoh-2026`).
 - **No network access.** Verification MUST NOT fetch keys or make network requests. The caller builds the trust store first, so verification works offline.
+- **Unusable entries**: An entry whose algorithm isn't `Ed25519`, whose public key isn't exactly 32 bytes, or whose 32 bytes don't decode to a point on the curve (RFC 8032 §5.1.3) is a configuration error. Implementations SHOULD reject such an entry when the trust store is built. If one still reaches verification, the result MUST be `invalid`, not `unknown-kid`: the kid was found, but no signature can verify under that entry.
+- **Revocation**: Trust-store entries have no validity period in 1.4.0. To revoke a key, remove its kid from the trust store (see [Key compromise and rotation](#what-a-signature-proves)).
 - **Key set document (optional)**: An issuer MAY publish its public keys at `https://{issuer-host}/.well-known/wols-keys.json`:
 
   ```json
@@ -671,13 +673,19 @@ Verification takes a label (embedded label text, or an encrypted URL) and a trus
 
 | Status | Meaning |
 | ------ | ------- |
-| `unsigned` | The label has no top-level `signature` member, or the URL has no `sig` parameter |
-| `malformed` | A signature is present, but the token, the label, or the URL breaks a rule in this section |
+| `malformed` | The label text isn't an I-JSON object (checked before anything else, signed or not); or a signature is present, but the token or the URL breaks a rule in this section |
+| `unsigned` | The label is well-formed I-JSON with no top-level `signature` member, or the URL has no `sig` parameter |
 | `unknown-kid` | The token is well-formed, but its kid isn't in the trust store (or its entry isn't an Ed25519 key) |
 | `invalid` | The kid is in the trust store, and the signature doesn't verify under that key |
 | `valid` | The signature verifies under the trust store's key for the kid |
 
-- **Check order**: Verifiers MUST check in this order: `unsigned`, then every `malformed` rule, then the trust store lookup (`unknown-kid`), then the signature (`invalid` or `valid`). With a fixed order, every implementation returns the same status for the same input.
+- **Check order**: Verifiers MUST check in this order, so that every implementation returns the same status for the same input:
+  1. For an embedded label, parse the text as an I-JSON object. Any failure is `malformed`, whether or not the label carries a signature.
+  2. No signature present: `unsigned`.
+  3. Token and URL rules: `malformed`.
+  4. Trust store lookup: `unknown-kid` when the kid isn't there.
+  5. The signature: `invalid` or `valid`. An [unusable trust-store entry](#key-identification-and-the-trust-store) gives `invalid`.
+- **Choosing the form**: A verifier that takes a single string decides its form from its start. Text that starts with a URI scheme (`ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"`, RFC 3986 §3.1) takes the encrypted URL rules. Anything else is parsed as embedded label JSON. A URL that isn't a `wemush://v1/encrypted/` URL is then `unsigned` without a `sig` parameter and `malformed` with one.
 - **Only `valid` is authentic.** Only a `valid` result may be presented as signed, authentic, or unmodified. A `valid` result MUST also report its kid.
 - **Other statuses**: A verifier MAY report the kid with `unknown-kid` or `invalid`, for diagnostics. It MUST NOT present `unknown-kid` as valid; "signed by an unknown key" is an accurate description.
 - Verification never fails decoding, and decoding never verifies.
@@ -685,7 +693,10 @@ Verification takes a label (embedded label text, or an encrypted URL) and a trus
 #### Signing
 
 - To sign an embedded label, a signer removes any top-level `signature` member, computes the body and the signing input, and sets `signature` to the token. Re-signing a label therefore replaces its old signature.
-- A signer MUST refuse to sign an encrypted URL that already has a `sig` parameter. To re-sign it, remove the old `sig` first. The unsigned URL MUST also satisfy the verifier's rules: ASCII only, no fragment, and the `wemush://v1/encrypted/` prefix.
+- A signer MUST refuse to sign label text that isn't an I-JSON object (see [Embedded body](#embedded-body)).
+- A signer MUST refuse to sign an encrypted URL that has no query (no `?`, or nothing after it).
+- A signer MUST refuse to sign an encrypted URL that already has a `sig` parameter. To re-sign it, remove the old `sig` first.
+- The unsigned URL MUST also satisfy the verifier's rules: ASCII only, no fragment, and the `wemush://v1/encrypted/` prefix. Signers emit only that form.
 - Signers MUST emit the canonical token encoding.
 
 #### Decoding and compatibility
@@ -714,6 +725,16 @@ Other considerations:
   - **Limiting the damage**: Keep private keys offline or in hardware where possible. A key per site or device limits what one compromise affects.
 - **Trust store distribution**: The trust store is the root of trust. How it reaches the verifier (shipped with the app, pinned, or fetched over HTTPS from a host chosen in advance) determines what `valid` means. A key set document is only as trustworthy as its host and the way the verifier chose that host. Kids from different issuers must not collide within one store.
 - **Display what you verified**: Applications SHOULD display the values from the same parse they verified, not from a separate parse of the label text.
+
+#### Not in 1.4.0
+
+These are deliberate limits of this version, recorded so implementations don't fill the gaps on their own:
+
+- **Compact URLs**: They can't be signed. Compact signing waits for the compact parameter and species code registries, and will be defined with the compact URL conformance vectors.
+- **Other URL forms**: Only `wemush://v1/encrypted/` URLs can be signed or verified, and signers emit only that form. `web+wemush://` and any future HTTPS resolver form are `malformed` when they carry `sig`.
+- **Key validity periods**: Trust-store entries have no `notBefore` or `notAfter`. Revoke a key by removing its kid. Validity periods may come in a later version; without a trusted timestamp they couldn't distinguish a backdated label anyway.
+- **Kid syntax**: The kid stays `[A-Za-z0-9_-]{1,64}`. Domain-style kids with `.` or `:` aren't supported.
+- **Other algorithms and multiple signatures**: Ed25519 is the only algorithm, and a label carries at most one signature per form. A future scheme would use a new domain tag (not `WOLS-SIG-v1`).
 
 ---
 
@@ -1052,11 +1073,17 @@ Normative changes, subject to the public comment period:
   - **Keys**: Resolved only through a caller-supplied trust store, never from the label, with an optional `/.well-known/wols-keys.json` key set document.
   - **Verification result**: One of five statuses (`valid`, `invalid`, `unknown-kid`, `malformed`, `unsigned`), checked in a fixed order.
 - **Compact URLs** can't be signed yet. Compact signing will be defined with the compact URL vectors.
+- **Malformed before unsigned**: Label text that isn't an I-JSON object is `malformed` whether or not it carries a signature. That covers non-JSON, non-objects, duplicate member names, lone surrogates, and non-finite or overflowing numbers. The check order is: parse, `unsigned`, token and URL rules, `unknown-kid`, then `invalid` or `valid`. A single string input takes the URL rules if it starts with a URI scheme, and the JSON rules otherwise.
+- **Duplicate member names**: Rejecting them is a MUST, compared after unescaping, at any depth.
+- **Signing refusals**: Signers refuse label text that isn't I-JSON, and encrypted URLs with no query or with an existing `sig`.
+- **Unusable trust-store entries**: A wrong algorithm, a key that isn't 32 bytes, or bytes that aren't a curve point is a configuration error. Implementations SHOULD reject the entry when the store is built; if it reaches verification, the result is `invalid`.
+- **Number precision**: Adds the caveat that JCS rounds integers beyond ±2^53, so generators SHOULD stay within the I-JSON safe range and applications SHOULD display the canonicalized value.
+- **Not in 1.4.0**: Records compact URL signing, other URL forms, key validity periods, kid syntax changes, and other algorithms as explicit non-goals.
 - **`sig` parameter**: Now a signature token instead of a reserved value. When present it is the last parameter. Decoding still never verifies it.
 - **Security considerations**: Adds what a valid signature does and doesn't prove (no freshness, so rollback and replay are possible), plus key compromise and rotation, trust store distribution, stripping, and linkability.
 - **Library API Reference**: Adds the recommended `signSpecimen`, `signEncryptedUrl`, and `verifySpecimen` shapes.
 - **Conformance**:
-  - Adds `signatures.json` with `sign` and `verify` cases, published test keys, and a trust store.
+  - Adds `signatures.json` with `sign` and `verify` cases (including signing refusals and per-case trust stores), published test keys, and a trust store.
   - Adds `decrypt-signed-url` to `encrypted.json` and `signed-label-valid` to `embedded.json`. Both show that signed labels decode and validate unchanged.
   - The existing cases are unchanged.
 
