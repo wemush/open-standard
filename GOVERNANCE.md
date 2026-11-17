@@ -333,6 +333,7 @@ Printed labels can't be upgraded, so they outlive any single version of the spec
 - A release **MAY** stop generators from producing a format. It must keep decoding rules for that format, marked as legacy.
 - A major version may only remove decoding rules for a format if a migration path for existing labels is published with it.
 - Release candidates are exempt. Anything introduced only in a release candidate may change or be removed before the final release.
+- This rule applies to formats as they are specified from 1.3.0 onward. Earlier releases did not specify every format fully enough for a decoder to read it from the specification alone. In particular, 1.2.0 named the encrypted URL but defined no key derivation, IV transport, or payload encoding, so each 1.2.0 library produced its own incompatible encrypted labels. There is no single 1.2.0 encrypted format to preserve, so the specification makes decoding those legacy labels optional (a MAY), and each library reads only the legacy format it produced itself. See [Encrypted Format](./SPECIFICATION.md#3-encrypted-format-researchcommercial) and [Interoperability Notes](./docs/interoperability-notes.md#2-encrypted-format).
 
 ## Conflict Resolution
 
@@ -492,6 +493,7 @@ This governance document can be amended:
 - **December 2025**: Initial governance structure established
 - **December 2025**: First steering committee formed (Mark Beacom, Chair)
 - **November 2026**: Founding phase, pre-release process, and wire-format compatibility rule added
+- **November 2026**: Wire-format compatibility rule scoped to formats specified from 1.3.0 onward
 
 ## Acknowledgments
 
@@ -506,5 +508,5 @@ Thank you to these projects for pioneering open-source governance.
 
 ---
 
-**Last Updated**: November 14, 2026
-**Version**: 1.1.0
+**Last Updated**: November 16, 2026
+**Version**: 1.1.1

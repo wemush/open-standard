@@ -3,7 +3,7 @@
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
 **Current Version**: 1.3.0
-**Last Updated**: November 15, 2026
+**Last Updated**: November 16, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -237,6 +237,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - Wholesale/retail integration specs
 
 4. **Enhanced Security Features**
+   - **Signature scheme**: Replace the non-normative signature sketch, and give the reserved `sig` parameter and `signature` field a meaning: canonical signed bytes, one mandatory algorithm, a `sig` encoding, and a key identifier resolved outside the label (never a key embedded in the label itself), with conformance vectors. Until then, 1.3.1 reserves both: decoders preserve them and never treat them as verified.
    - Blockchain-ready verification hooks
    - Multi-signature support for supply chains
 
@@ -516,7 +517,7 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: November 15, 2026
+**Last Updated**: November 16, 2026
 **Next Review**: February 2027
 **Version**: 1.3.0 (Roadmap document version)
 

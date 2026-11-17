@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.3.0**. See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target the **WOLS 1.3.0** wire format, which 1.3.1 doesn't change (currently release candidate `1.3.1-rc.1`, which adds one case). See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 
@@ -46,6 +46,7 @@ What `expected` means for each operation:
 - **`derive`**: PBKDF2-HMAC-SHA256 intermediate value, provided for debugging key derivation.
 - **`decrypt`**: The input is an encrypted URL plus a `secret`, which is either `{ kdf: "pbkdf2", passphrase }` or `{ kdf: "raw", keyBase64url }`.
   - On success, the decrypted bytes must equal `plaintext` exactly and parse to `specimen`.
+  - `sig` and `sigVerified`, when present, check the reserved `sig` parameter. The decoder must keep `sig` with the decoded label, equal to this value, and must not report it as verified (`sigVerified` is always `false` in 1.3.x). Implementations that don't expose URL parameters can check only that decryption succeeds.
   - On failure, decryption must be refused. `reason` is a suggested error category and doesn't have to match exactly.
 - **Suggested `reason` values**:
 
@@ -101,3 +102,5 @@ Results against the `1.3.0` vectors, November 2026:
 | [`wols`](https://github.com/wemush/specimen-labels-py) 1.3.0 (Python) | 12/12 + 1/1 | 4/4 + 1/1 | 9/9 + 1/1 | 19/19 + 2/2 | 6/6 |
 
 Each cell shows `MUST` cases passed, then `SHOULD` cases passed. Both libraries vendor these vectors with matching `SHA256SUMS`.
+
+`1.3.1-rc.1` adds one `MUST` case, `decrypt-with-sig`, to `encrypted.json` (20 `MUST` cases in total). Both 1.3.0 libraries already preserve `sig` without verifying it, but neither has yet run this case against its vendored vectors.
