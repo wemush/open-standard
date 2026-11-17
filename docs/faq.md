@@ -37,7 +37,7 @@ WOLS can encode:
 - Harvest yields
 - Parent-child lineage
 - Custom fields for your specific needs
-- Cryptographic signatures for verification (reserved in 1.3.x; the Ed25519 scheme is drafted in 1.4.0-rc.1)
+- Cryptographic signatures for verification (Ed25519, since 1.4.0)
 
 ### What QR code format does WOLS use?
 
@@ -320,7 +320,8 @@ See [ROADMAP.md](../ROADMAP.md) for details:
 
 - **v1.2.0** (Jan 2026): ✅ Extended growth stages, type aliases, `_meta` namespace
 - **v1.3.0** (Nov 2026): ✅ Encrypted wire format, `PRIMORDIA` handling, `transferDepth`, conformance vectors
-- **v1.4.0** (planned): Compact URL and species code registries, HTTPS resolver form, IoT integration
+- **v1.4.0** (Nov 2026): ✅ Ed25519 signatures, key set documents, numeric `strain.generation` tolerance, cross-library interop matrix
+- **v1.5.0** (planned): Compact URL and species code registries, HTTPS resolver form, IoT integration
 - **v2.0.0** (planned): Blockchain, standards alignment, supply chain
 
 ### Can I request features?

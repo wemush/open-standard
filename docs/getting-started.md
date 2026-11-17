@@ -194,7 +194,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "stage": "COLONIZATION"

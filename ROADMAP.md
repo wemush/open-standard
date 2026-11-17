@@ -2,8 +2,8 @@
 
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
-**Current Version**: 1.3.0
-**Last Updated**: November 16, 2026
+**Current Version**: 1.4.0
+**Last Updated**: November 17, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -40,8 +40,12 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 └─ Transfer depth (strain.transferDepth)
 └─ Language-neutral conformance vectors
 
-Next: v1.4.0 📋 IoT, Analytics & Interoperability
-└─ Signature scheme (Ed25519, trust-store kids) — 1.4.0-rc.1
+2026 Q4: v1.4.0 ✅ Signatures
+└─ Ed25519 signature scheme (trust-store kids, key set documents)
+└─ Numeric strain.generation tolerance for decoders
+└─ Cross-library interop matrix
+
+Next: v1.5.0 📋 IoT, Analytics & Interoperability
 └─ Compact URL and species code registries
 └─ HTTPS resolver form
 └─ IoT sensor specs
@@ -150,7 +154,7 @@ Focus on making WOLS easier to integrate and extend for developers and equipment
 - **February 2026**: Python library v1.2, community feedback
 - **March 2026**: Documentation finalized, adoption push
 
-## Current: v1.3.0 (November 2026)
+## Released: v1.3.0 (November 2026)
 
 ### Status: ✅ v1.3.0 RELEASED
 
@@ -171,6 +175,29 @@ Closes the cross-implementation gaps found while integrating the WeMush Platform
 ### Timeline
 
 - **November 2026**: 1.3.0-rc.1, 1.3.0-rc.2, and the final 1.3.0 release, with both libraries ✅
+
+## Current: v1.4.0 (November 2026)
+
+### Status: ✅ v1.4.0 RELEASED
+
+### Theme: **Signatures**
+
+Lets a verifier check that a label was signed with a key it trusts and hasn't changed since. It also folds in the 1.3.1-rc.1 clarifications, which were not released separately.
+
+### Deliverables
+
+- [x] Signature scheme: Ed25519 over RFC 8785 (JCS) canonical JSON for embedded labels and over the exact URL bytes for encrypted URLs, with a domain-separated signing input, a `{kid}.{sig}` token in the `signature` field and `sig` parameter, kids resolved only through a caller-supplied trust store, and five verification statuses ✅ DONE
+- [x] Key set documents (`/.well-known/wols-keys.json`), with entries for unsupported algorithms skipped ✅ DONE
+- [x] Numeric `strain.generation`: generators write a string, decoders read an integer as its decimal string with a warning ✅ DONE
+- [x] 1.3.1-rc.1 clarifications: reserved `sig`, key derivation responsiveness, what encryption does and doesn't protect, ID path encoding ✅ DONE
+- [x] `signatures.json` conformance vectors (112 `MUST` cases) ✅ DONE
+- [x] Cross-library interop matrix ([`conformance/interop/`](./conformance/interop/README.md), 51 cases) with both reference harnesses ✅ DONE
+- [x] `@wemush/wols` 1.4.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) passes every conformance vector ✅ DONE
+- [x] `wols` 1.4.0 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) passes every conformance vector ✅ DONE
+
+### Timeline
+
+- **November 2026**: 1.3.1-rc.1, 1.4.0-rc.1, and the final 1.4.0 release, with both libraries ✅
 
 ## Real-World Integration Learnings
 
@@ -212,15 +239,15 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 | SENESCENCE | ✅ | End-of-life monitoring |
 | HARVEST | ✅ | Final harvest stage |
 
-## Next: v1.4.0
+## Next: v1.5.0
 
-### Status: 📋 PLANNED (release candidate `1.4.0-rc.1` drafts the signature scheme)
+### Status: 📋 PLANNED
 
 ### Theme: **IoT & Analytics**
 
 Focus on enterprise features, IoT integration, and supply chain tracking.
 
-### v1.4.0 Goals
+### v1.5.0 Goals
 
 1. **IoT Sensor Integration Specification**
    - Standard for encoding sensor data in WOLS labels
@@ -238,7 +265,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - Wholesale/retail integration specs
 
 4. **Enhanced Security Features**
-   - **Signature scheme** *(drafted in 1.4.0-rc.1)*: Ed25519 over RFC 8785 (JCS) canonical JSON for embedded labels and over the exact URL bytes for encrypted URLs, with a domain-separated signing input, a `{kid}.{sig}` token in the reserved `signature` field and `sig` parameter, kids resolved only through a caller-supplied trust store, and five distinct verification statuses. Conformance vectors are in `signatures.json`. Next: `signSpecimen` and `verifySpecimen` in both libraries, then the final release. Compact URL signing follows the compact URL vectors.
+   - **Compact URL signing**: Follows the compact URL vectors. The signature scheme itself shipped in [1.4.0](#current-v140-november-2026).
    - Blockchain-ready verification hooks
    - Multi-signature support for supply chains
 
@@ -256,10 +283,8 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - **Specimen condition**: Add an optional field for terminal or abnormal states (for example contaminated, disposed, archived). Today implementations must map a contaminated specimen to a growth stage, which loses information.
    - **Container/vessel (optional)**: Add an optional field for vessel and size (petri dish, jar, bag, monotub). Several current type aliases (`PETRI`, `BAG`, `BUCKET`) describe vessels rather than specimen types.
 
-### v1.4.0 Deliverables
+### v1.5.0 Deliverables
 
-- [x] Signature scheme specification and `signatures.json` conformance vectors (1.4.0-rc.1)
-- [ ] `signSpecimen` / `verifySpecimen` in `@wemush/wols` and `wols`, passing `signatures.json`
 - [ ] IoT Integration Guide
 - [ ] Analytics specification
 - [ ] Supply chain guide
@@ -268,18 +293,16 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
 - [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
 
-### v1.4.0 Success Metrics
+### v1.5.0 Success Metrics
 
 - 🎯 25+ organizations
 - 🎯 5+ supply chain integrations
 - 🎯 1 academic paper published using WOLS
 - 🎯 100+ GitHub stars
 
-### v1.4.0 Timeline
+### v1.5.0 Timeline
 
-- **November 2026**: `1.4.0-rc.1` (signature scheme)
-
-The final release is not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
 ## Long-Term: v2.0.0
 
@@ -370,7 +393,8 @@ Track community-requested features and their status:
 | Environment detection | 1 | ✅ Released | v1.2.0 |
 | Migration utilities | 1 | ✅ Released | v1.2.0 |
 | Extended growth stages | 1 | ✅ Released | v1.2.0 |
-| IoT sensor integration | - | 📋 Planned | v1.4.0 |
+| Cryptographic signatures | - | ✅ Released | v1.4.0 |
+| IoT sensor integration | - | 📋 Planned | v1.5.0 |
 | Blockchain verification | - | 📋 Planned | v2.0.0 |
 | Mobile app example | - | 💭 Considering | TBD |
 | Video documentation | - | 💭 Considering | TBD |
@@ -522,9 +546,9 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: November 16, 2026
+**Last Updated**: November 17, 2026
 **Next Review**: February 2027
-**Version**: 1.3.0 (Roadmap document version)
+**Version**: 1.4.0 (Roadmap document version)
 
 ---
 

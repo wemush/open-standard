@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target the **WOLS 1.3.0** wire format, which 1.3.1 and 1.4.0 don't change, plus the **1.4.0** signature scheme (currently release candidate `1.4.0-rc.1`, which builds on `1.3.1-rc.1`). See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.4.0**: the 1.3.0 wire format, which 1.4.0 doesn't change, plus the 1.4.0 signature scheme and numeric `generation` tolerance. Each file's `wolsVersion` is the version that defines its cases: `1.3.0` for the wire-format files and `1.4.0` for `signatures.json`. Cases added in 1.4.0 to the `1.3.0` files are marked in their descriptions. See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 
@@ -170,15 +170,13 @@ node conformance/tools/verify_vectors.mjs
 
 ## Current library status
 
-Results against the `1.3.0` vectors, November 2026:
+Results against the `1.4.0` vectors, November 2026:
 
-| Library | embedded | primordia | generation | encrypted | field-encryption |
-| ------- | -------- | --------- | ---------- | --------- | ---------------- |
-| [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) 1.3.0 (TypeScript) | 12/12 + 1/1 | 4/4 + 1/1 | 9/9 + 1/1 | 19/19 + 2/2 | 6/6 |
-| [`wols`](https://github.com/wemush/specimen-labels-py) 1.3.0 (Python) | 12/12 + 1/1 | 4/4 + 1/1 | 9/9 + 1/1 | 19/19 + 2/2 | 6/6 |
+| Library | embedded | primordia | generation | encrypted | field-encryption | signatures |
+| ------- | -------- | --------- | ---------- | --------- | ---------------- | ---------- |
+| [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) 1.4.0 (TypeScript) | 13/13 + 1/1 | 4/4 + 1/1 | 9/9 + 2/2 | 21/21 + 3/3 | 6/6 + 1/1 | 112/112 |
+| [`wols`](https://github.com/wemush/specimen-labels-py) 1.4.0 (Python) | 13/13 + 1/1 | 4/4 + 1/1 | 9/9 + 2/2 | 21/21 + 3/3 | 6/6 + 1/1 | 112/112 |
 
-Each cell shows `MUST` cases passed, then `SHOULD` cases passed. Both libraries vendor these vectors with matching `SHA256SUMS`.
+Each cell shows `MUST` cases passed, then `SHOULD` cases passed. `signatures.json` has only `MUST` cases (12 `sign`, 72 `verify`, 28 `loadKeySet`). Both libraries vendor these vectors with matching `SHA256SUMS`, and both pass the 51-case [interop matrix](./interop/README.md) in each direction.
 
-`1.3.1-rc.1` adds one `MUST` case, `decrypt-with-sig`, to `encrypted.json` (20 `MUST` cases in total). Both 1.3.0 libraries already preserve `sig` without verifying it, but neither has yet run this case against its vendored vectors.
-
-`1.4.0-rc.1` adds `signatures.json` (112 `MUST` cases: 12 `sign`, 72 `verify`, 28 `loadKeySet`), plus `decrypt-signed-url` in `encrypted.json` and `signed-label-valid` in `embedded.json`. Signing and verification are in progress in both libraries (`specimen-labels-js` #15, `specimen-labels-py` #13) and haven't been released. Run against the 1.3.0 libraries, the two decoding cases pass: both decrypt a signed URL and keep its `sig` token unchanged, and both validate a signed embedded label.
+Against the 1.3.0 libraries, the signed-label decoding cases `decrypt-signed-url` and `signed-label-valid` pass: both decrypt a signed URL and keep its `sig` token unchanged, and both validate a signed embedded label. The 1.3.0 libraries can't sign or verify.
