@@ -1200,6 +1200,730 @@
         "status": "invalid",
         "configError": true
       }
+    },
+    {
+      "id": "keyset-load",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set with two Ed25519 keys loads both, and a label signed by one verifies",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            },
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "acme-lab-1",
+          "mushoh-2026"
+        ],
+        "skipped": 0,
+        "status": "valid",
+        "kid": "mushoh-2026"
+      }
+    },
+    {
+      "id": "keyset-unknown-alg-skipped",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "Entries with algorithms the implementation doesn't support are skipped, not errors; the remaining Ed25519 key still verifies",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2027",
+              "alg": "ML-DSA-44",
+              "publicKey": "-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSg"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            },
+            {
+              "kid": "acme-lab-2",
+              "alg": "Ed448",
+              "publicKey": "uocEtRX_ZLAjI_04GvJnbWLmpIeDI4Ovi2WGYcykcDj9Zw5_4zEMz1yenZ_k6sNzufqHOKVEdyi8"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "mushoh-2026"
+        ],
+        "skipped": 2,
+        "status": "valid",
+        "kid": "mushoh-2026"
+      }
+    },
+    {
+      "id": "keyset-unknown-alg-members-unchecked",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A skipped entry's other members aren't checked: no kid, a bad kid, or no publicKey is fine",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "alg": "ES256"
+            },
+            {
+              "kid": "not a kid",
+              "alg": "future-alg",
+              "publicKey": 7
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "mushoh-2026"
+        ],
+        "skipped": 2,
+        "status": "valid",
+        "kid": "mushoh-2026"
+      }
+    },
+    {
+      "id": "keyset-unknown-alg-same-kid",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "Duplicate kids are checked only among usable entries: a skipped entry may share a kid with an Ed25519 entry",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "ML-DSA-44",
+              "publicKey": "-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSvqTUK-8yNSmJcd73s3xQyJDMQIRVB7AGuFOVrBZeqpK-pNQr7zI1KYlx3vezfFDIkMxAhFUHsAa4U5WsFl6qkr6k1CvvMjUpiXHe97N8UMiQzECEVQewBrhTlawWXqqSg"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "mushoh-2026"
+        ],
+        "skipped": 1,
+        "status": "valid",
+        "kid": "mushoh-2026"
+      }
+    },
+    {
+      "id": "keyset-alg-case-sensitive",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "`alg` is compared exactly: `ed25519` isn't a supported algorithm, so the entry is skipped and the label's kid is unknown",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            },
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "acme-lab-1"
+        ],
+        "skipped": 1,
+        "status": "unknown-kid"
+      }
+    },
+    {
+      "id": "keyset-empty",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set with no keys loads as an empty trust store",
+      "input": {
+        "keySet": {
+          "keys": []
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [],
+        "skipped": 0,
+        "status": "unknown-kid"
+      }
+    },
+    {
+      "id": "keyset-extra-members",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "Members the specification doesn't define are ignored",
+      "input": {
+        "keySet": {
+          "issuer": "mushoh.example",
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to",
+              "use": "sig",
+              "created": "2026-01-01"
+            }
+          ]
+        },
+        "form": "embedded",
+        "label": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+      },
+      "expected": {
+        "kids": [
+          "mushoh-2026"
+        ],
+        "skipped": 0,
+        "status": "valid",
+        "kid": "mushoh-2026"
+      }
+    },
+    {
+      "id": "keyset-ed25519-off-curve-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with 32 bytes that aren't a curve point is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-short-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a 31-byte key is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2g"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-long-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a 33-byte key is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2toA"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-padded-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a padded base64url key is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to="
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-non-canonical-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a key with unused bits set is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2tp"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-missing-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with no publicKey is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-key-not-string",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a publicKey that isn't a string is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": [
+                253,
+                120,
+                220,
+                167,
+                139,
+                32,
+                144,
+                147,
+                104,
+                18,
+                69,
+                174,
+                155,
+                134,
+                76,
+                214,
+                164,
+                236,
+                203,
+                179,
+                19,
+                42,
+                189,
+                210,
+                147,
+                167,
+                91,
+                172,
+                120,
+                169,
+                218,
+                218
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-missing-kid",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with no kid is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-invalid-kid",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a kid outside the token's kid syntax is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh 2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-kid-too-long",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a 65-character kid is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-ed25519-kid-not-string",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "An Ed25519 entry with a kid that isn't a string is a configuration error: loading fails, rather than dropping the key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": 2026,
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-duplicate-kid",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "Two Ed25519 entries with the same kid are a configuration error",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-duplicate-kid-same-key",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A repeated kid is a configuration error even when both entries carry the same key",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-array",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is an array is a configuration error",
+      "input": {
+        "keySet": [
+          {
+            "kid": "mushoh-2026",
+            "alg": "Ed25519",
+            "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+          }
+        ]
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-string",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is a string is a configuration error",
+      "input": {
+        "keySet": "mushoh-2026"
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-null",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is null is a configuration error",
+      "input": {
+        "keySet": null
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-missing-keys",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is an object without `keys` is a configuration error",
+      "input": {
+        "keySet": {
+          "key": [
+            {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-keys-not-array",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is an object whose `keys` isn't an array is a configuration error",
+      "input": {
+        "keySet": {
+          "keys": {
+            "mushoh-2026": {
+              "kid": "mushoh-2026",
+              "alg": "Ed25519",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          }
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-entry-not-object",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is a `keys` element that isn't an object is a configuration error",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            "mushoh-2026"
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-entry-missing-alg",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is an entry without `alg` is a configuration error",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
+    },
+    {
+      "id": "keyset-malformed-entry-alg-not-string",
+      "operation": "loadKeySet",
+      "requirement": "MUST",
+      "description": "A key set document that is an entry whose `alg` isn't a string is a configuration error",
+      "input": {
+        "keySet": {
+          "keys": [
+            {
+              "kid": "acme-lab-1",
+              "alg": "Ed25519",
+              "publicKey": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+            },
+            {
+              "kid": "mushoh-2026",
+              "alg": 25519,
+              "publicKey": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "configError": true
+      }
     }
   ]
 }
