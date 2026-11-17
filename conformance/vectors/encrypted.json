@@ -503,6 +503,37 @@
         "sig": "mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ciZn5iIhij9Zi3U9LbXPR_wGXV9gBw",
         "sigVerified": false
       }
+    },
+    {
+      "id": "decrypt-numeric-generation",
+      "operation": "decrypt",
+      "requirement": "SHOULD",
+      "description": "Decoders SHOULD accept a plaintext whose `strain.generation` is a JSON integer and decode it as its decimal string (added in 1.4.0-rc.1)",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QU2pHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sRDgPsx-8rfJ8VuhSAuG92rq6okEsc-JHxw-dh5Gl7pUWyft5V200MnCxLj5GJ0Lo9PZwEjivB-2_5_nw1bUV9i6xHZTmbIYlPZuYlhqZr8wle4y7ilAP2OdbCUxhy22Fbg0qisw&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": true,
+        "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.3.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"MO-Blue-001\",\"generation\":1},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\"}",
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "1"
+          },
+          "stage": "COLONIZATION",
+          "created": "2025-12-16T10:30:00Z"
+        }
+      }
     }
   ]
 }

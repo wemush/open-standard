@@ -47,7 +47,7 @@ What `expected` means for each operation:
 - **`create`**: The input is the argument to the implementation's specimen factory. Check the resulting `type` and `stage` (`null` means no stage), and whether a `warning` was emitted.
 - **`derive`**: PBKDF2-HMAC-SHA256 intermediate value, provided for debugging key derivation.
 - **`decrypt`**: The input is an encrypted URL plus a `secret`, which is either `{ kdf: "pbkdf2", passphrase }` or `{ kdf: "raw", keyBase64url }`.
-  - On success, the decrypted bytes must equal `plaintext` exactly and parse to `specimen`.
+  - On success, the decrypted bytes must equal `plaintext` exactly and parse to `specimen`. `specimen` is the decoded label: where the plaintext has a JSON integer `strain.generation`, it holds the decimal string (see [Numeric `generation`](#numeric-generation-140)).
   - `sig` and `sigVerified`, when present, check the reserved `sig` parameter. The decoder must keep `sig` with the decoded label, equal to this value, and must not report it as verified. `sigVerified` is always `false`, because decoding never verifies; verification is the separate `verify` operation. Implementations that don't expose URL parameters can check only that decryption succeeds.
   - On failure, decryption must be refused. `reason` is a suggested error category and doesn't have to match exactly.
 - **Suggested `reason` values**:
@@ -140,6 +140,16 @@ Signed labels must also keep decoding. `encrypted.json` has `decrypt-signed-url`
 A case marked `SHOULD` is recommended behavior. An implementation that skips it can still conform.
 
 > **Fixed salts and IVs**: The encrypted vectors use fixed salts and IVs so the output is reproducible. Real generators **MUST** use fresh random values.
+
+### Numeric `generation` (1.4.0)
+
+`strain.generation` is a string, but the Python `wols` 1.3.0 library wrote it as a JSON integer. Decoders SHOULD read such a value as its decimal string, with a warning (see [Generation Notation](../SPECIFICATION.md#generation-notation-v120)). Three `SHOULD` cases cover it:
+
+| Case | File | Expected |
+| ---- | ---- | -------- |
+| `generation-numeric` | `generation.json` | Valid, with a warning on `strain.generation` |
+| `decrypt-numeric-generation` | `encrypted.json` | Decrypts; `plaintext` keeps the integer, `specimen` has `"generation": "1"` |
+| `decrypt-fields-numeric-generation` | `field-encryption.json` | Decrypts; `specimen` has `"generation": "1"` |
 
 ## Checksums
 

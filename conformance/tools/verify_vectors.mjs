@@ -35,7 +35,12 @@ function validate(s) {
   const st = s.strain;
   if (st !== undefined) {
     if (typeof st?.name !== 'string') errors.push('strain.name');
-    if (st.generation !== undefined && !GENERATION.test(st.generation)) errors.push('strain.generation');
+    if (st.generation !== undefined) {
+      // A JSON integer is read as its decimal string, with a warning (1.4.0, SHOULD).
+      const numeric = Number.isSafeInteger(st.generation);
+      if (numeric) warnings.push('strain.generation');
+      if (!GENERATION.test(numeric ? String(st.generation) : st.generation)) errors.push('strain.generation');
+    }
     for (const k of ['clonalGeneration', 'transferDepth']) {
       if (st[k] !== undefined && !(Number.isInteger(st[k]) && st[k] >= 0)) errors.push(`strain.${k}`);
     }
@@ -57,6 +62,14 @@ function create(input) {
     type = ALIASES[upper];
   }
   return { type, stage, warning };
+}
+
+// --- Decoding ---------------------------------------------------------------
+// Decoders read a JSON integer `strain.generation` as its decimal string (1.4.0, SHOULD).
+function decoded(s) {
+  const st = s?.strain;
+  if (st === null || typeof st !== 'object' || !Number.isSafeInteger(st.generation)) return s;
+  return { ...s, strain: { ...st, generation: String(st.generation) } };
 }
 
 // --- Encrypted format -------------------------------------------------------
@@ -117,7 +130,7 @@ async function decrypt(url, secret) {
   }
   if (specimen.id !== `wemush:${id}`) return { success: false, reason: 'id-mismatch' };
   // `sig` is reserved: preserved as received, never verified.
-  const result = { success: true, plaintext, specimen };
+  const result = { success: true, plaintext, specimen: decoded(specimen) };
   if (q.has('sig')) Object.assign(result, { sig: q.get('sig'), sigVerified: false });
   return result;
 }
@@ -158,7 +171,7 @@ async function decryptFields(label, secret) {
       return { success: false, reason: 'authentication-failed' };
     }
   }
-  return { success: true, specimen: out };
+  return { success: true, specimen: decoded(out) };
 }
 
 // --- Signatures (1.4.0) -----------------------------------------------------
@@ -440,7 +453,7 @@ for (const file of readdirSync(join(INTEROP, 'corpus')).filter((f) => f.endsWith
   if (corpus.matrixSha256 !== matrixHash) { fail++; console.log(`FAIL interop/corpus/${file}: made from another matrix.json`); continue; }
   for (const c of matrix.cases) {
     const entry = corpus.cases[c.id];
-    const expected = { ...matrix.specimens[c.specimen], id: c.specimenId };
+    const expected = decoded({ ...matrix.specimens[c.specimen], id: c.specimenId });
     const secrets = c.kdf === 'raw' ? [{ keyBase64url: c.key }] : c.decryptPassphrases.map((passphrase) => ({ passphrase }));
     let ok = entry !== undefined, detail = ok ? '' : 'missing';
     for (const secret of ok ? secrets : []) {

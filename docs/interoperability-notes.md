@@ -117,6 +117,12 @@ The specification defines `strain.generation` as the *filial* (sexual) generatio
 
 Native phone camera apps generally don't open custom schemes such as `wemush://` or `web+wemush://`. The WeMush Platform registers `web+wemush://` as a PWA protocol handler and also prints plain HTTPS tracking URLs for camera scanning. WOLS 1.3.0 doesn't define an HTTPS form. The Python library's HTTPS form (`https://wemush.com/s/v1/{id}`) is not a resolver endpoint on wemush.com today.
 
+## 11. Numeric `strain.generation`
+
+The specification types `strain.generation` as a string. The Python `wols` 1.3.0 library accepted a JSON integer there and wrote it unchanged (for example `"generation": 1`). The TypeScript `@wemush/wols` 1.3.0 library rejects such a label, including after decrypting it.
+
+**Resolved in 1.4.0**: Generators MUST write a string, and decoders SHOULD read a JSON integer as its decimal string, with a warning (see [Generation Notation](../SPECIFICATION.md#generation-notation-v120)). The `SHOULD` conformance cases are `generation-numeric`, `decrypt-numeric-generation`, and `decrypt-fields-numeric-generation`.
+
 ---
 
 ## Reporting a divergence
