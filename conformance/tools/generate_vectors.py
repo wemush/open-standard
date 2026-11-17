@@ -195,6 +195,10 @@ def generation_cases() -> list[dict]:
              req="SHOULD", warn="strain.transferDepth"),
         *[case(f"generation-notation-{g.lower()}", f"Generation notation `{g}` is accepted",
                {"name": "Blue Oyster", "generation": g}, True) for g in ("P", "F1", "G2", "3")],
+        case("generation-numeric",
+             "Decoders SHOULD accept a JSON integer `generation` (written by one 1.3.0 implementation) "
+             "as its decimal string, with a warning (added in 1.4.0-rc.1)",
+             {"name": "Blue Oyster", "generation": 1}, True, req="SHOULD", warn="strain.generation"),
     ]
 
 
@@ -265,6 +269,11 @@ def encrypted_cases() -> list[dict]:
     low_iter_ct = AESGCM(low_iter_key).encrypt(iv, plaintext.encode(), None)
     other = specimen("wemush:zzz999", stage="COLONIZATION")
     other_ct = AESGCM(pb_key).encrypt(iv, serialize(other).encode(), None)
+    # A label whose plaintext carries `generation` as a JSON integer, as one 1.3.0
+    # implementation wrote it. Decoders read it as the decimal string.
+    numeric_gen = dict(spec, strain={"name": "MO-Blue-001", "generation": 1})
+    numeric_gen_plaintext = serialize(numeric_gen)
+    numeric_gen_ct = AESGCM(pb_key).encrypt(iv, numeric_gen_plaintext.encode(), None)
 
     def case(cid, desc, u, secret, expected, req="MUST"):
         return {"id": cid, "operation": "decrypt", "requirement": req, "description": desc,
@@ -357,6 +366,13 @@ def encrypted_cases() -> list[dict]:
                                            "mushoh-2026"),
              pb_secret,
              {**ok, "sig": signed_url_pbkdf2.rsplit("&sig=", 1)[1], "sigVerified": False}),
+        case("decrypt-numeric-generation",
+             "Decoders SHOULD accept a plaintext whose `strain.generation` is a JSON integer and decode it "
+             "as its decimal string (added in 1.4.0-rc.1)",
+             url("clx1a2b3c4", numeric_gen_ct, "pbkdf2", salt, iterations), pb_secret,
+             {"success": True, "plaintext": numeric_gen_plaintext,
+              "specimen": dict(spec, strain={"name": "MO-Blue-001", "generation": "1"})},
+             req="SHOULD"),
     ]
 
 
@@ -421,6 +437,14 @@ def field_cases() -> list[dict]:
              "Decoders MUST reject a label whose total PBKDF2 cost exceeds 10,000,000 iterations "
              "before deriving any key",
              costly, pb_secret, {"success": False, "reason": "excessive-iterations"}),
+        case("decrypt-fields-numeric-generation",
+             "Decoders SHOULD accept a decrypted `strain` whose `generation` is a JSON integer and decode it "
+             "as its decimal string (added in 1.4.0-rc.1)",
+             specimen(id_, strain=enc("strain", {"name": "MO-Blue-001", "generation": 1}, iv_seed=8),
+                      stage="COLONIZATION", batch=batch),
+             pb_secret,
+             {"success": True, "specimen": dict(clear, strain={"name": "MO-Blue-001", "generation": "1"})},
+             req="SHOULD"),
     ]
 
 

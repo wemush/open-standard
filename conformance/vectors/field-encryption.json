@@ -263,6 +263,54 @@
         "success": false,
         "reason": "excessive-iterations"
       }
+    },
+    {
+      "id": "decrypt-fields-numeric-generation",
+      "operation": "decryptFields",
+      "requirement": "SHOULD",
+      "description": "Decoders SHOULD accept a decrypted `strain` whose `generation` is a JSON integer and decode it as its decimal string (added in 1.4.0-rc.1)",
+      "input": {
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "encrypted": true,
+            "algorithm": "AES-256-GCM",
+            "payload": "b1xrQ4NPSzmY5PAO5u26IXorI_RWg7AS-HAoQ5xRtIYEammZzQXjINCmkiQvt3lpGomw_s4",
+            "iv": "CAkKCwwNDg8QERIT",
+            "kdf": "pbkdf2",
+            "salt": "EBESExQVFhcYGRobHB0eHw",
+            "iterations": 100000
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        },
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "success": true,
+        "specimen": {
+          "@context": "https://wemush.com/wols/v1",
+          "@type": "Specimen",
+          "id": "wemush:clx1a2b3c4",
+          "version": "1.3.0",
+          "type": "SUBSTRATE",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "name": "MO-Blue-001",
+            "generation": "1"
+          },
+          "stage": "COLONIZATION",
+          "batch": "batch_2025_12_001"
+        }
+      }
     }
   ]
 }

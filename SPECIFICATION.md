@@ -177,6 +177,8 @@ The `strain.generation` field accepts multiple formats:
 
 Implementations SHOULD normalize to filial notation (F{n}) by default.
 
+**Type (1.4.0)**: `strain.generation` is a JSON string in every notation, including the numeric one (`"1"`, not `1`). Generators MUST write it as a string. Decoders SHOULD accept a JSON integer in its place, because one implementation's 1.3.0 release (`wols` for Python) wrote one. A decoder that accepts it SHOULD treat it as its decimal string (`1` is read as `"1"`), validate that string like any other value, and report a warning. Printed labels can't be recalled, so these labels should keep decoding.
+
 ### Generation, Subculture, and Transfer Tracking (v1.3.0)
 
 The `strain` object carries three independent counters. Implementations MUST NOT use one to represent another.
@@ -1067,7 +1069,7 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ### Version 1.4.0-rc.1 (Release candidate — November 16, 2026)
 
-Defines the signature scheme that 1.3.1-rc.1 reserved. This candidate builds on `1.3.1-rc.1` and includes its clarifications. Nothing here changes how any label decodes: unsigned labels and 1.3.x labels decode exactly as before. Signing and verifying are new, separate operations.
+Defines the signature scheme that 1.3.1-rc.1 reserved. This candidate builds on `1.3.1-rc.1` and includes its clarifications. Apart from one new tolerance for decoders (a numeric `strain.generation`, below), nothing here changes how any label decodes: unsigned labels and 1.3.x labels decode exactly as before. Signing and verifying are new, separate operations.
 
 Normative changes, subject to the public comment period:
 
@@ -1090,10 +1092,12 @@ Normative changes, subject to the public comment period:
 - **`sig` parameter**: Now a signature token instead of a reserved value. When present it is the last parameter. Decoding still never verifies it.
 - **Security considerations**: Adds what a valid signature does and doesn't prove (no freshness, so rollback and replay are possible), plus key compromise and rotation, trust store distribution, stripping, and linkability.
 - **Library API Reference**: Adds the recommended `signSpecimen`, `signEncryptedUrl`, and `verifySpecimen` shapes.
+- **Numeric `strain.generation`**: Generators MUST write `strain.generation` as a string. Decoders SHOULD accept a JSON integer, which the Python `wols` 1.3.0 library wrote, and SHOULD treat it as its decimal string with a warning. This doesn't change the wire format: the field was always a string, and only decoders gain a tolerance.
 - **Conformance**:
   - Adds `signatures.json` with `sign` and `verify` cases (including signing refusals and per-case trust stores), published test keys, and a trust store.
   - Adds `loadKeySet` cases to `signatures.json`: an unsupported algorithm is skipped and the remaining keys verify, while a damaged `Ed25519` entry, a duplicate kid, and a document that isn't an object with a `keys` array fail to load.
   - Adds `decrypt-signed-url` to `encrypted.json` and `signed-label-valid` to `embedded.json`. Both show that signed labels decode and validate unchanged.
+  - Adds three `SHOULD` cases for a numeric `strain.generation`: `generation-numeric` in `generation.json`, `decrypt-numeric-generation` in `encrypted.json`, and `decrypt-fields-numeric-generation` in `field-encryption.json`.
   - The existing cases are unchanged.
 
 ### Version 1.3.1-rc.1 (Release candidate — November 16, 2026)
