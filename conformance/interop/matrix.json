@@ -1,22 +1,30 @@
 {
   "$comment": [
-    "WOLS 1.3.0 cross-library round-trip matrix (inputs only).",
+    "WOLS cross-library round-trip matrix (inputs only).",
     "Each case is encrypted by one implementation and decrypted by another.",
     "The document for a case is specimens[specimen] with 'id' set to specimenId.",
+    "It is the generator's input and, unless expectSpecimen is set, what the",
+    "decrypted label MUST equal.",
     "pbkdf2 cases: encrypt with 'passphrase'; every entry of decryptPassphrases MUST",
     "decrypt; every entry of rejectPassphrases MUST fail authentication. Omitted",
     "'iterations' means the library default; expectIterations is what the label must carry.",
     "raw cases: 'key' is the 32-byte key, base64url without padding.",
-    "url cases: 'sig', when present, is attached as the sig parameter and MUST be",
-    "returned unchanged by the decoder. expectPathSegment, when present, is the exact",
+    "url cases: 'sig', when present, is attached as the sig parameter. The raw sig",
+    "value in the URL MUST percent-decode (UTF-8, '+' literal) to it, and the decoder",
+    "MUST return it unchanged. expectPathSegment, when present, is the exact",
     "percent-encoded ID path segment the generator must emit.",
     "fields cases: 'fields' are encrypted with field-level encryption.",
+    "expectSpecimen, when present, names the document a WOLS 1.4.0 generator writes",
+    "for the input and that every decoder MUST return (strain.generation: the JSON",
+    "integer 1 in, the string \"1\" out). With legacyPlaintext, a label that carries",
+    "the input unchanged (as the 1.3.0 releases wrote it) is also accepted on the",
+    "wire, is reported as legacy, and MUST still decode to expectSpecimen.",
     "expectedFailures lists known divergences (optionally scoped by generator/decoder",
     "language). A listed case that passes is reported as an error, so fixed",
     "divergences must be removed from the list.",
     "This file is ASCII-only on purpose: non-NFC strings are written as \\u escapes."
   ],
-  "matrixVersion": 1,
+  "matrixVersion": 2,
   "wolsVersion": "1.3.0",
   "specimens": {
     "full": {
@@ -72,13 +80,16 @@
         "generation": "G1"
       },
       "stage": "INCUBATION",
+      "created": "2026-01-15T10:30:00+00:00",
       "batch": "Charge M\u00fcnchen #7 & co?",
       "organization": "\u00c9quipe \u00ab Mycelium \u00bb",
       "creator": "\u0645\u0633\u062a\u062e\u062f\u0645",
       "custom": {
         "line": "a\nb\tc",
         "nul": "x\u0000y",
-        "bom": "\ufeffinside"
+        "bom": "\ufeffinside",
+        "separators": "line\u2028sep\u2029para",
+        "html": "</script><script>alert(1)</script><!--"
       }
     },
     "numeric-generation": {
@@ -93,6 +104,19 @@
         "clonalGeneration": 0
       },
       "stage": "INOCULATION"
+    },
+    "numeric-generation-decoded": {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "version": "1.3.0",
+      "type": "CULTURE",
+      "species": "Pleurotus ostreatus",
+      "strain": {
+        "name": "Blue Oyster",
+        "generation": "1",
+        "clonalGeneration": 0
+      },
+      "stage": "INOCULATION"
     }
   },
   "cases": [
@@ -103,6 +127,20 @@
       "kdf": "pbkdf2",
       "specimen": "full",
       "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 600000
+    },
+    {
+      "id": "url-pbkdf2-explicit-600k",
+      "description": "Explicitly requested 600,000 iterations (the default, asked for by value)",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "minimal",
+      "specimenId": "wemush:explicit-600k",
+      "iterations": 600000,
       "passphrase": "correct horse battery staple",
       "decryptPassphrases": [
         "correct horse battery staple"
@@ -509,6 +547,25 @@
       "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
     },
     {
+      "id": "url-raw-id-literal-percent",
+      "description": "kdf=raw, literal '%' text including a non-hex '%zz' (the generator must encode every '%')",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:%41%2F%zz",
+      "expectPathSegment": "%2541%252F%25zz",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-id-everything",
+      "description": "kdf=raw, one ID with every ASCII reserved and unsafe character",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush: ?#&=/+%~!'()*;:@,$[]\"<>\\^`{|}",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
       "id": "url-raw-sig",
       "description": "kdf=raw with sig",
       "form": "url",
@@ -516,6 +573,16 @@
       "specimen": "full",
       "specimenId": "wemush:raw-sig",
       "sig": "c2lnbmF0dXJl",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-sig-reserved",
+      "description": "kdf=raw, sig with + / = & # ? space % and non-ASCII",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:raw-sig-reserved",
+      "sig": "a+b/c=d&e#f?g h%\u00e9",
       "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
     },
     {
@@ -710,39 +777,57 @@
       "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
     },
     {
+      "id": "fields-raw-id-everything",
+      "description": "kdf=raw, AAD with every ASCII reserved and unsafe character in the ID",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush: ?#&=/+%~!'()*;:@,$[]\"<>\\^`{|}",
+      "fields": [
+        "strain",
+        "custom"
+      ],
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "fields-raw-id-nfd",
+      "description": "kdf=raw, AAD uses an NFD ID exactly as written (no normalization)",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "unicode",
+      "specimenId": "wemush:cafe\u0301",
+      "fields": [
+        "batch",
+        "custom"
+      ],
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
       "id": "url-raw-numeric-generation",
-      "description": "strain.generation as a JSON number (the wols Python API accepts and emits it)",
+      "description": "strain.generation given as the JSON integer 1: a 1.4.0 generator writes \"1\"; a 1.3.0 label carrying 1 must decode as \"1\"",
       "form": "url",
       "kdf": "raw",
       "specimen": "numeric-generation",
+      "expectSpecimen": "numeric-generation-decoded",
+      "legacyPlaintext": true,
       "specimenId": "wemush:numeric-gen",
       "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
     },
     {
       "id": "fields-raw-numeric-generation",
-      "description": "strain.generation as a JSON number, field-level",
+      "description": "Field-level, strain encrypted: a 1.4.0 generator writes generation \"1\"; a 1.3.0 label carrying 1 must decode as \"1\"",
       "form": "fields",
       "kdf": "raw",
       "specimen": "numeric-generation",
+      "expectSpecimen": "numeric-generation-decoded",
+      "legacyPlaintext": true,
       "specimenId": "wemush:numeric-gen",
       "fields": [
+        "strain",
         "stage"
       ],
       "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
     }
   ],
-  "expectedFailures": [
-    {
-      "case": "url-raw-numeric-generation",
-      "decoder": "typescript",
-      "reason": "Not an encryption divergence: decryption succeeds and the plaintext matches, but @wemush/wols rejects the decrypted label because strain.generation is a JSON number (\"strain.generation must be P, P<n>, F<n>, G<n> or <n>\"). SPECIFICATION.md 1.3.0 types generation as a string (Specimen Structure), so the TypeScript decoder is correct; the wols Python API accepts an integer generation and emits it unchanged.",
-      "reference": "SPECIFICATION.md 1.3.0, Specimen Structure: strain.generation?: string"
-    },
-    {
-      "case": "fields-raw-numeric-generation",
-      "decoder": "typescript",
-      "reason": "Not an encryption divergence: decryption succeeds and the plaintext matches, but @wemush/wols rejects the decrypted label because strain.generation is a JSON number (\"strain.generation must be P, P<n>, F<n>, G<n> or <n>\"). SPECIFICATION.md 1.3.0 types generation as a string (Specimen Structure), so the TypeScript decoder is correct; the wols Python API accepts an integer generation and emits it unchanged.",
-      "reference": "SPECIFICATION.md 1.3.0, Specimen Structure: strain.generation?: string"
-    }
-  ]
+  "expectedFailures": []
 }
