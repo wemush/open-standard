@@ -1,0 +1,625 @@
+{
+  "corpusVersion": 1,
+  "matrixVersion": 1,
+  "matrixSha256": "2b70fc32b4f4381714cf26e239766b38d98f3f5adbc312c7b25175f6331656c5",
+  "generator": {
+    "implementation": "@wemush/wols",
+    "language": "typescript",
+    "version": "1.3.0"
+  },
+  "cases": {
+    "url-pbkdf2-default-full": {
+      "url": "wemush://v1/encrypted/clx1a2b3c4d5e6f7g8?e=StywmRQHZp0IgU_aZsXPASWHvAKhaXOwP4jsyu3ZymYaKuDN2IOLNB4Ct5HxfNfGneaaiwk9xmQT-ab8-Nv01g1gvWDD7V4QYDRpkmbhOdWrhAj5CXM8WBLzxitLGyTFIOkqNNnP3NRkW-qHAWMVdtycNBSsXRCGLjcPtM5oQmr1hqWFk8DnaGZ8g0CQ4IRSA-Nd_sWTcMf764hei3FDuqVRS4sseHX7nMIcy5GCE0UsgGS8YWmhfLVQ5tuK0vLdQJIRIhrFHHIQrRLzXziZgiC3Et83X0e2WHVe34KHd2WAzEiyu28_-1t2LYhREAHaDew-lc3uesIPsbXF5kChUDrCQ76dSnYWo1iafK__IUhE9s45hVbWOZvYKW_6IM6jATRtVeDqZujKcaYB8-rtTGFfaFt6VEc8ui2cjG7eap4yRFTOLJAh7-4vNKC9xsL7hrsSQQzb8bZHSRnGtY6k9kydGr0GhhZugXY9sjBo6Y8-XfDpW59ux91yuMcDlsLXxXVXU_-2XvUgeBUIClcpvokjrT6tx5xikNiS8nK0c5cC89VaZBB9MlbihBiYHufu6XruHjeXBXVWXMLglCOf9OOBHCM5TvQ7WWwnLt3t6J0BHzGXjL8vAl9Ku5eB5whMvQ8HUG03fFciUH5HAmbuvxR5apbfy1XV7D0WXN6tDzxKyvEnrKwHoPYz9D8ot9bQpU_ohQfOe0TF4OSa0nWcBfxwyZcrNUNtmR8G0aAev3TdEHS_IDRVaZKmhsa8gkdyQ8LdQ68Yyjep_VcOcCQqkz9fRfIiMmejcA&iv=ZUlMJPhB6JsGo3Lz&kdf=pbkdf2&salt=gUnqHpdSc9MA_3RpsTkpfQ&i=600000"
+    },
+    "url-pbkdf2-min-full": {
+      "url": "wemush://v1/encrypted/clx1a2b3c4d5e6f7g8?e=lft7HNnwIJyzW97nvwoygzOLsn-s1255tMQcw2nSRnpgFH6tyyfQ_qa_UOfSMgr7jmK1Y-BRdtnZM-vL0opUjYn0qYJBCco3ACzTfoeHxQmR1KX-OInNLJSNLrK3ubMvfXCh3v3qgqweh3tJv8Sdo0DHg7o5le3lhQn49uimvZZ4Fj8C0HSqrc16U-JXGQsh8ETAni5K37reSILKqgLi6ejEw679rDn6j0hBAOVTPrTm19ZbKpFo9PundbZBvZhsOBbMGXA4q1HufovvXiw6OGa5im0VmsAaxcxWCr_o539Su0Rn219if0xiQZLhwytowPDsj_wF2h39nBDdrzSXbGrpNnDTtU2IL3XqHN97tnZzOMZFWQ2AzsjH5CZJDpgGjHVo6nbii9tfXFcuMxObc-zRSutUxwDaSPTkCDYrsEyZO8xvVWANkHoBHV5ZjopHRbe0MAyS0BVHZTNxdBoPBNbFOG_8MLnpQ6kfFxAeO8vRB-0eC9D7HA7KU_3n8xz4dxUAF4h4whR-19XEWrVtdj3zH8CLX8nHLFCmag0xGaRZNcGdNBcIyCgvaPBbJXTFdVf38txn38ecW-a57isILY9IVo7Sg-gMdUhPBCACXthjNmdhl5CgTMNeAxRqzqU-n0ySuZfSCTRmw6tj3EeVMUB2o6sABqistHvfXmZX3GshHYmI2oSIjEhUaPcN8vOhQiqMCBIasfJex3tNReiz6x0I8ZYp8lJz8Mum0Nb2QES5bPXWmQq04o_uoQgp3eHeB80NaOfE54Q3kYZrDEI83lNpJb44Nul7bA&iv=5H_l7S-MQkt_Rzf0&kdf=pbkdf2&salt=-BGPwpyz3E8cXt_JiNPZYw&i=100000"
+    },
+    "url-pbkdf2-min-minimal": {
+      "url": "wemush://v1/encrypted/01ARZ3NDEKTSV4RRFFQ69G5FAV?e=l8MWLpsR5j-6EFdiM0u1mfLAdm66Cwlhx9_SkWcvu4TgAOPyBuacDVhfR8frHo0xrbqMkLOOJnTDsp5sSIleAd8ZDbsHDq1n7zvr4Cs3VbSlmGkfYlyxvnTLrch-60FUUfQ89vyQt84Mlpmf9H0TqGiQJ_c9AoNKKqasLA999ECk36aqSeMcgtjLnVhhzheIdPqkhRVbiEFT3lyPdxxxc0UmKru6syBQrUYtaDdWkgvCKY-1LtdX&iv=1ZgLD7HEkrjK-5Wk&kdf=pbkdf2&salt=FTbbCXaxS0sahm0TE55uZA&i=100000"
+    },
+    "url-pbkdf2-min-unicode": {
+      "url": "wemush://v1/encrypted/unicode-1?e=dUJjxK6x3MpUM5TK6Mpk4plNdA_KXwvVItuGVEFe2AVcGe-ilWpjHQ-a9KCbhTrp-GDJfdntwQD1GFbYceZq7fxQC7UFt9wbnvVbkVVdJaKrsyKjY7N7tBV9eqYIh1E4CYkG0lvLeFw1pkQjQjdUwIIogn8MHkNWK_ThxYtlbMivmyXfkA8Duk4vdBKpHT9Af9a1rr3E9OFzkJha04wL4G_vWWR4Y8s1QiHKV5_fPmTgwawfE3n0qz5pz0nXcnRJNCKQ_YukVzrZK-HkGhSGxFBsHK7WDVDVrhQs8qUGiLhCnzzLNNkN5gxn__CS8A9gO2Ni70iA7v-xlOI8RHDT3iqgrjEKfD93OUlvhK_RCgTU6m-Snp8lW9p9G8G7wkfIo0AtLP8HU_DOak179-CK5G57QRsub03Y5-iHSlhk4UMDPtkek9emzgaCWVg3ZJqlMSpSgu_kAramRppv3UVnhGrZtdxwnYna8a0hFnm9f1pxASDU3wV-z9HEsHfxincOHfY4RpFMI07TZY6fvalH-TEouYnqoArmtIEVmT6p&iv=0jQx27bQ9J-4mLsB&kdf=pbkdf2&salt=P1a42uFTeNPAjlXp4R3brQ&i=100000"
+    },
+    "url-pbkdf2-min-id-spec-example": {
+      "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=2mI-s8bq8CaTQz9h2qkBwrxHHy30diLb3Jxydw3pI25NmfG5X3J1Rfo9Sjo8KeHUUUAJKi6Q_-qVaAe27Jw5qDEHmgNX49QwsxiDzVrXCPD0njUNMzqY_q3i3g_4OVz_PAPSv1XUr26YQm02k8hh45LOEyquQBrAYNkG0fiR_j1M5N-xSlfx98HOww6MSwFisaiihu8Ycry6LLUq-7rgXxX5w3WyO-MaD6TSx1vwP3bjlw793VTDMKtjGbqVLphBu0H75wbycPLpcHjD8ev_xlhpyX2eQ9kbyM76Qqr3wbJEiH0Yujoy_dAUwswg5fA8NZ7ZQ7BxgaWWMV9wH-i0ckg-poD8MHxSr6pFWtWHsskKgBgL3chaUUCQrZpLLL8sgLiSP0CzV5fY4tAM3ZRPNqli7acXcq5HrB-N7iGRxodsePW8nvafca_u3uLfk-7cIST9QV_e-BZvuqmcARRgnhjGouXN3BM8xLN44Q6ZMYLyjHYRk_RjYSkDjBGaH2FVG7TIqAWCMu_E7aQQoS7eORZH5cyYRe24_jocYsni6rxteAWC2aKEL0MpWh71O5a-aQZ6Zl1C-ruzj_iAyfJ6TnS8CXGuKk14_RIA5LvYjI2pDxb5nNrJb2Sk0gF-W8iznvCyWnDzOOFVJh59sNkNl-9fFP2vX_-Qkn8EFoKl82P_YlC0H37REsPcpkd4grUY0M8Z8OIbHdOQWBGWQ1Cj3Er0X1P8w0hIMn324qi-THTq7PvXi38_5gDl-QLEMb-s-1xLM_uWLjhFB9pb8tQhaT-xuesP&iv=Nr1yphciy7jPBDdd&kdf=pbkdf2&salt=fMxQBFFFZZSzpAuyRqwi_g&i=100000"
+    },
+    "url-pbkdf2-min-id-query-chars": {
+      "url": "wemush://v1/encrypted/batch%3Fx%3D1%26y%3D2%23frag?e=MaVef5bFz2uc2ySR7eXxlotaHC1h_94VlD1TXNCLyGGY3NPFpNwpdyKRsFbd2XSTELQv4qOQTlFfUsO57Ng8HZz6gfyJOqVS7AN0UwV425JcXK8MkyFgSeT4MTXOD1g4NxC8FKdqpXZwhPtogp3X4Ff209twX1hEmsAFUQwK_EG3zgezg34Y9lVtvgmBcx6xmiNg2UbeNKrWrtwptZcibM7qo4r0_XenTa0CY8x7QRQ_0aKTb-b1X1PhY1ZxJlpv7xz990Q-LMTUXtEzAKM4dA4MZQ_i_CfPWCi-AuTE2URkyF03QAjsAA1jLBai5pxU292oCiRtUCfqcCnlxKYovetiXDtexZRXxHICiekH9851A8JCVmRt2MRR5OIVuMTOO5Bcw9H8p80OnyCmw4dlGy-fF2Wb5p2s3frsjsOq80VopYpN_pMOl7DK2zweDzX2tLUCpGOxjViFuIIfHQuNEufqNzpMdGP5xhlFiaX-B6HJB9V-VmI-hqh7IlSAQ1yahgnczbWcIDxAmFn83DzlxwGmb38Kzd5KhGi-PUX7Yxw9E94V8_oK_o85jGugxv_5JmKX_du8P-bWmZfo-yVh6o8rXK2VB-XvOnLV4g7HgRC5uvW_01hYKR72ud5AI7dhV1tDuNkRc41p3hMfWpca3_jRT-ZM0sqUsClR7ypVyCgJ9sP0PvmM5GIaCbQ7rrSoM9-4diA4U0MnJnebWudWuuc8_yUk0IHLmyUEllovvdwZX27FdxXUbTAh9c76_OcKQXgitQwC9pgh4dnUTJh_VJyvNTzb-H-LqA&iv=0GQhSJBv_Ow4DuJs&kdf=pbkdf2&salt=5n7EenWpwR6gpiuTsiHfyQ&i=100000"
+    },
+    "url-pbkdf2-min-id-non-ascii": {
+      "url": "wemush://v1/encrypted/Champignon-caf%C3%A9-%C3%9Cn%C3%AFc%C3%B8d%C3%A9?e=l_Mc8Amb0s84XWnVnDGZWtDwdhxkiIclZOV6_t9M9IbKLcE_cQteaOgT-8pO_3FsWYJI6g9DISP24DUNb7GmIs6Yuucrrm9k_25mvYIcgFzdnCkKuz-UO0bvXPuF3A3sEUwfLNLcvQclaCYSO3rd7p1--recWq39WoVMNGakZja2nqmeJBif9_egzurYxzsN353CF0EwrBRn6vzl4g0PPx0owgJO9oopbT7A_IvynRX9-wTJRF6KNXhYSNOssRb4Bd_6IgZSapmX21KhoemjrGw2weX6FPGDIT6u1Bplv7sc2mLAiqHR_qrr_hCb548ZxxxycliBzTmiI9QX4WQfk89PtAyRe5X-Ty5x1OQaFXPiMHuXdV9OCFzD0HCzknl9N0hTL2zXegLA_I8hOn52wj0D-cDNTz8FC4GdxPQdh0yFyih7RttGfvsk-SRYJ4_612tMXKnTVeniNNYRIcCoMS1q_-d1ns8RU0hBqyXCDGpi08dEmzcMEw06av0Tf7HNeXhwmHbors1h6eOYjQPjT4sAJpNSKFp8eygWW0iVAmZ0tIYfay0TuNllLh765AfDmluso_i9U52NSnzqLYJM-6Ahy2bSiSai-q30SeSpj9UsLntIhlgCf2n7yh0-o7mHz8SEweCrly9osigl1ajmhtGRQQs-FCrVfoGvHUJZ7_cewQ_Zwa5IxLCRKVTfcxIA7vS_Dy98l8tUqSOozGhDWNjGEk6BUjzcHt7ldIY_uf66eOc-WsHyochbNwFVRZ65T6lDsBetS1EWJtKRi21Fpo8Q7I_U-RYO-vdpg53fq6kRYwg&iv=g6-3CJfmGCfvPqWs&kdf=pbkdf2&salt=VLoU5PX3o7dum8o78ochVQ&i=100000"
+    },
+    "url-pbkdf2-min-id-cjk-astral": {
+      "url": "wemush://v1/encrypted/%E3%82%AD%E3%83%8E%E3%82%B3-%F0%9F%8D%84-001?e=wiyVhzBwIAKU549u0RMMF8FZmTdzwkkb9hsno0vZBUE34GX3_B0OlmEhJV38TYkZtEc3t7e-CDskUuDUg_BviDPZX1HjXRfl-bl5Pr34VqMRBHU3L3b7zwIEAXWwPz3UoX-nZK_n8Rr9U9tSPOg8ySEHUv9jPbxil9FSSwqW22MJWmroQPsQTXTLZvlTe6vbDEscJZ7qBqW3ukMP6ZUeKMr4t5oNORvzNPVuTCHn5A6Q4dxFSo-BOLGKqgpAc86ESWLnd8w6rSdlT7D-KalvfF5utD3Fg_fbQLZqVwngrW8fWfYxFR8GpeaQMSeeFVQ8lPJzWpCT8LRLGHiDz7Gk38GvDpvAV1Hr_NahK8qk3KW1vJMiIjA63mTgod4AH_UFTP5F1aqFJkOfA2jfkqLqJ_-amdPLNWvkneM48GH01K3KqgfZgqBTZuZJjzrBko7Enoa_VZY7dsd6-W3SyMAbqh-lj6MdWEViiVM6gTA8sOMWN9SXIyCJIlPu1_N43Fm7HNj4jGzvSttDiGoQ2ysp1cHe6yA4__TshmS_PG8fFKm2gsrJtmpVs4L5FFOPNf1_1YMzHLdz7WusCccP6EZXKg8nvB4o0hxw5peubd7yXCXWh8gPKqgU4LhBu9Ui4JDIfofjIMkNy0MKTKM_vzjyJf3RYIQvPlDoEvmtQfTV_oUJWtDtg5wzRwwsKoxOjpRycFy5rdwl0d8Sn1GYa8PtB9Jzqk8We2Ow_aPYWcuFiOMuJruYKNRnA84Lx9ujg0BwFSW0gMlKETGQvBu73eubLxsN-pB_4BzvQw&iv=sum6cXFeavnMbIsC&kdf=pbkdf2&salt=yf0MJytCKk9zQV_BmhJc6g&i=100000"
+    },
+    "url-pbkdf2-min-id-nfd-id": {
+      "url": "wemush://v1/encrypted/cafe%CC%81?e=uqEneXvePw1KjhAoe-MFgVHxHSEaBWnif32rY8lZmKSkUmgdAtCWOrBGyVBRgDukPcfI56pQNWNIx3bYllKyldzEmwv5G9D6mp-hFhbpJhjqJAy5znOt03fKSBw2UERy32Kd62Wz83I5rNQn8ATryaIcdZXYmgs6_rSfAdRULso6hDGw12k0v8UbbRBU9v-iBNtniMH5MI-jHopZS7vVNiP7zVUH1loAXY6YjGESda1QqeO_9O2-KNrRFccgQ7t2TQsC6cGILtaDZHvJThEWRJVJrjyF5mn008x5Fj-OzpYHMgcb26dX1zCvtIzVMgqAJcUGIExV0QBlPd5o_uWJaVaxyDGWDB0RZZ4LfCC3X3njAzyFpp4zWaSoQZBA5kE7iy2HWTtKUMt1ftmJxrSmr_o7J1AhaaEiyBR10vY7C6gEeAei64qTWBAD3XvLNvw3WWjak8KN_qH_U4jJ79ma_BYU-biaevIs5-5GuwfvHpqyeDV9QwggeL-LtJRwNSvo23XoN6UvPr4cYaH4wmxFRYP6J6RWia6foDvHo_BKP9h0EeZMaraE88PPzm2urPef6F-iyWCt2ISeh_etgEnq2OWzrEXapxqZ1oWt-CJ9t2sZAZVYmcD1dTPr9hOY-7YsOtCw35swUpkmAxt0QKLUt8_xvUfINwKVSYf8AIFZisXwQBo8Wo0IkNF2zhWBq7PnMT_B0k_Sgn_eLx4uxgKqjQNPD3XwCL-Tws6FE_tCdPVYsHqgkQyc7NqpqgurV391ajYq9wLK8fP3PXi5iA&iv=6HfnwgcVl3zA0KD9&kdf=pbkdf2&salt=VZZe2ustCYkVnKlWehnHxQ&i=100000"
+    },
+    "url-pbkdf2-min-id-literal-percent": {
+      "url": "wemush://v1/encrypted/%2541%252F%25%2525?e=cgmve4s2vBqdYhIxsc5SJJlGuzcKv-B_r5AOtg6jjT9kn-t8buigFOUpVlmqka9r2YVk70VQZ67M-iHTxw9PDiVIdkMUQiOaswSGJZy2j1nkhNcs8DYAh3udJ3xFfn_wf2VlthFjltoyuJQFH0bxhhJYgHivUTi_L9uKem1OezvWG4hksv_bQ55FjNLBNAK2kKkqKwvMVaY5I0T5wA-jz86vAHomM_Nw54KD1d2n05uUobX30-ZIQT4AqHL4esGYSoTRRavjhgMubsry1-wNhQ33cHz8JQy6S4fdAlbGdtlsKedbfZENwFjwegqZ1DegXpIdYm1CeSA-lQFTVtGmKhU4dkmnGZ8Y6IRieY5f-olDIw_w4IyWW2N44czBlAQ1fNPXpvIep9fGV5uglVdIOB4eFlgakICCjCg7GZKyFMqIK8dPPF2Sb8bUz3fbAYWtj6ULcTruqqLzT6bT2mvmPTQA0RySRdtO1z94RmSF5mBgrU_J6f0u_KR9vFV9DjKF_raXgWZb2_qgrhm7rPmetYTe3xZh4BwbWbF-iNEnmERxWyU0VgD_Wrs4jKrk-jlFAyw4viJrOij2yiijHOGl0vFf2_dSMcTqCEytrrEz2AM6-mMUQShWRYczQODf6RiyGCaw4zREUaC0C4kgmNb4anFpZ5QRTnYzr_V9smUaSsAT0t3YSdlGGQEzdmd7Weal7j4WxN3JqFIB_j1oRISEIavpXwZRhvxalpYOBnQDdoEb0gkGAWVFWPROd8wg5MeFysHFZxnd2CHsVH5xypWQVMc&iv=1cGCeF2rwKOaOC-b&kdf=pbkdf2&salt=ZkcaZudGHqk3RlSLTLNc4w&i=100000"
+    },
+    "url-pbkdf2-min-id-sub-delims": {
+      "url": "wemush://v1/encrypted/a!*'()%3B%3A%40%2C%3D%24%26~._-z?e=ojLjqsD-kvGOlfedsqLnc3hUqNbJQVwEdUG1TRAR6cyjwGz2Vvd9IESEyNfYwFIlUTPwejWUbjHL5gOxn3yGNvpiPOJEk-IDTthHp1Mxmsq622eAGSqCdBiLZXrY8_hXV9gyAMlDaxOA1N3Ds9o_sIWfi8o-Oh7fKGK9VQk7BjKW3NeXvXz4g25KNTeKn3OMYC1I4K_sbv_JuAJbYAYpGZwuypUfXqiWUOQg8o7z5ih6_sgHLHZLF6w7QjzUtkHF_GTNoPxfDun2haA3uf1ScWZv8ZC_dVTuM9aUDtTHtv03ZMjOMAeGFkzeoFHOcJpKouqedYMwVxI1uZZ4QLi8SY4qmED9zpJ-CFVTsB33bIYulRg1MYgWkq16FW04qOYu5pYXM_C4KBgc4TAjnmerySaaybv5e8GZ7S7_ciKrHhjNgm9c6bwmA4_YMSShjO8K5lDh3Og3eW-0sbNJ22FcZg0I73GwjliCNcM1SdsQAf4Nx0Oc1YCVAeJDad-_KFbPSqwsYG7SYcH8dY6rrrlPZ0DX7tZuoGscCMLpCfNfUB5BFnwrGbXIT0lIdvFEiOMkwxapR2i36CMqgSAjfVpdEW9pHa5ZP6_yFT_h5IH21lBoXqyG6DHInmcSuuheur26a6KXMBD_Fj2ArmdBqVRV2KxlQhgLCegZYu4pEKZN37kqvIrISbgpepxvwV0LsxI7Xcu8pPyO7m0fH9Nhm8Xamtm8UXfRFnnRQeuXMMZ3-9t199kxRHRq3iQyVp9nhISX41vsYfV5XE6_npCj_gdPeNyJ8uGPOdEcDw&iv=pKmawvGQrmSeQpFv&kdf=pbkdf2&salt=DaLxD11jWUixji3VZ_iUKA&i=100000"
+    },
+    "url-pbkdf2-min-id-json-escapes": {
+      "url": "wemush://v1/encrypted/q%22uote%5Cback%3C%3E%7B%7D%7C%5E%60%5B%5D?e=xQ7k73ednUAiPNUGWFg0qns5E2UfSA3nMy2pebHT6omCotVOR-6G9XfDrAPtBAVFS0Bq2ORKlwX2Xm3FDUyzqFA2I0OmwhchahQT4C5AQvws9cDUeIjpxMUFuZUnjx-DX4CXR_2g79gkpSA-JaLNx401Si5IDvuQK2UcvA7aaxKg1wJventCODEHsSVyBTYgt5oOej1W1WIOOi_FqfPr0hiblUaiyCdhy49NJBLOLPmynE854dWtJUzV2V1UGWIU-81HEg3FOOPq6LtVcTys5ecV1mzZr3svAYFZBGbDsOK7uDIfzGCQH1nrfmeWgk9REG2qd75-RXqwx4am3HoaVEyd5OaNuUEzuN08QbcsFYTgVtmaie3iPsWUP_71P8sajiqEe66H9GAqgLH1PgZWRv300FrhVxX9S-JNorl8YW87IOWG7gYaBo76DH01EUbgSYTME62LGqY7S2qEktJZDiHCJbroaHtYNMaFvag6JtH-ahYglbSNQVYSKgtwQLGTw6fGOig9fYzqookwD9cjCVYUg9YZH60LU8ctWsB41X9JKl30E_GARR85MCMwL5dKFxCkfY9Jst37CKn6ENvusP_gLIf3fjZYw-vbU9O7P_k7JIudUWbOrBnCp4R9yr5sg9e7dQby-fPmrWI49AKU8yfkUg88EMGzApkZpRxOuHDDq9x2rxDsWCUaoIIkjCvSHdqOGqT-RgEPng80RbEc68W4AOebbti6eI6bE5cxodqJcY3E0ebH8Ifgv-83fDHy-9eqA6tmPeWtm9EgxIf1N535M3--omyqBNvdjME&iv=GxN-GITL5pH8UK_a&kdf=pbkdf2&salt=lIRit3ekASxPdXRUV9GhJg&i=100000"
+    },
+    "url-pbkdf2-min-id-control": {
+      "url": "wemush://v1/encrypted/tab%09here%1Fus%7Fdel?e=PG5G2ol2ccXmiHBFuV2Yd9P_8ZzpWB9zJtMhnEujf_9fasSw1ZRZxHsIwKfbFhR4h5pFJsgsSv5UIOozmrYgJaEhq_CUGUzoFHc3DlUl-FzitMGCSO89GV61HqAOjhKV02-fmSJDcoJ-R8CXuMCr45It5a4vwA3K4LL00Hs2wmigyfaW0p5j3_7p22ZQI81UnWPzTQk1tUH25auutmcui5_O_ad68ibQ5velRQvmq-FBiFOdVjpxKWiNwzmlaZ9LfBDZr9WT2is8ieqyKNYJAY1MF8OANlvhXxHPl1lnZREzNXHKR04NfSwFLbW6fM3wcA55EBedHaiBpdjaSnuFcudNc8YMSOJWktDEuXuF8KzFFOhIOsTS1yC3dyIi5jrsIl1ouYwynSkUdypcGRVksr7I5Vgzbc3sedEztY3peJUyUZCO2VxFQWeCRpQ6MQoKTzJKMaFOmk7gpwirDr1GcPsJC6rTPDjTLSPvlBZMxNZl5P7ofcfD-Zs7-Z7De9cxchBVoE0VSY0iPoXHUyM5bIMShavLi-p9JRc0nUB3IyohxQm7kdKLinW1hrz8kCiYTQwTSnVaSncIYtrTjvdwdTgJdUjYOh69oybWjs8HorpxC7pSzj93DWCRqZEFHwrISBkoC7h6sQd8KkkCsAGjAL1PTqU82S2H20HdclfTYdnaosFqJfH81Rz69WCLEX37-E_t9K9qzLkBorYZIrGeBfW6tXe3T3usdU1hhnquAED59FLMm24gKeE0ChDUh27IbTQDLFuP9-m5yiNX37vIc4q6qFnrQ5BP64-JDA&iv=B_B7nOWRgJWeg7Yb&kdf=pbkdf2&salt=JID1TcYUfR8lV4hmJjfmRQ&i=100000"
+    },
+    "url-pbkdf2-min-id-plus-space": {
+      "url": "wemush://v1/encrypted/a%2Bb%20c%2B%2B?e=YTFTJdMg8hjfyB-49JcyqCiXJxYow80GweSpOYSwVZPKq35qBbEYL-6kbkRVW5gBo5qyyqyQ3mTGy1POeYMSVe8fV04xl6jpe4aWP1Ei5VX-Yb-WQxHQxRGrobCcV3eSuVTIt-fU8BDVgowR3YYcJvx5Zdx3WoMivdsRk6dEspZHm_F0YAyl0fHM23f1MQgOtkHn1E6miWheUuA7Bd95__HI5Fvg6hlrP6g5tHMKMlnMn3sEhkUDOyiVM7atjb_S2lyp9ddW10dsJumxD-XOSyYpkreGHhnb3Tt09DhRpeFAL-FtJBIauyXXXms2c-sZNvgWEe7wsN48wLSxnfUYCoWC36Yz_qz1kpHA4VDCDu7b7FW8EH6DyDhCoL8ysHu3qXtkObONgVbjgXAq_YRS3w_AzVwc0cwn7jgOpCd2708Ea5u1stMNwQ5jk06ZDY2Cf2ko0ZspJxphDsnR75l6phY5smoSEE3BbKX8ykdheQjo8gQY9Z6vcUSMUIZJEet9QH24bgHTOemTIhyX7_iTQ5NOC-KfWjPTA5ZvQFVthuic_uV4JTHdyp61dPOuwc7UUQ90Sob0eB9b-KBiUmjnaIWw4Fff16ij6UDCwtM_U7XAXULxVjN9tgZVzwUbMuxJ_Ynm7s8DowOFARdCkW_0ilMjybEdco5Flum1saFQj9WMhGvvb1XndYrNhwzUEedpRlYLFiV3i2reo5G1fswl8AW5Ogiyighog89-f4u5N04-7RpuwEPg2FqrVjaUr7c6M7q9PDnSdPtz-56vAQo&iv=iTc9WlCMsku5dHNC&kdf=pbkdf2&salt=Q5yP454Bx6MLjeLIeNSsbQ&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-nfd": {
+      "url": "wemush://v1/encrypted/nfd-pass-1?e=DzYlACjurPn-xNZHcM2o6TZJP5iMLN-dQ2DdaenDi6FCWHIsy2i0UN-i8-xEC_YvHuc8MNEedKUtPhelGXQpIu3FRAb4xz5YfM1eCnDbNDUWpQdhuvU7eZ8rCN27F2gnoM77HWzY62XzJRUreHKPOvElhQoRN3PXlCj6BEc9jadR4EXegmJyf2zwh0kE-LyBHIWjy2CowDOHmQvAYW6ov5g1KjYhTG3_nBt2rfb7e621pTUgtT0q-EqGk_iNg4vD6zWMYkfwgsxlLZR1hJVbqxyv67lqK_d7NNiCwB4FcoSTnagf4rcJC-R0ikpAAnwQAsayCJ2k497rZnMjIEabxZvASBKhOkVUnQZNJGO-M1ypO0miDOhG5htxFwharxRRZ4uDb-U-q-MEsUNII97_quJSxdV_WAaha0wnm3Cg7agycEPLghkadXIfFBwAq49OJQfrMB5sLLRc5EYsDe7ryLGy89OIBPrSiQEqnz2BmNhxoWMVP6YYvTMS-aYI6YqkKbcIJtVyLKRV61D2eL8gLuqVhVkNho1Ye2O6jyRpDpn0ifs99wkRMADc00e7xu8pkFyafxkZQqmx_wce0zejX8HnLBmp9uo70k1URlYD9f47Vhpl_CfKek1vychA943ci27PdilWipe6HgZ3a44sH-zWncZonfdZc_jFO3fYWSABAj2dO20kwpxvtD0BB_Ag75EeXcsmHmPi3qw2XYMJaz-HNIAa5BJtwXp85PsPNwKbvh4o6izKkUDNfZOEMjn82aj3JpES4Bz6R09dc-qCpt0&iv=LIl2VTBAV_XbXdKC&kdf=pbkdf2&salt=8FCG19yAJ3eeDo-SDiTDGg&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-nfc": {
+      "url": "wemush://v1/encrypted/nfc-pass-1?e=H4DB_o9Kjw7LT4OtiahNf5YdaJUDDDjCrXBfNqWxb3f1OVt9m6hitpNWRj6YQfeWbnmsJgGGHmrEdBc43d-IN4VHBK8-mNrDM0FSo0aMKNZ1wXSpcA-5GNsGMVM9DutYGvzsqDxHPpvaUVg96T8xTxHVIpEZtiNyKN_BY7QPCdjBJC3uxp5zfNkn4g-UOolMbrr-0Pzou9ISR5BEXqeH6dM17E50-3ILxI0AFJN3cd_Y2XEuWJpvzY5rPKyVqPyIZ_C6EM4itn7Op6BeYupSI0hvP0x8SLFPB76f6CxNSLunA-8AM9nCvJvNprKKEnNRgta4D5KQ0MY9YPY0Exel85CtEgY4WEwd7XC66XHFWElt783seICpCT1RJkXVIXQjrj4tVd5bkUTkd7o1GAC-5WDL0J5MAj5ZSbLdIUEVh9jLkh962VMI0vwElwLMLiwsgpaOqPcbM4Gqkc7w4_PWbwQhqxIAsuT2nPwH7ezR7o0--EBnxpYRsDi_OkCQVp58uae5tw-f6G5hcl4vRcEXtlZCTLivb1gxfjPGHMZjN61zTWb_ybcDQXNwPjK_KLFL-kcWOk4BZxBROILSTtNBWfTomTSebpEnmPeIyebSYB2LmvraYq_IKWfd8Eads8oSD_loX_OCo6Ozx1KhBb74FgiCOez3ycDR2nzkp7mgdOKSbO9VLBw0XEnsWkY7l1sKqCbCWB6uVqyNwakQQt0g3NtFO3wi_OdTh9QVhZHgWW40WBY5Xn4CWVIJ9GpTGR4oqW7M0tzYMypjdAEkPg6sQz4&iv=HtlRiyJEd5DOIw3p&kdf=pbkdf2&salt=zMEmXXLGMrULazX-NTZmFw&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-angstrom": {
+      "url": "wemush://v1/encrypted/angstrom-1?e=0JHR-gFXR0VX2DpcMehcpuBsK-VLohArzShudm_GxbKd3QmG0h5vd-o1Mre5Ekfw52wRv09_Df4Isp-geIZlD5uLoNhiVzDaAP5uR-G09cuN794-heG-axXriM0oUkTSKRG-2VCkLKt-Z_r2f8z_cl1mIm8kgY6dZdGmNeg3C_vvtK2Ezg1YPNafewz6NvoFBEVkIvBv2isazIB7U0tlOB7qs_V4e9Z-co33DjGtIr1QIxCz60pMhr0Hj7lVQDQeso_ixQEdB3qmzLw4mtWpFXjBu4GX9YOiSumc9L4UFWMM0FoPLlf3DryY1XDhwDPkEkyBj9G5lqxoSrtJMtKUuO0DLVDnL9Ai1A7DdmaoAEgwHI8jLMlDga958RYDa1nSV15pn1aGM7nKQaBGbJ1pJWsoeEa1zc5MDH-QqMfmXuPyTvbXJX6c15k7QGnoASFHVkMEN9D7LZAWFIqvOcT9xT8oxAkp0kO5t4-n2Td4xHXAolMGRfi81-z6he4vKL2_LaWLdLPlTSK6FLyJFzxIjcJiC83F5KiRfr_WxzrgRq_eQ2lL6FGMWHxeMLBqzMwD9ZSfk9_BX8ue62IBTqEC-nen-6wqt7A8pc2AlZAjZdSS1CVtrLP_ex-s2nX5OR7CKwNbmp3abq6elGFSyPA7lKEJ-L8GaEsmcUl84R69WSDRnbKHdufj3ZIC0TsXu4kJ8jA_e0tHJI4rbUi8HwURSxJFiq45ePu135Ob-6tYJZhJMZaHSIZXKmueamOdYRtTtx9QlTefk_pt3Hxbdmc5xz8&iv=frZ_RuXiGuHvRXKM&kdf=pbkdf2&salt=Cc5tD6duRDkeSr9nhYHMDg&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-hangul": {
+      "url": "wemush://v1/encrypted/hangul-1?e=Z-E49KVxnt6-NPqj_UlJvQGNP39B_iTArEXdilzjPf-MhRBB4QxBbEbTCc22zYhsbV7AsjSVESt5RyXRMo3ItJYrFaCThTKChCxiELCv7irtshHX2e-bJmYM7TO-KS0udaSuTAdecmlaAtuiSEleabIuePmhFx0KawvEV8AF4fUrg9fRaPjIT5fGuage4pPiK-70zlTwINB7BcTaXTaDzjCUcmqiPeZWeOrusoBkPm12X_OsLOqxTcdmWmpXk19xc2CQPfGGUEhhp3vyHIkX72xkib9fNJCP58gw6iNNlrOSBOoExGBcSp2WNQd8hAxFBHS4ZS5a0N4x0TtWEovbvlTBmG-GblT1EbKdUebc3tYA5bWAdRFtZDd5Pmzw1-qzFy20GsY4wWN91ceWTmKt3nuzO7p0cvV5T8kka3QFMsSYtLzNmgppIa3g8mOVEEcKZTUMU3Ij4bVsu0rsx9py_9O3au0EVfcIbaiTVa5RhcoAVMoXdSl_A5-PEczWhRvPi1N-GkTSYdIKdS3VVgfNYrJCNZUAFKCYgpgB-3wLcSMiSj-1K4ocfIZhVhk9C0J6HdutEhCg6DBFLdIafatd7MOwdyrA0bhMBLt6jm4GRi1cRhtoVQnZUKBisgDSaq0Moo9O0GVl2n7f9jFGOPSOl0WsuVBrZXD7fcQAsH5GybumjwwLx5gwcqc_1SyRRv_9L8m6Yds6OZBQYf_wKwupHpMUWsMigm1lCW7586aXc4ujfXaCToohMXXr9VGZnD-Klsd3jAT5DFAF3QthSCba&iv=mdqi6WtwKUyZJure&kdf=pbkdf2&salt=xJl_1YHBg4pEQMYf_hHkSQ&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-nfkc-not-applied": {
+      "url": "wemush://v1/encrypted/nfkc-1?e=tM1xdBlzI3jHb7TWVFeVH1AAmEr-3Q1qnz7esF0p05rD34laqIfKBdwHJYQKlUSycNoZF8aEsMlmNvY4exnmErT5IMjcFF__E3SalW1hNjGeGwdGnhJJmqizN5QSzMCQEVA6CI9b6mbSv3B7dFO7iJUGDKubUChD2mxMDNs6-AVynkECELNF0pOxWXl9Ud0nOe8ZOGU44NDbb_enBygh7HJFmu5fFfsGDLI9yceIWH45-nkMky2TxZTjR6nToDQSkMpC7JmiuJIuv2ZcdN2FSwbJqUnQos-EZYpBkphWCkkSkRricFyaYVUdXCQi0KbcSlfcdRmtj4NV4VzjYH98socvz8kuhypM8jFjcU7SAZRu7UTZKZ415MW3DQokm-gQmU53EZyPKYSrTdxtBYslQioPtt6WmJIrf-4G6DrIQDClq-YTi2O67RMc4PyF7LbazTFimp4KGo6B9OfSVTfMY8_EMc7rH0tMXfuAUYaSCCjyfC1TmvE3r2AFDHkwbeRoeFc_LQEk8PDx3qeekIt_sVYcioBo4v-MXItf2-OXyRB0Pn3rRtlXFi46w0GXpOf988gcS-VjgLDauEadD2b3qSweTBmbpZJjW6GJL6m7YMKV4LO5O0JQB5OVBaM-FjsfFuvJiTQPJRpoaEZYTi9fZ-zYyV050E2_bRRpBpKa83gYNfgy8yN2SQH1i8AIJAGkdEJVHEI5-8BIrDrzzeJ3OR08HLYvwA1ASnB8TXGhUc4yH3YJlFBBOI7FjMVEpsVX3uNzxQKXpPQp6GWlEA&iv=cSDV1zTzYA7Rz8s9&kdf=pbkdf2&salt=SKtwiHLefMqGS7cS0dK38Q&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-whitespace": {
+      "url": "wemush://v1/encrypted/space-1?e=jqem6vt5jtZ4EuIjprn5wG_7_gKzUV4j2sDOOu93MisQkMRLxV1gPKBgOMjH-ZbWvFPGpM2z2tio-T2acfkjIbDl1cjipAm4WjjoqZXPitLVgDZBl_9V4hdBTRPr-jByrKmHeOItpYxVyy1A-yp8P5g-wQYZh87ZvE_lDlccj6YsHlqikL1hBcNWWNF11cnaQ805pQC-ET6xTvTHhPck7vVfo1TADLmAQwHqF0bYUqtmmEQ8qZO6D85HsFTeR4c7x4dIXIvb5W0FvIbuXljErDjT7wGcYHSCLVQbXaXw3Vh0ps4Gi6qSarOiTRRhGXFTHKPquKyecSVImUEiSZoKZcFoG5BT2qgQeELuft3AX_cz_GmyG509-leAZbYhIz3xn-0zWtI6S0p1p5tDPhyXRpXI4MtF_Q0Oc4Q7xuFUGCaRZEhgzQrw1gk6ONWiktm3OKpLIhymT-nO3FuKRjQksUjGH6Nao8n6BGce86OBN_dbVC3VGYimUD05J2LFMk7AyKKxKb6MZQcnLJ6jIy_e9GDYvbQ6_ElXUfsfbY6g5Ogq19qVxHvTVcnM2UvD41hAvdOxNH7Cl3_yby9PeA29leSoLQWFPNPn68kOZh6akdgrNQseAsx10t7ibBYEBvbC4o46Cmg4Px5jwOrcu9EBjGESFeKhrPYgBaT0LAZQsbH3To12OutKRzDj7HkGUD5X-IuggeoIqVXsM0uUYDcNILG4_rid25t0graHq7hZIEcJOtHlDXFnD2-eZZA1fx_YZYYkNWURVt4sdiEK-FA&iv=dVdZEd5-ESSj6x1c&kdf=pbkdf2&salt=sCsXeQGXRupJIrMmpf1z2Q&i=100000"
+    },
+    "url-pbkdf2-min-passphrase-astral": {
+      "url": "wemush://v1/encrypted/astral-1?e=bJCbeeW_Uw1YSQpzkoIkhUccv3O0e7tkmQ7CADElgxGg-hDFLT4v5jnnrrogVBlA0QfFuoUeLHztSwjppQuAbDAVResHOtTI8R0S6gOUbaTEr9xStK5F-PJsIc9Ur1RPvUADHX_jkq4BP1LsFIsU9aQ8K5D5veDM35TzYAhGGz_RpfnlqLPV5J7fX68gjLzgmijBR97AHoSsR7-9y0g_8yPW4jNt-ZufTeHaKMYhsSJ0pG7KKN82b4xPIRv1cnHuKxDsVtTxzOP0KtQB22KMR24YyY2UCJ0iQDLQPTyVf6u54IIg1pNLTjcW2icoNN_xhPuOT_3ZqC2CO2sgDtHcecgnA7CczO9yEu7P_T5ZTBwAkUV3xJ9yEtlv8QpyqVaqL0-vl1T_vduEHmKdd_LfrMQ775wWkJOyZ5AzIGuw3fIcEnqniTGzhIZx9jn7p1V1YZdz7e0q0s4ayhbef13LS-fzUGwEH9KWwR1CcCCUhnilkuh6yaV5d1g2lGIntoP2dNNRYoAsLq_J6JoVmL6RFQIOwtJlMViJ094mIcw_4GvWRZSjmXS0R0lUI5XVeLhRXzB3iebdf23GrDhfdMDXBJwdBgGAUw8oLs5IhPHIYeyS0qFduyXE0sO71ghyPhmBCvTWK8TtuuM7hVCV2n6ZEDORd3OYQ_OBLPgD5NBeUYJ0lEFFD9rsPSAUqRr1xoXyDY_uzzJe8fFYsH1BTpBOp22_w2a2tqubjBQwvSXFOfs95Nuc7vpUOBgM_SUw5Ag-FOATgoZboY5DIgCiyxcY&iv=mBlxoizurbLc63wS&kdf=pbkdf2&salt=ILYyxQd7WMmD6Pm4jQ4b_g&i=100000"
+    },
+    "url-pbkdf2-default-passphrase-nfd": {
+      "url": "wemush://v1/encrypted/nfd-pass-default?e=uzkgGjfPwpKcmacYzlRrdOLlsdFCEHGZQaOTumRqKgnBtPQ4lDnyC7O-RJUbYcm_hLo6r81uuewDt3VqW4d4npjnFp7aUQlvT6LX0BSMbsBbSPGdHHq6rWMUYCm7G00UpwKHEpOYq0wipELjUo1qUrVBPERbSz1a5mPFeZIDfWe6PtA3Cug5t27bTyG3lOTS_cS0VHcWyLDO8w2ZMw5lVORGurUqvmOTg9vA3mjz5klc7HuWU_3muGZWLbif3ED-KMzsuJYUOoZ08DgZ332F6SSZ3cLej02HeyQYWD8vLuRn-Oyj7b-F9WxNx2-0TAh103oj2O-n1yb59b5xejTlU22v9AObsJQRI-2QzNDrjnKHWHq5-q_0I4mUepW7oBoqFsSOpljPspAb-GJywCE2a0EHnN7LvkvjsCQTOcGNQRPNTE7s-cA3xBSzSabLuvcztNXVbA4DZ3MX7ZsdS4ZE2GPGNYn7xzD4gjH5bhGZFCGxZtp6OwFwtiGH3whSw9h106IQnQIDDaCv6hyxe2QMoHsTO0REp2TtmHz6OKZK5qqNbxwX7g&iv=8gQqhERJ3AVldzsc&kdf=pbkdf2&salt=gR64rym9RsSLBYcT3KKRcg&i=600000"
+    },
+    "url-pbkdf2-min-sig-base64url": {
+      "url": "wemush://v1/encrypted/sig-1?e=EynoqLFiQkonXEDlXlSP7Qve1C74GE2F3hBcjqnnPnhG974E9F0yCdPBPpcnr75N9pJRNGEOLApzLQxnvJ7n7X3x_S2jD6n0sapwwuyZjRw52ZqSvVIOhu7P054zbdd_LNYM6v-wjUVE2witpAnfnVQsUao2NqdMyiK5raSaNIwNeBnCngWztLHSSUvVw2dYxvdJKwFPzbxOu2FKColQ1JTXxSeMBU7F5wgdc0tuUGVx44jq0Roq-N100OiMQr3G8XQnO9I8UM7hmo_WUbTitMCMovduex8F0dH0Yre2giGuDpqBGTH8BiST5KgYoCRbViohu3BAV-GjOpYN18KSPp3lWtKxHiAJzbumUodJT2mXYljHNTa-UvviDKLHc_l3Wjt3OAgr_KTR2yw8EyKRGiExlXpi3oVfmmHYkiGRUBBPPQMxmtf6Wdf_XGHdVfjPkAqVpvgusbQpSBfmAEJNEFWoIAh-fNWd3HVasQSWMzryMARZutHa7uPLG_W8Zf1cywmnNsMlyEvnBlyOAa_INMrwGP0bFpHh9nYx-lWC1-DCnUXMrnzKYa26vs-mRQ9rjOUaEskpGNEy-_yd-2pAxQqLegJwVHe8PSkzOTwjRlV7oMhF_jo6P_H_WbVMamhCBjafYPP5WQ06nBP9JzTStSFWjx_QoY8kxzNvtbKKuVjvIU1m9wqab6BjlluEYv4wxadEwLp-kkCZ6rP-vOX2Ahc8BK2I38TOncfmz1NspIibkXlwCAiZoZGVmInqeOO0iq8VrEO6W8GhVQvy&iv=BBegKBVqyL8Ehkws&kdf=pbkdf2&salt=JIJXUuZGTH8gSc4OAiWLXw&i=100000&sig=MEUCIQDx3k-_9aZ0b1c2d3e4f5g6h7i8j9k0lAiEA_-xyz"
+    },
+    "url-pbkdf2-min-sig-hostile": {
+      "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=jujQkxpcYJBQGc8z_9AbCX4ihFOa67P_QRnD3uifEe0uPmDT8_10vVNixcnPLD-Cuype_18UqvPMe6zyqfZ0iacbiJHekAtoAwFTSR3-paL88uy33dlWiXlUpHCbt1ueLtu5XIpnBUHmgw_hUegbOfi6N-o8i1GN8yoG956EvXrMZfW0mHqymF9BwKSUwZyA48Ux6J9tmUjyOeFs_cEPGNWzq31TskM_0bKkn7Q5v-XGpG8auHGKptXnKaOfsCw4tYZkvp-BYyoSXkCFAs7fT9tjO7dfr0OQv8tStT9S0qmKXrvrCzLScplpXykQPzeqtUMQxucIvfp5-mBNufUEa423h1FolkPzCDRcR09HRVRX87Pgitt3zeOzA846q65H3X-BZM_ntrscct4t-u7bJpMst_nL-8mH7wbS9m5qTW4g35gjM23bzTEKy4lnTsnEsjSPqIEzx4EiLv2YDlSOgmqBDVxEJef6oM9spZQ9CkeLqhg817EIgJj_jq5LEBlT8YfIM6Xqnlq9z6N9nXERSNN-d5Aet8thO94N3TnqdKCRRVVde3deOSKyFqBrxVe7VDjFXUm8XPILe4tKL0fTDXunqOBtjoH3xq9CwGvphpDXvifWgg_v8iIbdCvCRHrnTGlGuRGhpnBRM8lgnEL0jsIxGXt1awjm5SLtIjKvVdV3ffsX6j20KvQgegZ2aV5HH6SDbrx2FAuDx8seoX8ha6bUN_IgK7TmJpZxzvo3owi77t_eCDZjnhEFCIFUXnxYrd9lbKcL05SLF0dmxYk31QuVVT-X&iv=NmRPD8c71k3eK1-w&kdf=pbkdf2&salt=bwxLmH55_dt8Hqak0K6xmQ&i=100000&sig=ab%2B%2Fcd%3D%3D%26x%3D1%23%3F%25%20%C3%A9"
+    },
+    "url-raw-full": {
+      "url": "wemush://v1/encrypted/clx1a2b3c4d5e6f7g8?e=Cqne5bAeL-Uw23vwBJtiH533MRJSZicsdiFwmXAv4_e1d46i_jdNZpnugjzcs5XnHdYIhxeCt4PLrsSud6u685PkTf32DV3vsrQizaU4tXyf998LM1_7UKs_V5MfWU737AV9nbf3Tj-ugo_3ndc3-MeLe5tsAo9gbpQjXhu80FXrdAOlzETwUcBZdFe1Dj44vyTkXfUPzU5r7aHS8SDiKMzsdTExUq2u7Zjc3caxpO99QrugPL1dZchcc2OMvv1wmbFkRisbffQ22kln9Kis4QsDIEtA1jPPd1esDPoomv9g_Cd3yB-rEB2mnCNQRo0F1d1X3lHFSnZk3opGA1TrQJvu3O5OH0UWC1R04azZCiP3rMC1aDq7Tf_CEGVThPFHS7q7-zk4G_f6-6TJzji33pk6D6hVk2IZa5tZGt-YaUJSdvk4bWtdTkZJ9njq1v-loqeUhkRH6G6pHNCPtsX8wpPIjydOrKZWx25DfkMFLqb4MM3tX9yeQLU4Imgv46gyJzT3UwwjNzgYvoprrkqOQVVsazLpUva-Ahqsm5cg5eTFAfxBpWDXwDkOXfbupZyNyXVyBZZv1sbXOGYma2Mbr0-uU_BJIuvIoK07Q0sbH5lmNFn8VYVaR_OKlE6yJulnKGvejq_nDsPP2bVcTU0RpvoyfAHraNMw-GQcX4ytlgAl-X6iDTpDnLH-yCV9AsCglpViWd6V9Lu9n1MG_bZ1Tclm56_H1dIyfm-_rANnQTRvaaQTJuzLRpcavbfclc4O2WDZOs1WX-oM7l3FJe1t6hGB_gmMaRkYXg&iv=2JhinyCvGi6xt1tg&kdf=raw"
+    },
+    "url-raw-minimal": {
+      "url": "wemush://v1/encrypted/raw-min?e=O7SRkEQOEO1om82GY5rZKe-8SuMC59bzuaqynAMvcOpW6iwX2EGP1zVNAB5s_Z5axTMxrdKFiNs34cdIOVMmvhwaKWyAveA52OFnDOfjP88poIlDQIRjD7fknEVrI5oLHNl9KP3UFwrT6BVMMw_A1ljqzREw9jMKWyaOeQCKZ-xM0OEqmUeblzrF0fvHyrHw2ZPOd9dRIRYBBar9_BnKW3EW-uU&iv=57iif-d1MwfAPfgj&kdf=raw"
+    },
+    "url-raw-unicode": {
+      "url": "wemush://v1/encrypted/raw-unicode?e=CA79VFThw0pZQaK64g-F0jApcBaKkcBXFBsas8MS13uLkMo3yPxPUZAAeHbEGsszv5q11R1OSCHczthe55xfyXpfbfJae6W7bNKwBGAbHqKA6mzqaHvU1tKdfFEAtkmT-wdUNjgHrJf9j6_csUbQk0U9Vxy0s7aHjZZdrmU-g-6l13XmsF2Yg-ecUPbjnevUxcL_7XN4pkNntbSfjgdO7PlecCXa4txCxnNHp7vlXYqz-yQp0D6sYKpwNlJvT7v37f_fUevJYe4ww_hLNieH77DhCS-lviFFVuODW5LkxZ-2yhsd_f3wcC9R_SkyGnp5E7M3BvIjMfe4KbMq25izbuq0DZpXsslbRCz6MJze2AyQJPXmnCCmkccfKxagIxFwIYNZ82Oml4y2Hl4n1cF6zjA8pxXntmgINyYjSwk5m-fJGxTJAjL47UcK3hEaDcesbS3L1P2IaIXmYlVwZDKtsAYI14QkWOMNIsuFXWZhoFESeMPFhO6UJ4aCplLyJ_CUCq3gw2sFV_MIiyQUIWep2KNjiw1KurA7rV1cfHpf5Bs&iv=lH5RQHaKQ8uYGL8J&kdf=raw"
+    },
+    "url-raw-id-spec-example": {
+      "url": "wemush://v1/encrypted/Lab%20A%2Fplate%2B3%25?e=CW8dz8fuGOHGUcwN12oXKXR9ar4OZxkRR0OzRZfmf5fnvwJ8NKzSuxX-G91EW-3m8ejLre0_qh3qzcb969JrSxcAsxnhSw-nBA_2dQ3UXfZN5hVogJ9h9m2czhN9VbV1Z3zuwqBmZCZDM65nSsPD0HTa2yfuFT3vbWueH-KTM8oioqTL5xlPvvx-V4wKa4MpewoMAOuQtP-YSdQt-qXt0_t9qcN3r2YEsAUQEjrx8CQZPuI5jL64CKgcZjzm-VOaqSI1sYHeyOxPjkH6WSiJlLRvc32CdvHnjEQwo2QP-uh0h660GuqQIDD0ykHqsCecoEp96nhf7N-6GU0MXJ238ofvpH4Mj1fBreWLXQfMx2T3weqTYboZuXq3yGXlfad6zbUtOe_glG7mDJjjdt28eP9SOsWHzZHzEtWkQktGzTGem2-7Fhxm3mxg3e_qjoYkJ82fgN3Y_Y-m8hi3q2o0NudmMsVsQgnX3WmFzgi4VPWEEB1U-O1URN7KAKpKuQSb7xosPQnx9hY9pfo4UgI3FqvYQL4on3h10s8DOg4NmnLuWAxoGGuXdkRDcbQC0XxN6qCN_T1wyMJX2XEDbDwaSFBT6WJvgPvmnCUgPSOafhntNVA4HFDQt1kfjMPc2SJMfnq72SAXcvy123VWoWRQf7P81oHqCqsuuH4w6uWiSbsaykrXCCmFT5M3_kxqGAIDq6C_7j0zd7zUByUZEGc8l9TSh5t2dQ6gCwvkwW1BqaAxp19rfjmveKeqkGTApjf7sb9g92rHwGedkwIrgtP9DHc1CDag&iv=I5Qv7EXsE2TNR-JT&kdf=raw"
+    },
+    "url-raw-id-query-chars": {
+      "url": "wemush://v1/encrypted/batch%3Fx%3D1%26y%3D2%23frag?e=vOreK5e3fOSNHXhFxyKrjvLBEKjokOhTgFrC2HLVzzm57iM5g-gwYmR6l8pUXVgScimg2KXGNUrTZ8-Xzz58_xIufhpZt23lb2E3yfoeejgjZIIW2JPZnt7UzeqYS53DX-HtXL6uftUhVtSU0NsTudDEBueU_lPVJHKUrUIIqITvrZG9rnP-EMwRwuQV6B5vWiCl_fRJc_3sT9uolSoUfezmDgPPkEysK11w7RI4TqP8uthHqK1JeZV0ZTk-dNC2ubqS_GsQd5WfBCHdo68ekSSLwsrJRPaomXr7IKs6KExVeZzYUY_8dKgNcEqn8aUXR_avkoa5GjL5eZwoBP33CrBkrMqQAmrPxXkjUrpIa-SOGh0K1XSC0HJYJQgzOTLg1GR4bqdUhJ_f1O36d1Uwa5mGqItAEg0WcXeAm9Pd4ts62eGqgkfiG5SyDZBYNq7VynYWB5c1w7QwwQFeYKq2PQUyAyRcz8OwqVmMyq-5DUENHSeDfNJnGozvYO-T_F3KoCbCrASSBXb2HH4gLCRi_GB9YcWm-aX1KO_-00sb7mLxa2g9V1PmQZUcnksDPtCGR0wVsGkmwbB4z5hQltMp-bk0752-u9-UQKpZnAJ_RZ8RopCz57qxtWUwMI9zQNP0EQngYWYjQocmEkROjIOvzYfk3x9ZrWefgAZzuVaTE_RJy6n_rn8iNc2pP33bLpwvRNxYCNg7yBlZNCBmj46Svr0SFWR4pD5dz7-TF7CeKxQV0KbdY6zP0YrrVxdAVkL1NVadVtqB8yWQNQ9m58SjTMsbZSUiawNiqA&iv=52CiB5dYj03vYPKB&kdf=raw"
+    },
+    "url-raw-id-cjk-astral": {
+      "url": "wemush://v1/encrypted/%E3%82%AD%E3%83%8E%E3%82%B3-%F0%9F%8D%84-001?e=a77qHik5TZeZcXroY2XM3dpANYF9a3b6RX0apvPA1LaBWAZGCVWijLX5BzEnndZzg3etbkjeutIT_jIIHosV_xdmOQ2Sq17KsqmrVD6wXHv-3M2jdRPz_fDJMTfOKKI7sx0OeRNN8NmbxzXOm3BCc4kYIVV9PpDpQsR-q2El86HA7F5oCA3TAyOyMDx-Gy_R4l88lkfTLo__qV3DKvZETo4THL-AvGAPZeQ4bS7jnKtoREQqBuYUEVmxIjoqNjs6ErMptbiV74fgrKdXCZu0Ny1WvbSzmtZ3kqquuPakw3qOhlszcfw-k6uS0ustzGIeGjwAiotVLiBQW6wahJk4YseAPByPsoig7G_gAXE5PyczDlgMUH6AxT882jmdJ_pVZBimMQtBsQm9TZ0vMY1bqfhDuTkosPQPVnm4wk9wAwDl6cInBy11UBSPS1ukOL-nPPg2wpved_St2ApfzC4cAWDH0eiTb--Ahrpm3BUYDm3lSp92ZP8izMm_VVEESXVBKuWMCDNl6N7SJEHnrR7d9RY6B3fZg5nQpsrYjjYy2LkZKA6y8qKO7To1MK22t_9JgAntGOBOZEzcMrmTThPM124JFIxKocs9AA29dZMm34dJbPOt__uTmoOJ9b8qIoIlBO1PdMZy_xqpgE-3crAwVSva4PD2yqCTfe7BimFdrTZY-T9uXIIh2-untylkgBKL2HhpYc6AmKqrAgyMeBrZSDTFMR2L9jrSCfbkjFqlGJQfFZFRxJpzDTY0n8x38wyDD6uXL59TLwFQ4RJJeQPMaRJ-gP5FoBMWcw&iv=QiSaOC8t4BKUxehx&kdf=raw"
+    },
+    "url-raw-id-sub-delims": {
+      "url": "wemush://v1/encrypted/a!*'()%3B%3A%40%2C%3D%24%26~._-z?e=OYsAQwyUG3zS7XMrs6sraq4e823yRAbKxIXxz1REIU94D_sQ1wjTCxgK16fCptPhfbwxfEGrRUdSKkeTFQXZCJJx3rQX_5SoZ6QQ-rbb9gmNei1bOPf1JxLlFfUMNFhsVeAy5dKST5fcHn5SGibkhmsSzQ02CChz_Pob2qiddWJI8oYCPEqDM1CH5tyk9fEDPDe7mX0oDKTaG8r-osCFmxa1ls9_-j_Ap6ZO-BTHSI-SRu9-AuvdBsE0FOEd5j-S9coKJ92xEfFeEDbt9LZKaLZFRSsXTRx9KFGJ8PnHjmLvRm_MRT5dx4Jb7wrHfaBZxDVesWGKAbYR2ljScIfptFHn2lY2aOA9AZIDjIygP4dYMvC2silN3vQztu4wcZjod9zwk9LMAy7xQpaHS48zyDJnPbkJYMhWnxo5NVE2Qlo3c8Kl1xzW-uOk6nhsBms-V_ETtf3gPS5OQOwLU5DTxb8fhdH2tTYntEsXliM9_mWI2vivtEbnuO_ftQM__V4fRHrq4XIpKFDA732KOKW-a8XfPHxqpEyRCcAI-PlDcr0ClwDOW6TRJ1Q5FlxKdMlZ4HRZSl_JmUlurk6cjqjcjxG5FtbsyRo4dyW3_Nn8fZbMimYUGNByNVN3xoVN1c1dIzrwcODZHfB_juoHBKtm95qUYz5f7bBYHgbtDBWTgtu8O5QrBpgCasoqyMne2HYnLBdX_itXXM0gzgco1H0z3Qk8vFcJc2CwNqOYOMzEm5R5b8dW2xl3bLiB6OezuBN1uLfdYIlrePK7gyudqBmKTlGUzqmSayJBGw&iv=nVq4pHPJYLyZGWnx&kdf=raw"
+    },
+    "url-raw-sig": {
+      "url": "wemush://v1/encrypted/raw-sig?e=2FpikC0Rhp-5lfWEbA-PAmMjf5BpHzmLw5IdcGHd_ludykRBTZERfsIQNlWS4MIsZkpToNsDbChTM5B1Vmq51gyi2ySIBqkm0Dv7BxnCZPESKzx7VBtN3X0aGoFXBkdBTSWPrD2HgI0iKXVStHZSC1Oo2ZH71dawkN2VKQb52BDiNWyjFEqv0Mb2yEHGyqy9ppW7OTAwjy6-h2N46ndWa7_Rwptkirb2lq2FWqEUW9l-eCDHUTEjiilpOM9_OaJkv0t6xl_rXUqFP4dAm6VwVB1fwbdu689aX7c6FKvbKO7fsZ9w9ZrJFYliHr26Qx5rgIgVVXmawgc_LrtQToMcVbl2CuZfDDSrbifmoVoyuHMZW3TJXcv_OiCKd3wa2EkFavGombXAACDuFqkf12qbMWv07UNebwbC9KrzoYAF2XqBaJ03yzBGlvhPPergQmlx7xRJVgZWPRr0qceiwFIIA7UOGHkK0HHSNfPV8AFGHSugcrSX1MrTQnwNWhz_b-8dVphGP-pw1gwcHGKxm3jj-Kk0_AHFlrJesJwJ0Vi_xBar-3wyGeFyEJZKOpbcFUtXmfQyGS1qAZIrXH1IzSYqWHoHg93zeTi8GVHWMfGEPJapYvvgLt5nhFj1ByNqO5q3bnsrKmFit-7ml2Rrhl4IKNmT6cjWE52045T47ioBxMaAVE7dPxwtXc7yYZDQGRj4pOSEF22G2wfsNVXZAKoCCaEIinnSWba14bpZuhViqPNQcLKmH4Qe9tLLV6hpIW9KT6SKVW0xK8J-9AKrmYo&iv=Ol19hH6j5i1O_iJS&kdf=raw&sig=c2lnbmF0dXJl"
+    },
+    "fields-pbkdf2-default-strain-custom": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4d5e6f7g8",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "ZnbxK-msTk7Tst26fdD8-bsp1AIRUczSXXcE1A7picmQFmvJjXXFnM5o1dIC4mCkG6aUSRnMMLp4jq92S5cldTzHU1C1N3_5yxUXYuZpy2GSEXisMf6BcAWFpnyBzV5xPdvk5Q",
+          "iv": "7SyeOd6AVxv8es-U",
+          "kdf": "pbkdf2",
+          "salt": "8YRyc1qb9dWJinpkCq3qAQ",
+          "iterations": 600000
+        },
+        "stage": "COLONIZATION",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "lWKr2A6ttGPug-InvbVYD-GwMta0BNE4f3CdjY1wLjXd8R9sZJLvevMbIAkojNm46jSvyJPBBRV0BWNU4f0hH_6XKLAdvK_W7f94apyb8NlWoEHpYNEyJzJ0p1oD51S-RRkXELxXxCIA4INqgE9b9OQFpo0sVgTwn_16VdnAoo3f8Q_JvsJ8KcDrhZ97h6ELuHK6ddjglWkFLE1wGJKqtKreNoXdHfC3",
+          "iv": "d8xi5Zrimak4gXOB",
+          "kdf": "pbkdf2",
+          "salt": "8YRyc1qb9dWJinpkCq3qAQ",
+          "iterations": 600000
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-pbkdf2-min-all": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4d5e6f7g8",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "WH5pjNA0qOJcfeukUDpjQscbuCOLDI2VCs81UvHiC54GxptnEpn8SuX8mLyXY1MAAnRZr_GnFT3nL0LF2NTAWNX948qW_Un7FF3pnQpvwTitETcfB2b82VK13bHC2rLAo439qw",
+          "iv": "KpOlEa5eNkOXBWm-",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "stage": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "lrVU031n82v7sV1yowCcldfRrmhlQpH1VcjCp6ss",
+          "iv": "33mMy8N4UilI99V8",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "batch": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "whA0WokZcaFTKdZw1UFcZdWwJTBCkplpr1FMg-J0zFxb4Fs",
+          "iv": "lTaQo95fQQPObw7p",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "organization": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "_4Pc7FFsWUvluZN3-PWVtzZRx7fzHC4h-oSqyg",
+          "iv": "Du6KnRHzVNWzDncf",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "creator": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "dk4r0MhckjEFWv6APyAaSXxlkolYa4Ji3g",
+          "iv": "FRSjxmiSPuqff2Ni",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "xenX8AG5h-5GRloLTRhZ-vwOBQwUCxzCHqV0P3BQUmOqzQ1lfLGyMENlFD9PhXarRSl-VS36Rf59hTW_cvspmyST1I21KcZM9IrrKWpRXQak_JlA4scPq-5dNLv1UrRrC48LlUYqARkOZr8-kdNC-kmqplEVLPuSCsUTLxeWCF0M0tuROFVc18EBzhwa6TFvGUrhYpOZSz8zpItMWzi1DptT_EpdoIDi",
+          "iv": "ctcYEiHHsyWh9MoG",
+          "kdf": "pbkdf2",
+          "salt": "m7PQ_AcbxyQ8cwzFk_ygEg",
+          "iterations": 100000
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-pbkdf2-min-id-spec-example": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:Lab A/plate+3%",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "Dl3ZrEIIYtotyntYTVg3VkZ6RX2RnRCyahJGw2z9b3AlQkwzACRqbtRrexF549rToVmhIvFvs0usJPzPu8Lvstb0IrJKPR2z0WBGe2KqqxkHVcb5xUT3e7FEdthhKJDYbFc2HQ",
+          "iv": "mGxoMBdIHHVWQ7Vv",
+          "kdf": "pbkdf2",
+          "salt": "IRDtBYfAO5Hl_6eOOl01Sg",
+          "iterations": 100000
+        },
+        "stage": "COLONIZATION",
+        "batch": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "Hrxr3RAPah7I0hPD3b9zfCBNmM1nF_S4TKwbCRGF3mtHZl4",
+          "iv": "vfQ1XrnipfyDr4F_",
+          "kdf": "pbkdf2",
+          "salt": "IRDtBYfAO5Hl_6eOOl01Sg",
+          "iterations": 100000
+        },
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "note": "Café “quoted” \"dq\" \\ back / slash",
+          "count": 42,
+          "ratio": 0.1,
+          "flags": [
+            true,
+            false,
+            null
+          ],
+          "nested": {
+            "rtl": "פטריות",
+            "emoji": "🍄🔬"
+          }
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-pbkdf2-min-id-cjk-astral": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:キノコ-🍄-001",
+        "version": "1.3.0",
+        "type": "SPAWN",
+        "species": "Lentinula edodes",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "aLzfWbFoQCVjokM2XXkcBcQoTP3fIhrynAGfanl9Yhen2PX_gpNOggIwZmi5QDJa_QSW0EoFa3rkx02eZvRWPL6G5QbdMUQsq2I",
+          "iv": "SofzF9hXwIAGphT5",
+          "kdf": "pbkdf2",
+          "salt": "4RQg0FmeRT0hQ5SHJR0cTw",
+          "iterations": 100000
+        },
+        "stage": "INCUBATION",
+        "batch": "Charge München #7 & co?",
+        "organization": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "quixxGgxwcwfr2_FHfnPV71DndJfDfkXk8F_XYPEyi1x7alpNY3teg",
+          "iv": "BV8QDcVs6Sn8K4tU",
+          "kdf": "pbkdf2",
+          "salt": "4RQg0FmeRT0hQ5SHJR0cTw",
+          "iterations": 100000
+        },
+        "creator": "مستخدم",
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "1NyjukAiAYx1rx8bJdgcYuxyH6QFezEuUbugkNc1uBdxIiHzD7X762anZuizw4CpEunx3dT13-yTDycbDjlO89VcfbHQ",
+          "iv": "KA7KmDd8Fk6UHr8C",
+          "kdf": "pbkdf2",
+          "salt": "4RQg0FmeRT0hQ5SHJR0cTw",
+          "iterations": 100000
+        }
+      }
+    },
+    "fields-pbkdf2-min-id-nfd": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:café",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "TtOjQ2TXUkzo95SFeG4CeLaoefGQzKE6CsXO1VIGX3qIvFsU3_YD36RGJFviee7SJ-jbYTrCv-_PfDZoJw--r0G_qMAVtiT9WSIYyCcR3ZEGm2p3Rw0yT0IGUl3y58hx8Spk-w",
+          "iv": "-oEEi4ZFxPZe8qpF",
+          "kdf": "pbkdf2",
+          "salt": "to2Eo9OuHK_Z_7wJv0XTFg",
+          "iterations": 100000
+        },
+        "stage": "COLONIZATION",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "note": "Café “quoted” \"dq\" \\ back / slash",
+          "count": 42,
+          "ratio": 0.1,
+          "flags": [
+            true,
+            false,
+            null
+          ],
+          "nested": {
+            "rtl": "פטריות",
+            "emoji": "🍄🔬"
+          }
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-pbkdf2-min-id-control": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:tab\there\u001fusdel",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "name": "Blue Oyster PoHu",
+          "generation": "F2",
+          "clonalGeneration": 3,
+          "transferDepth": 4
+        },
+        "stage": "COLONIZATION",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "0DDS28nyGTW1cP1xkSnw0yYqfeeE1Dnn4U9p-rXcMj5IeOZIUJCmSgOYXcELrs6_pN_t2-K8svQ7xBZCgMRG_W3qnhnuAC_K_W3dJ3QJgUt5Fi_IuHVBvH17X4SyupI_VLOriAijrw0rTNIjbsKeGibNk9-8zjM3uEtSC7gauy6a_Xcv2bzHWnDM4JCa0pXQgm9IOxjSGo5jFtraFFgTuOvUGbWUYWMm",
+          "iv": "dPu0V1Tru1SN0aoJ",
+          "kdf": "pbkdf2",
+          "salt": "h0AKh01d3ZDxyvB6vOr97Q",
+          "iterations": 100000
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-pbkdf2-min-passphrase-nfd": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:fields-nfd",
+        "version": "1.3.0",
+        "type": "SPAWN",
+        "species": "Lentinula edodes",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "ZBd5TjCHt5EHY_-BE74tBXiBLqn2s76t129OJsSt9A8N3jNWn8ExjkCzkFQQh8wthABn1rOOjhBSJvn5YxvJjzcjf9OKWwsGEUk",
+          "iv": "w-dM0Whfk0lcMSWA",
+          "kdf": "pbkdf2",
+          "salt": "ls-wJU3Oo2pEPE4N2sor4w",
+          "iterations": 100000
+        },
+        "stage": "INCUBATION",
+        "batch": "Charge München #7 & co?",
+        "organization": "Équipe « Mycelium »",
+        "creator": "مستخدم",
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "twMYLgdjFNgTMl2WxjdaxPA9FN9yumxqULQCUF_EOaT_CxHlnU0dSQHkGY7muHt8QezHxGMvf8aaRC2H-MOysuC38jmb",
+          "iv": "qBAypNvtZRNHqhq_",
+          "kdf": "pbkdf2",
+          "salt": "ls-wJU3Oo2pEPE4N2sor4w",
+          "iterations": 100000
+        }
+      }
+    },
+    "fields-pbkdf2-min-string-values": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:fields-strings",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "name": "Blue Oyster PoHu",
+          "generation": "F2",
+          "clonalGeneration": 3,
+          "transferDepth": 4
+        },
+        "stage": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "R91dlibIYiX0kHafbwsOav9TkiuEx9d3Fy2bwpjq",
+          "iv": "cEpbNjiyuty3kXTM",
+          "kdf": "pbkdf2",
+          "salt": "eELniwNoiDFEkMPAJ5DTmA",
+          "iterations": 100000
+        },
+        "batch": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "4M8Npn_0h6TcA2HdWiAbpSzdyoDinqkdpYleMEAr4NyISRs",
+          "iv": "JFPTU38AgAiLMncx",
+          "kdf": "pbkdf2",
+          "salt": "eELniwNoiDFEkMPAJ5DTmA",
+          "iterations": 100000
+        },
+        "organization": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "Bs6HG7IKwYZ3W44Q1QDvXySZqk4VUbR98alBoQ",
+          "iv": "RM-NZuVzQnGnNtn8",
+          "kdf": "pbkdf2",
+          "salt": "eELniwNoiDFEkMPAJ5DTmA",
+          "iterations": 100000
+        },
+        "creator": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "jAlEDZTzW1XdUyuS6rXrGQMpBX-zqf9zqQ",
+          "iv": "Cm_ZIwO96v7tsfEy",
+          "kdf": "pbkdf2",
+          "salt": "eELniwNoiDFEkMPAJ5DTmA",
+          "iterations": 100000
+        },
+        "custom": {
+          "note": "Café “quoted” \"dq\" \\ back / slash",
+          "count": 42,
+          "ratio": 0.1,
+          "flags": [
+            true,
+            false,
+            null
+          ],
+          "nested": {
+            "rtl": "פטריות",
+            "emoji": "🍄🔬"
+          }
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-raw-strain": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:clx1a2b3c4d5e6f7g8",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "M5JCcpTiGDReX-EB_p8_salGZn9-cKHPvfBhkAZhRp6p_CwApzdssimUURvjZP-LUnnTXsObljDvCL42pDr2FvKQL3AfDRCvHzRdRkFfsip4Z1PuNmhD0FQyVrJZIcqBq_mkmg",
+          "iv": "S7-pSBWniZoDOIPV",
+          "kdf": "raw"
+        },
+        "stage": "COLONIZATION",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "note": "Café “quoted” \"dq\" \\ back / slash",
+          "count": 42,
+          "ratio": 0.1,
+          "flags": [
+            true,
+            false,
+            null
+          ],
+          "nested": {
+            "rtl": "פטריות",
+            "emoji": "🍄🔬"
+          }
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "fields-raw-all": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:fields-raw-all",
+        "version": "1.3.0",
+        "type": "SPAWN",
+        "species": "Lentinula edodes",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "ow6wBes0Pt75F3t4o5poMcxS0FhwWDibL8482R1x6SB-iWAl92d_Zw0BFQ3zs_HzTMNGZD3QEpTZcKkKs5TeekRv4VlegV0LKW8",
+          "iv": "JTmQodheYEAq66I3",
+          "kdf": "raw"
+        },
+        "stage": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "s6bLNWm0llMNsQpj_NfocEh1rWp5JYwIsKYLpw",
+          "iv": "lpAPFek7ucKV8pC9",
+          "kdf": "raw"
+        },
+        "batch": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "y8iibx-4JABYWK1rFxVpA53T75dgKBgw2a_6xjzcJnJXIVQOQ7rhHT8C",
+          "iv": "iYCv6-N08koxtGaQ",
+          "kdf": "raw"
+        },
+        "organization": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "ubeeP1Z4AUsewOP8DicyjgMST6XvJxYl4muBEJmIjjFr6eOPddxiEA",
+          "iv": "-V0LxxcVtP1fY_Qs",
+          "kdf": "raw"
+        },
+        "creator": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "VR2LVyZoNyvDbAuOjCKNNB_uYWncrC3UPolHJcTn",
+          "iv": "GccElqXNvt7T8vKk",
+          "kdf": "raw"
+        },
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "jtkcCjMr6iEJR4zo3foSnY0fqA_9z9CxLpzbcRGSRjAsrFqjRdxPk5NK0pmbNGqT5SsZ-3koktrjCt3NrXTpfrU38r5u",
+          "iv": "gTBMKqqH32UiUaWC",
+          "kdf": "raw"
+        }
+      }
+    },
+    "fields-raw-id-query-chars": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:batch?x=1&y=2#frag",
+        "version": "1.3.0",
+        "type": "SUBSTRATE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "s44vdYO5ph5TL-MLSp800ZnzagGp0CkdzVAaINAwbj3JVeFbqawT2843g_mx20eb7Gjzln3fM7_iTPd5HHklBE9aGM2U5p8UJ9BE6wqmElKuJYOcNL1maPnsHeEnqVgTdXkZYg",
+          "iv": "cFwO3O2kenR7-zFD",
+          "kdf": "raw"
+        },
+        "stage": "COLONIZATION",
+        "batch": "batch_2025_12_001",
+        "organization": "org_mushoh",
+        "creator": "user_42",
+        "custom": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "JIoN-cwAjSjVrjhpGhzNiXT9XWggWubMsqOgIiki37TBCBo8HhPfQKX1DVUf2GigCKXcale8Mtz5zJfWxojRv025Nkzfpc9ZocWTMjEJZO8f_BYsNZva8QiefLaGw4qKkCBaaknmzSplrICoxWAAeQ5JhH91QcQYNw9NEOUD_Ra-60pYwPHPZec-RP3rVQSSBB8kLe5JsOIT9ZzeyjS3RKxsRFP5lSJZ",
+          "iv": "PiZbZUhtWVO7udxe",
+          "kdf": "raw"
+        },
+        "_meta": {
+          "source_system": "interop-matrix",
+          "schema_version": "1.3.0"
+        }
+      }
+    },
+    "url-raw-numeric-generation": {
+      "url": "wemush://v1/encrypted/numeric-gen?e=pUEAQqnpGfjymCVBPOSDbozloEz6zzpxqhSy3Ob6xrygEUEs4Xx7odLuQ27dXfQVfKizIL06J3Pr26tWxPLdT9xkcz4pK-a687o75fYzuREJInAAGqT25-vBSkDORJ9TLR6tVicrDr0gE4vir34yHOEIpZTeuWmHpt2F5UxNRl-hQPc_5Yv5KhFLrPbU_qWAAHXlX4rKfVFvstrooXyqH6UuwZMpFysR9nu_iiuCzuFXa5yeFARfCCraNkOn4ut-nwB_UCQTGmYfv1pYGmsAJbvP5e7I_y7s1hra2CwTu86lXLkP91j6g1K_9cPa6jhspsQVZMtnmMjKqZA5SDrzCDCsvg&iv=cSxwwM3dNPSwqkoi&kdf=raw"
+    },
+    "fields-raw-numeric-generation": {
+      "document": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Specimen",
+        "id": "wemush:numeric-gen",
+        "version": "1.3.0",
+        "type": "CULTURE",
+        "species": "Pleurotus ostreatus",
+        "strain": {
+          "name": "Blue Oyster",
+          "generation": 1,
+          "clonalGeneration": 0
+        },
+        "stage": {
+          "encrypted": true,
+          "algorithm": "AES-256-GCM",
+          "payload": "RrIe0ERXFT4Ckf02ppWlYHN75skUS96D0xr6u3k",
+          "iv": "WTYHaMsgzNvBc0_v",
+          "kdf": "raw"
+        }
+      }
+    }
+  }
+}

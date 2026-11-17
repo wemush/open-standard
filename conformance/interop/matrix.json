@@ -1,0 +1,748 @@
+{
+  "$comment": [
+    "WOLS 1.3.0 cross-library round-trip matrix (inputs only).",
+    "Each case is encrypted by one implementation and decrypted by another.",
+    "The document for a case is specimens[specimen] with 'id' set to specimenId.",
+    "pbkdf2 cases: encrypt with 'passphrase'; every entry of decryptPassphrases MUST",
+    "decrypt; every entry of rejectPassphrases MUST fail authentication. Omitted",
+    "'iterations' means the library default; expectIterations is what the label must carry.",
+    "raw cases: 'key' is the 32-byte key, base64url without padding.",
+    "url cases: 'sig', when present, is attached as the sig parameter and MUST be",
+    "returned unchanged by the decoder. expectPathSegment, when present, is the exact",
+    "percent-encoded ID path segment the generator must emit.",
+    "fields cases: 'fields' are encrypted with field-level encryption.",
+    "expectedFailures lists known divergences (optionally scoped by generator/decoder",
+    "language). A listed case that passes is reported as an error, so fixed",
+    "divergences must be removed from the list.",
+    "This file is ASCII-only on purpose: non-NFC strings are written as \\u escapes."
+  ],
+  "matrixVersion": 1,
+  "wolsVersion": "1.3.0",
+  "specimens": {
+    "full": {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "version": "1.3.0",
+      "type": "SUBSTRATE",
+      "species": "Pleurotus ostreatus",
+      "strain": {
+        "name": "Blue Oyster PoHu",
+        "generation": "F2",
+        "clonalGeneration": 3,
+        "transferDepth": 4
+      },
+      "stage": "COLONIZATION",
+      "batch": "batch_2025_12_001",
+      "organization": "org_mushoh",
+      "creator": "user_42",
+      "custom": {
+        "note": "Caf\u00e9 \u201cquoted\u201d \"dq\" \\ back / slash",
+        "count": 42,
+        "ratio": 0.1,
+        "flags": [
+          true,
+          false,
+          null
+        ],
+        "nested": {
+          "rtl": "\u05e4\u05d8\u05e8\u05d9\u05d5\u05ea",
+          "emoji": "\ud83c\udf44\ud83d\udd2c"
+        }
+      },
+      "_meta": {
+        "source_system": "interop-matrix",
+        "schema_version": "1.3.0"
+      }
+    },
+    "minimal": {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "version": "1.3.0",
+      "type": "CULTURE",
+      "species": "Hericium erinaceus"
+    },
+    "unicode": {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "version": "1.3.0",
+      "type": "SPAWN",
+      "species": "Lentinula edodes",
+      "strain": {
+        "name": "Shiitake \u6728\u306e\u5b50 \u2014 \u00dc\ud83c\udf44",
+        "generation": "G1"
+      },
+      "stage": "INCUBATION",
+      "batch": "Charge M\u00fcnchen #7 & co?",
+      "organization": "\u00c9quipe \u00ab Mycelium \u00bb",
+      "creator": "\u0645\u0633\u062a\u062e\u062f\u0645",
+      "custom": {
+        "line": "a\nb\tc",
+        "nul": "x\u0000y",
+        "bom": "\ufeffinside"
+      }
+    },
+    "numeric-generation": {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "version": "1.3.0",
+      "type": "CULTURE",
+      "species": "Pleurotus ostreatus",
+      "strain": {
+        "name": "Blue Oyster",
+        "generation": 1,
+        "clonalGeneration": 0
+      },
+      "stage": "INOCULATION"
+    }
+  },
+  "cases": [
+    {
+      "id": "url-pbkdf2-default-full",
+      "description": "Library default iterations (600,000), ordinary ID",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 600000
+    },
+    {
+      "id": "url-pbkdf2-min-full",
+      "description": "Minimum generator iterations (100,000)",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-minimal",
+      "description": "Required fields only",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "minimal",
+      "specimenId": "wemush:01ARZ3NDEKTSV4RRFFQ69G5FAV",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-unicode",
+      "description": "Non-ASCII, control characters, NUL and BOM inside field values",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "unicode",
+      "specimenId": "wemush:unicode-1",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-spec-example",
+      "description": "Hostile ID (spec-example): 'wemush:Lab A/plate+3%'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:Lab A/plate+3%",
+      "iterations": 100000,
+      "expectPathSegment": "Lab%20A%2Fplate%2B3%25",
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-query-chars",
+      "description": "Hostile ID (query-chars): 'wemush:batch?x=1&y=2#frag'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:batch?x=1&y=2#frag",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-non-ascii",
+      "description": "Hostile ID (non-ascii): 'wemush:Champignon-caf\u00e9-\u00dcn\u00efc\u00f8d\u00e9'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:Champignon-caf\u00e9-\u00dcn\u00efc\u00f8d\u00e9",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-cjk-astral",
+      "description": "Hostile ID (cjk-astral): 'wemush:\u30ad\u30ce\u30b3-\ud83c\udf44-001'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:\u30ad\u30ce\u30b3-\ud83c\udf44-001",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-nfd-id",
+      "description": "Hostile ID (nfd-id): 'wemush:cafe\u0301'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:cafe\u0301",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-literal-percent",
+      "description": "Hostile ID (literal-percent): 'wemush:%41%2F%%25'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:%41%2F%%25",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-sub-delims",
+      "description": "Hostile ID (sub-delims): \"wemush:a!*'();:@,=$&~._-z\"",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:a!*'();:@,=$&~._-z",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-json-escapes",
+      "description": "Hostile ID (json-escapes): 'wemush:q\"uote\\\\back<>{}|^`[]'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:q\"uote\\back<>{}|^`[]",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-control",
+      "description": "Hostile ID (control): 'wemush:tab\\there\\x1fus\\x7fdel'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:tab\there\u001fus\u007fdel",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-id-plus-space",
+      "description": "Hostile ID (plus-space): 'wemush:a+b c++'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:a+b c++",
+      "iterations": 100000,
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-nfd",
+      "description": "Encrypted with an NFD passphrase; the NFC spelling must decrypt too",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:nfd-pass-1",
+      "iterations": 100000,
+      "passphrase": "cafe\u0301 Mu\u0308nchen",
+      "decryptPassphrases": [
+        "cafe\u0301 Mu\u0308nchen",
+        "caf\u00e9 M\u00fcnchen"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-nfc",
+      "description": "Encrypted with an NFC passphrase; the NFD spelling must decrypt too",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:nfc-pass-1",
+      "iterations": 100000,
+      "passphrase": "caf\u00e9 M\u00fcnchen",
+      "decryptPassphrases": [
+        "caf\u00e9 M\u00fcnchen",
+        "cafe\u0301 Mu\u0308nchen"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-angstrom",
+      "description": "U+212B ANGSTROM SIGN is a singleton that NFC maps to U+00C5",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:angstrom-1",
+      "iterations": 100000,
+      "passphrase": "\u212b ring",
+      "decryptPassphrases": [
+        "\u212b ring",
+        "\u00c5 ring",
+        "A\u030a ring"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-hangul",
+      "description": "Conjoining jamo (NFD) compose to one syllable under NFC",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:hangul-1",
+      "iterations": 100000,
+      "passphrase": "\u1100\u1161\u11a8 jamo",
+      "decryptPassphrases": [
+        "\u1100\u1161\u11a8 jamo",
+        "\uac01 jamo"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-nfkc-not-applied",
+      "description": "NFC, not NFKC: U+FB01 LATIN SMALL LIGATURE FI must not become 'fi'",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:nfkc-1",
+      "iterations": 100000,
+      "passphrase": "\ufb01ligree \u2460",
+      "decryptPassphrases": [
+        "\ufb01ligree \u2460"
+      ],
+      "rejectPassphrases": [
+        "filigree 1"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-whitespace",
+      "description": "Leading and trailing whitespace is part of the passphrase (never trimmed)",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:space-1",
+      "iterations": 100000,
+      "passphrase": "  spaced  out  ",
+      "decryptPassphrases": [
+        "  spaced  out  "
+      ],
+      "rejectPassphrases": [
+        "spaced  out"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-passphrase-astral",
+      "description": "Supplementary-plane characters in the passphrase",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:astral-1",
+      "iterations": 100000,
+      "passphrase": "\ud83c\udf44\ud83c\udf44 spores \ud83d\udd2c",
+      "decryptPassphrases": [
+        "\ud83c\udf44\ud83c\udf44 spores \ud83d\udd2c"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-default-passphrase-nfd",
+      "description": "Default iterations with an NFD passphrase",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "unicode",
+      "specimenId": "wemush:nfd-pass-default",
+      "passphrase": "cafe\u0301 Mu\u0308nchen",
+      "decryptPassphrases": [
+        "caf\u00e9 M\u00fcnchen"
+      ],
+      "expectIterations": 600000
+    },
+    {
+      "id": "url-pbkdf2-min-sig-base64url",
+      "description": "Optional sig parameter (base64url) is preserved through decode",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:sig-1",
+      "iterations": 100000,
+      "sig": "MEUCIQDx3k-_9aZ0b1c2d3e4f5g6h7i8j9k0lAiEA_-xyz",
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-pbkdf2-min-sig-hostile",
+      "description": "sig with characters that need escaping, on a hostile ID",
+      "form": "url",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:Lab A/plate+3%",
+      "iterations": 100000,
+      "sig": "ab+/cd==&x=1#?% \u00e9",
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "url-raw-full",
+      "description": "kdf=raw",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-minimal",
+      "description": "kdf=raw, required fields only",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "minimal",
+      "specimenId": "wemush:raw-min",
+      "key": "_-_-3q2-7wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxg"
+    },
+    {
+      "id": "url-raw-unicode",
+      "description": "kdf=raw, non-ASCII values",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "unicode",
+      "specimenId": "wemush:raw-unicode",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-id-spec-example",
+      "description": "kdf=raw, spec example ID",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:Lab A/plate+3%",
+      "expectPathSegment": "Lab%20A%2Fplate%2B3%25",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-id-query-chars",
+      "description": "kdf=raw, ? & = # in ID",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:batch?x=1&y=2#frag",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-id-cjk-astral",
+      "description": "kdf=raw, CJK and astral ID",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:\u30ad\u30ce\u30b3-\ud83c\udf44-001",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-id-sub-delims",
+      "description": "kdf=raw, sub-delims that encoders may or may not escape",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:a!*'();:@,=$&~._-z",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-sig",
+      "description": "kdf=raw with sig",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:raw-sig",
+      "sig": "c2lnbmF0dXJl",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "fields-pbkdf2-default-strain-custom",
+      "description": "Default iterations, two fields",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "fields": [
+        "strain",
+        "custom"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 600000
+    },
+    {
+      "id": "fields-pbkdf2-min-all",
+      "description": "Every encryptable field",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "iterations": 100000,
+      "fields": [
+        "strain",
+        "stage",
+        "batch",
+        "organization",
+        "creator",
+        "custom"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-id-spec-example",
+      "description": "AAD with a hostile ID",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:Lab A/plate+3%",
+      "iterations": 100000,
+      "fields": [
+        "strain",
+        "batch"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-id-cjk-astral",
+      "description": "AAD with a non-ASCII ID",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "unicode",
+      "specimenId": "wemush:\u30ad\u30ce\u30b3-\ud83c\udf44-001",
+      "iterations": 100000,
+      "fields": [
+        "strain",
+        "custom",
+        "organization"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-id-nfd",
+      "description": "AAD uses the ID exactly as written (no normalization)",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:cafe\u0301",
+      "iterations": 100000,
+      "fields": [
+        "strain"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-id-control",
+      "description": "AAD with control characters in the ID",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:tab\there\u001fus\u007fdel",
+      "iterations": 100000,
+      "fields": [
+        "custom"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-passphrase-nfd",
+      "description": "NFD passphrase, decrypted with the NFC spelling",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "unicode",
+      "specimenId": "wemush:fields-nfd",
+      "iterations": 100000,
+      "passphrase": "cafe\u0301 Mu\u0308nchen",
+      "decryptPassphrases": [
+        "caf\u00e9 M\u00fcnchen",
+        "cafe\u0301 Mu\u0308nchen"
+      ],
+      "fields": [
+        "strain",
+        "custom"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-pbkdf2-min-string-values",
+      "description": "String-valued fields only",
+      "form": "fields",
+      "kdf": "pbkdf2",
+      "specimen": "full",
+      "specimenId": "wemush:fields-strings",
+      "iterations": 100000,
+      "fields": [
+        "stage",
+        "batch",
+        "organization",
+        "creator"
+      ],
+      "passphrase": "correct horse battery staple",
+      "decryptPassphrases": [
+        "correct horse battery staple"
+      ],
+      "expectIterations": 100000
+    },
+    {
+      "id": "fields-raw-strain",
+      "description": "kdf=raw, one field",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:clx1a2b3c4d5e6f7g8",
+      "fields": [
+        "strain"
+      ],
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "fields-raw-all",
+      "description": "kdf=raw, every field",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "unicode",
+      "specimenId": "wemush:fields-raw-all",
+      "key": "_-_-3q2-7wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxg",
+      "fields": [
+        "strain",
+        "stage",
+        "batch",
+        "organization",
+        "creator",
+        "custom"
+      ]
+    },
+    {
+      "id": "fields-raw-id-query-chars",
+      "description": "kdf=raw, AAD with ? & = #",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "full",
+      "specimenId": "wemush:batch?x=1&y=2#frag",
+      "fields": [
+        "strain",
+        "custom"
+      ],
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "url-raw-numeric-generation",
+      "description": "strain.generation as a JSON number (the wols Python API accepts and emits it)",
+      "form": "url",
+      "kdf": "raw",
+      "specimen": "numeric-generation",
+      "specimenId": "wemush:numeric-gen",
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    {
+      "id": "fields-raw-numeric-generation",
+      "description": "strain.generation as a JSON number, field-level",
+      "form": "fields",
+      "kdf": "raw",
+      "specimen": "numeric-generation",
+      "specimenId": "wemush:numeric-gen",
+      "fields": [
+        "stage"
+      ],
+      "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    }
+  ],
+  "expectedFailures": [
+    {
+      "case": "url-raw-numeric-generation",
+      "decoder": "typescript",
+      "reason": "Not an encryption divergence: decryption succeeds and the plaintext matches, but @wemush/wols rejects the decrypted label because strain.generation is a JSON number (\"strain.generation must be P, P<n>, F<n>, G<n> or <n>\"). SPECIFICATION.md 1.3.0 types generation as a string (Specimen Structure), so the TypeScript decoder is correct; the wols Python API accepts an integer generation and emits it unchanged.",
+      "reference": "SPECIFICATION.md 1.3.0, Specimen Structure: strain.generation?: string"
+    },
+    {
+      "case": "fields-raw-numeric-generation",
+      "decoder": "typescript",
+      "reason": "Not an encryption divergence: decryption succeeds and the plaintext matches, but @wemush/wols rejects the decrypted label because strain.generation is a JSON number (\"strain.generation must be P, P<n>, F<n>, G<n> or <n>\"). SPECIFICATION.md 1.3.0 types generation as a string (Specimen Structure), so the TypeScript decoder is correct; the wols Python API accepts an integer generation and emits it unchanged.",
+      "reference": "SPECIFICATION.md 1.3.0, Specimen Structure: strain.generation?: string"
+    }
+  ]
+}
