@@ -1100,6 +1100,14 @@ Normative changes, subject to the public comment period:
   - Adds three `SHOULD` cases for a numeric `strain.generation`: `generation-numeric` in `generation.json`, `decrypt-numeric-generation` in `encrypted.json`, and `decrypt-fields-numeric-generation` in `field-encryption.json`.
   - The existing cases are unchanged.
 
+Editorial:
+
+- **Conformance, interop round trips** (`conformance/interop/`, matrix version 2): This directory is now the canonical copy of the cross-library round-trip set, including both reference harnesses (`harness.py` and `harness.mjs`). The libraries carry byte-identical copies.
+  - The numeric `strain.generation` cases now express the 1.4.0 rule. The generator is given the JSON integer `1` and must write `"1"`. A label that carries `1`, as both 1.3.0 releases wrote it, is still accepted on the wire and must decode as `"1"` (new case members `expectSpecimen` and `legacyPlaintext`). The `expectedFailures` entries for these cases are removed.
+  - Restores coverage from the libraries' earlier round-trip suite: U+2028, U+2029, `</script>` and `created` in the plaintext, an ID with a non-hex `%zz`, a `sig` with reserved and non-ASCII characters, one ID with every ASCII reserved and unsafe character (URL and field AAD), an NFD ID in the field AAD, and an explicit 600,000-iteration request. That adds six cases, for 51 in total.
+  - The harnesses again check that `i` has no leading zero, that the URL has no unknown query parameters and a printable-ASCII query, and that the raw `sig` value percent-decodes to the input.
+  - Both 1.3.0 corpora are regenerated from the new matrix with the published 1.3.0 packages, so they keep what those releases wrote.
+
 ### Version 1.3.1-rc.1 (Release candidate — November 16, 2026)
 
 Clarifications to 1.3.0, from a review of what the 1.3.0 text and vectors actually guarantee. Nothing here changes the 1.3.0 wire format or which labels decode: every label that 1.3.0 allowed decodes the same way, and generator limits (including the 100,000-iteration minimum) are unchanged.
