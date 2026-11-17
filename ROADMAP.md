@@ -41,6 +41,7 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 └─ Language-neutral conformance vectors
 
 Next: v1.4.0 📋 IoT, Analytics & Interoperability
+└─ Signature scheme (Ed25519, trust-store kids) — 1.4.0-rc.1
 └─ Compact URL and species code registries
 └─ HTTPS resolver form
 └─ IoT sensor specs
@@ -213,7 +214,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 
 ## Next: v1.4.0
 
-### Status: 📋 PLANNED
+### Status: 📋 PLANNED (release candidate `1.4.0-rc.1` drafts the signature scheme)
 
 ### Theme: **IoT & Analytics**
 
@@ -237,7 +238,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - Wholesale/retail integration specs
 
 4. **Enhanced Security Features**
-   - **Signature scheme**: Replace the non-normative signature sketch, and give the reserved `sig` parameter and `signature` field a meaning: canonical signed bytes, one mandatory algorithm, a `sig` encoding, and a key identifier resolved outside the label (never a key embedded in the label itself), with conformance vectors. Until then, 1.3.1 reserves both: decoders preserve them and never treat them as verified.
+   - **Signature scheme** *(drafted in 1.4.0-rc.1)*: Ed25519 over RFC 8785 (JCS) canonical JSON for embedded labels and over the exact URL bytes for encrypted URLs, with a domain-separated signing input, a `{kid}.{sig}` token in the reserved `signature` field and `sig` parameter, kids resolved only through a caller-supplied trust store, and five distinct verification statuses. Conformance vectors are in `signatures.json`. Next: `signSpecimen` and `verifySpecimen` in both libraries, then the final release. Compact URL signing follows the compact URL vectors.
    - Blockchain-ready verification hooks
    - Multi-signature support for supply chains
 
@@ -257,6 +258,8 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
 ### v1.4.0 Deliverables
 
+- [x] Signature scheme specification and `signatures.json` conformance vectors (1.4.0-rc.1)
+- [ ] `signSpecimen` / `verifySpecimen` in `@wemush/wols` and `wols`, passing `signatures.json`
 - [ ] IoT Integration Guide
 - [ ] Analytics specification
 - [ ] Supply chain guide
@@ -274,7 +277,9 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
 ### v1.4.0 Timeline
 
-Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+- **November 2026**: `1.4.0-rc.1` (signature scheme)
+
+The final release is not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
 ## Long-Term: v2.0.0
 
