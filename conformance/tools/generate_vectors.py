@@ -1120,6 +1120,155 @@ def signature_cases() -> list[dict]:
             raise SystemExit(f"{c['id']}: computed {status}, expected {c['expected']['status']}")
         if status == "valid":
             c["expected"]["signingInput"] = msg.decode("utf-8")
+    return cases + key_set_cases(signed_text)
+
+
+# ---------------------------------------------------------------------------
+# Key set documents (/.well-known/wols-keys.json)
+# ---------------------------------------------------------------------------
+
+class ConfigError(Exception):
+    pass
+
+
+SUPPORTED_ALGS = ("Ed25519",)
+KEY_RE = re.compile(r"[A-Za-z0-9_-]{43}")
+
+
+def load_key_set(doc: object) -> tuple[dict[str, dict], int]:
+    """Build a trust store from a key set document; return (store, skipped entries)."""
+    if not isinstance(doc, dict) or not isinstance(doc.get("keys"), list):
+        raise ConfigError("not an object with a 'keys' array")
+    store: dict[str, dict] = {}
+    skipped = 0
+    for entry in doc["keys"]:
+        if not isinstance(entry, dict) or not isinstance(entry.get("alg"), str):
+            raise ConfigError("entry is not an object with a string 'alg'")
+        if entry["alg"] not in SUPPORTED_ALGS:
+            skipped += 1  # unsupported algorithm: skipped, other members unchecked
+            continue
+        kid, key = entry.get("kid"), entry.get("publicKey")
+        if not isinstance(kid, str) or not KID_RE.fullmatch(kid):
+            raise ConfigError("bad kid")
+        if not isinstance(key, str) or not KEY_RE.fullmatch(key):
+            raise ConfigError("publicKey is not 43 base64url characters")
+        raw = base64.urlsafe_b64decode(key + "=")
+        if b64url(raw) != key or not on_curve(raw):
+            raise ConfigError("publicKey is not canonical, or not a curve point")
+        if kid in store:
+            raise ConfigError("duplicate kid")
+        store[kid] = {"alg": "Ed25519", "publicKey": raw}
+    return store, skipped
+
+
+def key_set_cases(signed_text: str) -> list[dict]:
+    """`loadKeySet` cases: build a trust store from a key set document, then verify with it."""
+    pub = {name: b64url(public_raw(name)) for name in KEY_NAMES}
+
+    def ed(kid: object, key: object = None) -> dict:
+        return {"kid": kid, "alg": "Ed25519", "publicKey": pub["mushoh-2026"] if key is None else key}
+
+    acme = ed("acme-lab-1", pub["acme-lab-1"])
+    # Keys for algorithms 1.4.0 doesn't define. Their sizes differ from Ed25519's on purpose.
+    ml_dsa = b64url(hashlib.sha256(b"WOLS key set: not an Ed25519 key").digest() * 41)  # 1312 bytes
+    ed448 = b64url(hashlib.sha512(b"WOLS key set: Ed448 placeholder").digest()[:57])
+    good = pub["mushoh-2026"]
+    idx = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    assert idx.index(good[-1]) % 4 == 0  # 32 bytes in 43 characters leave 2 unused bits
+    non_canonical = good[:-1] + idx[idx.index(good[-1]) + 1]
+
+    cases: list[dict] = []
+
+    def loads(cid, desc, doc, kids, skipped, status):
+        cases.append({"id": cid, "operation": "loadKeySet", "requirement": "MUST", "description": desc,
+                      "input": {"keySet": doc, "form": FORM_EMBEDDED, "label": signed_text},
+                      "expected": {"kids": kids, "skipped": skipped, "status": status,
+                                   **({"kid": "mushoh-2026"} if status == "valid" else {})}})
+
+    def fails(cid, desc, doc):
+        cases.append({"id": cid, "operation": "loadKeySet", "requirement": "MUST", "description": desc,
+                      "input": {"keySet": doc}, "expected": {"configError": True}})
+
+    loads("keyset-load", "A key set with two Ed25519 keys loads both, and a label signed by one verifies",
+          {"keys": [ed("mushoh-2026"), acme]}, ["acme-lab-1", "mushoh-2026"], 0, "valid")
+    loads("keyset-unknown-alg-skipped",
+          "Entries with algorithms the implementation doesn't support are skipped, not errors; "
+          "the remaining Ed25519 key still verifies",
+          {"keys": [{"kid": "mushoh-2027", "alg": "ML-DSA-44", "publicKey": ml_dsa}, ed("mushoh-2026"),
+                    {"kid": "acme-lab-2", "alg": "Ed448", "publicKey": ed448}]},
+          ["mushoh-2026"], 2, "valid")
+    loads("keyset-unknown-alg-members-unchecked",
+          "A skipped entry's other members aren't checked: no kid, a bad kid, or no publicKey is fine",
+          {"keys": [{"alg": "ES256"}, {"kid": "not a kid", "alg": "future-alg", "publicKey": 7},
+                    ed("mushoh-2026")]},
+          ["mushoh-2026"], 2, "valid")
+    loads("keyset-unknown-alg-same-kid",
+          "Duplicate kids are checked only among usable entries: a skipped entry may share a kid "
+          "with an Ed25519 entry",
+          {"keys": [{"kid": "mushoh-2026", "alg": "ML-DSA-44", "publicKey": ml_dsa}, ed("mushoh-2026")]},
+          ["mushoh-2026"], 1, "valid")
+    loads("keyset-alg-case-sensitive",
+          "`alg` is compared exactly: `ed25519` isn't a supported algorithm, so the entry is skipped "
+          "and the label's kid is unknown",
+          {"keys": [{"kid": "mushoh-2026", "alg": "ed25519", "publicKey": good}, acme]},
+          ["acme-lab-1"], 1, "unknown-kid")
+    loads("keyset-empty", "A key set with no keys loads as an empty trust store",
+          {"keys": []}, [], 0, "unknown-kid")
+    loads("keyset-extra-members", "Members the specification doesn't define are ignored",
+          {"issuer": "mushoh.example", "keys": [{**ed("mushoh-2026"), "use": "sig", "created": "2026-01-01"}]},
+          ["mushoh-2026"], 0, "valid")
+
+    # Every failing document also holds a good entry: the whole document fails, not just the entry.
+    for name, entry, desc in [
+        ("off-curve-key", ed("mushoh-2026", b64url(off_curve_key())), "32 bytes that aren't a curve point"),
+        ("short-key", ed("mushoh-2026", b64url(public_raw("mushoh-2026")[:31])), "a 31-byte key"),
+        ("long-key", ed("mushoh-2026", b64url(public_raw("mushoh-2026") + bytes(1))), "a 33-byte key"),
+        ("padded-key", ed("mushoh-2026", good + "="), "a padded base64url key"),
+        ("non-canonical-key", ed("mushoh-2026", non_canonical), "a key with unused bits set"),
+        ("missing-key", {"kid": "mushoh-2026", "alg": "Ed25519"}, "no publicKey"),
+        ("key-not-string", ed("mushoh-2026", list(public_raw("mushoh-2026"))), "a publicKey that isn't a string"),
+        ("missing-kid", {"alg": "Ed25519", "publicKey": good}, "no kid"),
+        ("invalid-kid", ed("mushoh 2026"), "a kid outside the token's kid syntax"),
+        ("kid-too-long", ed("k" * 65), "a 65-character kid"),
+        ("kid-not-string", ed(2026), "a kid that isn't a string"),
+    ]:
+        fails(f"keyset-ed25519-{name}",
+              f"An Ed25519 entry with {desc} is a configuration error: loading fails, rather than "
+              "dropping the key", {"keys": [acme, entry]})
+    fails("keyset-duplicate-kid", "Two Ed25519 entries with the same kid are a configuration error",
+          {"keys": [ed("mushoh-2026"), ed("mushoh-2026", pub["acme-lab-1"])]})
+    fails("keyset-duplicate-kid-same-key",
+          "A repeated kid is a configuration error even when both entries carry the same key",
+          {"keys": [ed("mushoh-2026"), ed("mushoh-2026")]})
+    for name, doc, desc in [
+        ("array", [ed("mushoh-2026")], "an array"),
+        ("string", "mushoh-2026", "a string"),
+        ("null", None, "null"),
+        ("missing-keys", {"key": [ed("mushoh-2026")]}, "an object without `keys`"),
+        ("keys-not-array", {"keys": {"mushoh-2026": ed("mushoh-2026")}}, "an object whose `keys` isn't an array"),
+        ("entry-not-object", {"keys": [acme, "mushoh-2026"]}, "a `keys` element that isn't an object"),
+        ("entry-missing-alg", {"keys": [acme, {"kid": "mushoh-2026", "publicKey": good}]},
+         "an entry without `alg`"),
+        ("entry-alg-not-string", {"keys": [acme, {"kid": "mushoh-2026", "alg": 25519, "publicKey": good}]},
+         "an entry whose `alg` isn't a string"),
+    ]:
+        fails(f"keyset-malformed-{name}", f"A key set document that is {desc} is a configuration error", doc)
+
+    # Self-check: every case must load (or fail) and verify as it claims.
+    for c in cases:
+        try:
+            store, skipped = load_key_set(c["input"]["keySet"])
+        except ConfigError:
+            if c["expected"].get("configError"):
+                continue
+            raise SystemExit(f"{c['id']}: unexpected configuration error")
+        if c["expected"].get("configError"):
+            raise SystemExit(f"{c['id']}: loaded, expected a configuration error")
+        status, _ = verify_embedded(c["input"]["label"], store)
+        got = {"kids": sorted(store), "skipped": skipped, "status": status}
+        want = {k: v for k, v in c["expected"].items() if k != "kid"}
+        if got != want:
+            raise SystemExit(f"{c['id']}: computed {got}, expected {want}")
     return cases
 
 

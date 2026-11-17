@@ -667,6 +667,13 @@ To also authenticate the plaintext to key holders, sign the embedded label first
 
   A verifier MAY load a trust store from this document for hosts it chose to trust independently of any label. It MUST NOT choose the host from the label's contents. Fetching, caching, and HTTPS validation happen before verification and are outside it.
 
+  Loading a key set document into a trust store follows these rules. A configuration error means loading fails and no trust store is produced from the document.
+  - **Document shape**: The document MUST be a JSON object whose `keys` member is an array, and each element of `keys` MUST be an object with a string `alg`. Anything else is a configuration error. Members not defined here are ignored, in the document and in each entry.
+  - **Unsupported algorithms are skipped**: An entry whose `alg` the implementation doesn't support MUST be skipped, not treated as an error, and its other members aren't checked. This keeps the format forward-compatible: an issuer can publish keys for an algorithm that a later version adds without breaking existing verifiers. Implementations MAY report skipped entries. `alg` is compared exactly, case included; in 1.4.0 the only supported value is `Ed25519`. A skipped entry isn't in the trust store, so a label signed under its kid verifies as `unknown-kid`.
+  - **Unusable Ed25519 entries**: An entry whose `alg` is `Ed25519` MUST have a `kid` that is a string matching the token's kid syntax (`[A-Za-z0-9_-]{1,64}`), and a `publicKey` that is the canonical unpadded base64url encoding of 32 bytes that decode to a point on the curve (RFC 8032 §5.1.3). An entry that claims `Ed25519` and breaks either rule is a configuration error. Loading MUST fail rather than drop the key: a damaged entry for a supported algorithm signals corruption or tampering, and dropping it would turn that error into `unknown-kid` results.
+  - **Duplicate kids**: Two usable entries with the same kid are a configuration error, even if they carry the same key. Skipped entries don't count.
+  - **Direct construction**: These rules apply only to key set documents. A trust store built directly by the caller follows the [unusable entries](#key-identification-and-the-trust-store) rule above, so an entry with an algorithm other than `Ed25519` is still a configuration error there.
+
 #### Verification result
 
 Verification takes a label (embedded label text, or an encrypted URL) and a trust store. It returns exactly one of these statuses:
@@ -675,7 +682,7 @@ Verification takes a label (embedded label text, or an encrypted URL) and a trus
 | ------ | ------- |
 | `malformed` | The label text isn't an I-JSON object (checked before anything else, signed or not); or a signature is present, but the token or the URL breaks a rule in this section |
 | `unsigned` | The label is well-formed I-JSON with no top-level `signature` member, or the URL has no `sig` parameter |
-| `unknown-kid` | The token is well-formed, but its kid isn't in the trust store (or its entry isn't an Ed25519 key) |
+| `unknown-kid` | The token is well-formed, but its kid isn't in the trust store (including a kid whose key set entry was skipped for an unsupported algorithm) |
 | `invalid` | The kid is in the trust store, and the signature doesn't verify under that key |
 | `valid` | The signature verifies under the trust store's key for the kid |
 
@@ -734,7 +741,7 @@ These are deliberate limits of this version, recorded so implementations don't f
 - **Other URL forms**: Only `wemush://v1/encrypted/` URLs can be signed or verified, and signers emit only that form. `web+wemush://` and any future HTTPS resolver form are `malformed` when they carry `sig`.
 - **Key validity periods**: Trust-store entries have no `notBefore` or `notAfter`. Revoke a key by removing its kid. Validity periods may come in a later version; without a trusted timestamp they couldn't distinguish a backdated label anyway.
 - **Kid syntax**: The kid stays `[A-Za-z0-9_-]{1,64}`. Domain-style kids with `.` or `:` aren't supported.
-- **Other algorithms and multiple signatures**: Ed25519 is the only algorithm, and a label carries at most one signature per form. A future scheme would use a new domain tag (not `WOLS-SIG-v1`).
+- **Other algorithms and multiple signatures**: Ed25519 is the only algorithm, and a label carries at most one signature per form. A future scheme would use a new domain tag (not `WOLS-SIG-v1`). A key set document may already list keys for other algorithms; 1.4.0 verifiers skip them.
 
 ---
 
@@ -1077,6 +1084,7 @@ Normative changes, subject to the public comment period:
 - **Duplicate member names**: Rejecting them is a MUST, compared after unescaping, at any depth.
 - **Signing refusals**: Signers refuse label text that isn't I-JSON, and encrypted URLs with no query or with an existing `sig`.
 - **Unusable trust-store entries**: A wrong algorithm, a key that isn't 32 bytes, or bytes that aren't a curve point is a configuration error. Implementations SHOULD reject the entry when the store is built; if it reaches verification, the result is `invalid`.
+- **Loading key set documents**: An entry with an algorithm the implementation doesn't support MUST be skipped, so issuers can publish keys for future algorithms without breaking existing verifiers. An `Ed25519` entry with a bad kid or public key, two usable entries with the same kid, and a document that isn't an object with a `keys` array are configuration errors, and loading MUST fail. A trust store built directly still rejects an unsupported algorithm.
 - **Number precision**: Adds the caveat that JCS rounds integers beyond ±2^53, so generators SHOULD stay within the I-JSON safe range and applications SHOULD display the canonicalized value.
 - **Not in 1.4.0**: Records compact URL signing, other URL forms, key validity periods, kid syntax changes, and other algorithms as explicit non-goals.
 - **`sig` parameter**: Now a signature token instead of a reserved value. When present it is the last parameter. Decoding still never verifies it.
@@ -1084,6 +1092,7 @@ Normative changes, subject to the public comment period:
 - **Library API Reference**: Adds the recommended `signSpecimen`, `signEncryptedUrl`, and `verifySpecimen` shapes.
 - **Conformance**:
   - Adds `signatures.json` with `sign` and `verify` cases (including signing refusals and per-case trust stores), published test keys, and a trust store.
+  - Adds `loadKeySet` cases to `signatures.json`: an unsupported algorithm is skipped and the remaining keys verify, while a damaged `Ed25519` entry, a duplicate kid, and a document that isn't an object with a `keys` array fail to load.
   - Adds `decrypt-signed-url` to `encrypted.json` and `signed-label-valid` to `embedded.json`. Both show that signed labels decode and validate unchanged.
   - The existing cases are unchanged.
 

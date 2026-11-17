@@ -305,6 +305,40 @@ function signSignature(input, keys) {
   return out;
 }
 
+// Key set document -> trust store. Unsupported algorithms are skipped; anything wrong with the
+// document's shape or with an Ed25519 entry is a configuration error (thrown).
+class ConfigError extends Error {}
+// RFC 8032 section 5.1.3 point decoding (OpenSSL doesn't check this when importing a key).
+const P = 2n ** 255n - 19n;
+const modPow = (b, e) => { let r = 1n; b %= P; for (; e > 0n; e >>= 1n, b = b * b % P) if (e & 1n) r = r * b % P; return r; };
+const D = (-121665n * modPow(121666n, P - 2n) % P + P) % P;
+function onCurve(bytes) {
+  const n = BigInt(`0x${Buffer.from(bytes).reverse().toString('hex')}`);
+  const y = n & ((1n << 255n) - 1n), sign = n >> 255n;
+  if (y >= P) return false;
+  const x2 = ((y * y - 1n) % P + P) % P * modPow((D * y * y + 1n) % P, P - 2n) % P;
+  return x2 === 0n ? sign === 0n : modPow(x2, (P - 1n) / 2n) === 1n;
+}
+const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+function loadKeySet(doc) {
+  if (!isObject(doc) || !Array.isArray(doc.keys)) throw new ConfigError('not an object with a keys array');
+  const store = {};
+  let skipped = 0;
+  for (const entry of doc.keys) {
+    if (!isObject(entry) || typeof entry.alg !== 'string') throw new ConfigError('entry needs a string alg');
+    if (entry.alg !== 'Ed25519') { skipped++; continue; }
+    const { kid, publicKey } = entry;
+    if (typeof kid !== 'string' || !KID.test(kid)) throw new ConfigError('bad kid');
+    if (typeof publicKey !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(publicKey) ||
+        Buffer.from(publicKey, 'base64url').toString('base64url') !== publicKey) throw new ConfigError('bad publicKey');
+    if (!onCurve(Buffer.from(publicKey, 'base64url'))) throw new ConfigError('not a curve point');
+    if (Object.hasOwn(store, kid)) throw new ConfigError('duplicate kid');
+    store[kid] = { alg: 'Ed25519', publicKeyBase64url: publicKey };
+  }
+  return { store, skipped };
+}
+
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
@@ -364,6 +398,21 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
         : verifySignature({ form: 'encrypted-url', url: r.url }, doc.trustStore);
       ok = ok && back.status === 'valid';
       detail = JSON.stringify(r);
+    } else if (c.operation === 'loadKeySet') {
+      let loaded;
+      try { loaded = loadKeySet(c.input.keySet); } catch (e) {
+        if (!(e instanceof ConfigError)) throw e;
+        loaded = null;
+      }
+      if (loaded === null) {
+        ok = x.configError === true; detail = 'configuration error';
+      } else {
+        const r = verifySignature(c.input, loaded.store);
+        const got = { kids: Object.keys(loaded.store).sort(), skipped: loaded.skipped, status: r.status,
+          ...(r.kid ? { kid: r.kid } : {}) };
+        ok = !x.configError && eq(got, x);
+        detail = JSON.stringify(got);
+      }
     } else {
       ok = false; detail = `unknown operation ${c.operation}`;
     }
