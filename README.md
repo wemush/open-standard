@@ -1,6 +1,6 @@
 # WeMush Open Labeling Standard (WOLS)
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/wemush/open-standard/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/wemush/open-standard/releases)
 [![License](https://img.shields.io/badge/license-CC%20BY%204.0-green.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/wemush/open-standard)](https://github.com/wemush/open-standard/discussions)
 [![Stars](https://img.shields.io/github/stars/wemush/open-standard?style=social)](https://github.com/wemush/open-standard/stargazers)
@@ -106,7 +106,7 @@ print(f"Created: {specimen.created}")
 
 - **Public data option**: Share openly for research
 - **Encrypted data option**: Protect proprietary strains
-- **Cryptographic signatures** *(Ed25519, drafted in 1.4.0-rc.1; reserved in 1.3.x)*: Verify that a label came from a key you trust
+- **Cryptographic signatures** *(Ed25519, since 1.4.0)*: Verify that a label came from a key you trust
 
 ### 📈 Research-Grade
 
@@ -158,7 +158,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix
-  version: string;               // Spec version (e.g., "1.3.0")
+  version: string;               // Spec version (e.g., "1.4.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name
 
@@ -180,7 +180,7 @@ interface SpecimenLabel {
   organization?: string;         // Organization ID
   custom?: Record<string, any>;  // Extensible fields
   _meta?: Record<string, any>;   // Implementation metadata (v1.2.0)
-  signature?: string;            // Signature token "{kid}.{sig}" (1.4.0-rc.1); reserved in 1.3.x
+  signature?: string;            // Signature token "{kid}.{sig}" (v1.4.0)
 }
 ```
 
@@ -199,7 +199,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -474,7 +474,7 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Reference implementation (WeMush platform)
 - ✅ Comprehensive documentation and examples
 
-#### Version 1.3.0 (Nov 2026) — Current
+#### Version 1.3.0 (Nov 2026)
 
 - ✅ Encrypted format wire specification: PBKDF2 with per-label salts, `iv` parameter, base64url, NFC passphrases, iteration limits
 - ✅ Field-level encryption bound to its label and field (AES-GCM AAD)
@@ -482,7 +482,16 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ `PRIMORDIA` type alias resolves to `FRUITING` with stage `PRIMORDIA`
 - ✅ [Conformance test vectors](./conformance/README.md), passed by both reference libraries
 
-### Next: Version 1.4.0 (not yet scheduled)
+#### Version 1.4.0 (Nov 2026) — Current
+
+- ✅ Ed25519 signatures for embedded labels and encrypted URLs: a `{kid}.{sig}` token over RFC 8785 (JCS) canonical JSON or the exact URL bytes
+- ✅ Keys resolved only through a caller-supplied trust store, with optional `/.well-known/wols-keys.json` key set documents
+- ✅ Five verification statuses: `valid`, `invalid`, `unknown-kid`, `malformed`, `unsigned`
+- ✅ Decoders tolerate a numeric `strain.generation` written by older libraries; generators always write a string
+- ✅ Clarifications from 1.3.1-rc.1 (reserved `sig`, what encryption does and doesn't protect, ID path encoding), released as part of 1.4.0
+- ✅ `signatures.json` conformance vectors and a 51-case cross-library interop matrix, passed by both reference libraries
+
+### Next: Version 1.5.0 (not yet scheduled)
 
 - 🚧 Compact URL and species code registries, with compact URL conformance vectors
 - 🚧 HTTPS resolver form that phone cameras can open

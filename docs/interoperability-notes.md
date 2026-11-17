@@ -1,9 +1,9 @@
 # WOLS Interoperability Notes
 
-> **Status**: Non-normative. This document records where implementations of WOLS currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#next-v140).
+> **Status**: Non-normative. This document records where implementations of WOLS currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#next-v150).
 
-**Implementations reviewed**: `@wemush/wols` 1.3.0 (TypeScript), `wols` 1.3.0 (Python), and labels produced by the WeMush Platform. Both 1.3.0 libraries pass every [conformance vector](../conformance/README.md). Notes about 1.2.0 behavior are kept where older labels or libraries may still be in use.
-**Last reviewed**: November 15, 2026
+**Implementations reviewed**: `@wemush/wols` 1.4.0 (TypeScript), `wols` 1.4.0 (Python), and labels produced by the WeMush Platform. Both 1.4.0 libraries pass every [conformance vector](../conformance/README.md), including signatures, and decrypt each other's labels across the 51-case [interop matrix](../conformance/interop/README.md). Notes about 1.3.0 and 1.2.0 behavior are kept where older labels or libraries may still be in use.
+**Last reviewed**: November 17, 2026
 
 ---
 
@@ -11,11 +11,13 @@
 
 | Area | Interoperable today? | Safe choice for implementers |
 | ---- | -------------------- | ---------------------------- |
-| Embedded JSON-LD | ✅ Yes (conformance vectors, 1.3.0 libraries) | Prefer embedded format for cross-system exchange |
+| Embedded JSON-LD | ✅ Yes (conformance vectors, 1.3.0 and later libraries) | Prefer embedded format for cross-system exchange |
 | Compact URL | ⚠️ Partially (no vectors yet) | Use `wemush://`, full stage names, and the full species name in `s` |
-| Encrypted format | ✅ Yes for the 1.3.0 wire format; ❌ not for labels made by 1.2.0 libraries | Generate with a 1.3.0 library; decode legacy labels only with the library that made them |
-| ID formats | ✅ Yes for `wemush:` + any non-empty suffix (1.3.0 libraries) | Emit `wemush:` + lowercase alphanumeric for older readers |
-| Type aliases and `PRIMORDIA` | ✅ Yes (1.3.0 libraries) | Emit canonical types; accept aliases on input |
+| Encrypted format | ✅ Yes for the 1.3.0 wire format; ❌ not for labels made by 1.2.0 libraries | Generate with a 1.3.0 or later library; decode legacy labels only with the library that made them |
+| ID formats | ✅ Yes for `wemush:` + any non-empty suffix (1.3.0 and later libraries) | Emit `wemush:` + lowercase alphanumeric for older readers |
+| Type aliases and `PRIMORDIA` | ✅ Yes (1.3.0 and later libraries) | Emit canonical types; accept aliases on input |
+| Signatures | ✅ Yes (conformance vectors, 1.4.0 libraries) | Sign embedded labels or encrypted URLs; resolve keys only from your own trust store |
+| Numeric `strain.generation` | ✅ Yes in 1.4.0 libraries; ❌ TypeScript 1.3.0 rejects it | Write `generation` as a string |
 | Generation semantics | ⚠️ Inconsistent in older labels | Use `generation` only for filial generations and `transferDepth` for transfers |
 
 ---
@@ -42,7 +44,7 @@ The specification documents `wemush://v1/{id}?s={species_code}&st={stage}&t={tim
 
 The [Implementation Guide](./implementation-guide.md#appendix-species-codes-compact-format) defines the 5-letter species code table, which the TypeScript library follows and the Python library does not.
 
-The 1.3.0 libraries don't change compact URL output, because the parameter and species-code registries aren't settled. The Python 1.3.0 parser accepts both `wemush://` and `web+wemush://`; the TypeScript 1.3.0 parser still accepts only `wemush://`.
+The 1.3.0 and 1.4.0 libraries don't change compact URL output, because the parameter and species-code registries aren't settled. The Python parser accepts both `wemush://` and `web+wemush://`; the TypeScript parser still accepts only `wemush://`.
 
 **Today**: Generate compact URLs with `wemush://`, full stage names, and full species names (or codes from the specification's example), and treat unrecognized parameters as optional.
 
@@ -63,7 +65,7 @@ The WeMush Platform carries the IV in the URL as `?e={payload}&iv={iv}` instead 
 
 **Effect**: Encrypted labels made by the 1.2.0 libraries cannot be decrypted across implementations, even with the same shared secret.
 
-**Today**: Generate encrypted labels with a 1.3.0 library. The 1.3.0 libraries never generate the legacy formats; decoding them is available only behind an explicit option. Don't rely on `sig` being present.
+**Today**: Generate encrypted labels with a 1.3.0 or later library. These libraries never generate the legacy formats; decoding them is available only behind an explicit option. `@wemush/wols` 1.3.0 normalized the passphrase to NFC on that legacy path too, so a 1.2.x label made with a non-NFC passphrase failed to open; 1.4.0 derives legacy keys as 1.2.x did. Don't rely on `sig` being present, and verify it only with the [signature scheme](#12-signatures).
 
 ## 3. Specimen IDs
 
@@ -121,7 +123,13 @@ Native phone camera apps generally don't open custom schemes such as `wemush://`
 
 The specification types `strain.generation` as a string. The Python `wols` 1.3.0 library accepted a JSON integer there and wrote it unchanged (for example `"generation": 1`). The TypeScript `@wemush/wols` 1.3.0 library rejects such a label, including after decrypting it.
 
-**Resolved in 1.4.0**: Generators MUST write a string, and decoders SHOULD read a JSON integer as its decimal string, with a warning (see [Generation Notation](../SPECIFICATION.md#generation-notation-v120)). The `SHOULD` conformance cases are `generation-numeric`, `decrypt-numeric-generation`, and `decrypt-fields-numeric-generation`.
+**Resolved in 1.4.0**: Generators MUST write a string, and decoders SHOULD read a JSON integer as its decimal string, with a warning (see [Generation Notation](../SPECIFICATION.md#generation-notation-v120)). The `SHOULD` conformance cases are `generation-numeric`, `decrypt-numeric-generation`, and `decrypt-fields-numeric-generation`. Both 1.4.0 libraries pass them and always write a string.
+
+## 12. Signatures
+
+WOLS 1.4.0 defines Ed25519 signatures for embedded labels and encrypted URLs (see [Cryptographic Signatures](../SPECIFICATION.md#cryptographic-signatures)). Both 1.4.0 libraries sign and verify, and pass every `signatures.json` vector. The 1.3.0 libraries can't verify, but they decode signed labels and keep the token unchanged.
+
+**Today**: Compact URLs can't be signed. Resolve kids only through a trust store you control, never from the label, and treat any status other than `valid` as unverified.
 
 ---
 

@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Release candidate — public comment period (see [Governance](#governance))
-**Version**: 1.4.0-rc.1
-**Date**: November 16, 2026
+**Status**: Active
+**Version**: 1.4.0
+**Date**: November 17, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -57,7 +57,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix (e.g., "wemush:clx1a2b3c4")
-  version: string;               // Spec version (e.g., "1.3.0")
+  version: string;               // Spec version (e.g., "1.4.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name (e.g., "Pleurotus ostreatus")
 
@@ -251,7 +251,7 @@ Embedded format uses JSON-LD for semantic interoperability:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -479,7 +479,7 @@ PATCH /v1/specimens/{id}
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -575,7 +575,7 @@ Example: `mushoh-2026.nZzoNsitU1s5QMmVvLnw6WZUNCMsTgwdMITGHgYTH_AXZEcZeiM8se78ci
 - A token is **malformed** if it doesn't match the grammar above. That includes padding (`=`), any character outside the base64url alphabet, a decoded length other than 64 bytes, nonzero unused bits, leading or trailing whitespace, and a missing or extra `.`. Verifiers MUST NOT try to repair a malformed token.
 - Every character of a token is in the RFC 3986 unreserved set. A token goes into a URL without percent-encoding, and `encodeURIComponent` or Python's `quote(..., safe="")` leave it unchanged.
 
-> **Why the kid is inside the token** (non-normative): the 1.3.x reference libraries already preserve the reserved `signature` member and `sig` parameter as opaque strings, as 1.3.1 requires. A separate `kid` member or parameter would not survive: both 1.3.0 libraries drop an unknown top-level member or URL parameter when they re-serialize a label, the Python library rejects unknown top-level members in strict validation, and it rejects a `signature` that isn't a string. Keeping the kid inside the token means a signed label passes through a 1.3.x decoder with its signature intact.
+> **Why the kid is inside the token** (non-normative): the 1.3.x reference libraries already preserve the reserved `signature` member and `sig` parameter as opaque strings, as this specification requires (since 1.3.1-rc.1). A separate `kid` member or parameter would not survive: both 1.3.0 libraries drop an unknown top-level member or URL parameter when they re-serialize a label, the Python library rejects unknown top-level members in strict validation, and it rejects a `signature` that isn't a string. Keeping the kid inside the token means a signed label passes through a 1.3.x decoder with its signature intact.
 
 #### Signing input
 
@@ -711,7 +711,7 @@ Verification takes a label (embedded label text, or an encrypted URL) and a trus
 #### Decoding and compatibility
 
 - **Decoding ignores signatures.** Decoders MUST decode a signed label exactly as they would the same label without its signature. They MUST NOT fail decoding because of a signature's status. An application MAY refuse to act on a label that doesn't verify as `valid`; that is policy, not decoding.
-- **1.3.x decoders**: A token is an opaque string in the reserved `signature` member or `sig` parameter, which 1.3.1 already requires decoders to preserve. The 1.3.0 reference libraries decode signed labels and keep the token unchanged. Both re-serialize a signed encrypted URL in the order this specification gives (`e`, `iv`, `kdf`, `salt`, `i`, `sig`), which leaves its bytes unchanged.
+- **1.3.x decoders**: A token is an opaque string in the reserved `signature` member or `sig` parameter, which decoders have been required to preserve since 1.3.1-rc.1 (released in 1.4.0). The 1.3.0 reference libraries decode signed labels and keep the token unchanged. Both re-serialize a signed encrypted URL in the order this specification gives (`e`, `iv`, `kdf`, `salt`, `i`, `sig`), which leaves its bytes unchanged.
 - **Older labels**: 1.4.0 decoders decode unsigned labels and 1.3.x labels unchanged. A 1.3.x `signature` or `sig` value that isn't a token verifies as `malformed`, never as `valid`.
 - **Re-emitting signed labels**: Implementations that re-emit labels MUST keep `signature` and `sig` exactly as received. They SHOULD re-emit a signed URL as received rather than rebuilding it. Re-encoding, reordering, adding, or dropping a parameter invalidates a URL signature. Rebuilding an embedded label invalidates its signature if any value changes.
 
@@ -758,7 +758,7 @@ Organizations can add custom fields under reserved namespaces:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "species": "Hericium erinaceus",
   "custom": {
     "mushoh": {
@@ -808,7 +808,7 @@ docker run --rm ghcr.io/wemush/specimen-labels-py create \
 
 **Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format, signatures) that implementations SHOULD pass.
 
-> **Interoperability note (non-normative):** The 1.3.0 reference libraries pass every conformance vector, so embedded and encrypted labels interoperate across languages. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
+> **Interoperability note (non-normative):** The 1.4.0 reference libraries pass every conformance vector, including signatures, and round-trip each other's encrypted labels across the shared [interop matrix](./conformance/interop/README.md), so embedded and encrypted labels, and their signatures, interoperate across languages. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
 
@@ -964,8 +964,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.4.0-rc.1 (release candidate; it builds on 1.3.1-rc.1, and 1.3.0 remains the latest final release)
-**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
+**Current Version**: 1.4.0
+**Stability**: Active (feedback welcome)
 
 ---
 
@@ -1067,11 +1067,15 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
-### Version 1.4.0-rc.1 (Release candidate — November 16, 2026)
+### Version 1.4.0 (November 17, 2026)
+
+Final release. It combines `1.4.0-rc.1` below with no further normative changes, and it includes the clarifications from `1.3.1-rc.1`. 1.3.1-rc.1 was not released as a final; its changes ship in 1.4.0, so there is no 1.3.1 release. Both reference libraries pass every conformance vector, including all 112 `MUST` cases in `signatures.json`: `@wemush/wols` 1.4.0 (TypeScript) and `wols` 1.4.0 (Python). Both also pass the 51-case cross-library interop matrix in each direction. Example labels now use `"version": "1.4.0"`.
+
+#### 1.4.0-rc.1 (November 16, 2026)
 
 Defines the signature scheme that 1.3.1-rc.1 reserved. This candidate builds on `1.3.1-rc.1` and includes its clarifications. Apart from one new tolerance for decoders (a numeric `strain.generation`, below), nothing here changes how any label decodes: unsigned labels and 1.3.x labels decode exactly as before. Signing and verifying are new, separate operations.
 
-Normative changes, subject to the public comment period:
+Normative changes:
 
 - **Cryptographic Signatures**: Replaces the non-normative sketch with a normative scheme:
   - **Algorithm**: Ed25519 (RFC 8032, pure). Verifiers reject `S ≥ L`.
@@ -1108,11 +1112,11 @@ Editorial:
   - The harnesses again check that `i` has no leading zero, that the URL has no unknown query parameters and a printable-ASCII query, and that the raw `sig` value percent-decodes to the input.
   - Both 1.3.0 corpora are regenerated from the new matrix with the published 1.3.0 packages, so they keep what those releases wrote.
 
-### Version 1.3.1-rc.1 (Release candidate — November 16, 2026)
+#### 1.3.1-rc.1 (November 16, 2026; not released as a final)
 
-Clarifications to 1.3.0, from a review of what the 1.3.0 text and vectors actually guarantee. Nothing here changes the 1.3.0 wire format or which labels decode: every label that 1.3.0 allowed decodes the same way, and generator limits (including the 100,000-iteration minimum) are unchanged.
+This candidate was folded into 1.4.0 and never released as 1.3.1. Clarifications to 1.3.0, from a review of what the 1.3.0 text and vectors actually guarantee. Nothing here changes the 1.3.0 wire format or which labels decode: every label that 1.3.0 allowed decodes the same way, and generator limits (including the 100,000-iteration minimum) are unchanged.
 
-Normative clarifications, subject to the public comment period:
+Normative clarifications:
 
 - **Signatures reserved**: `sig` and the embedded `signature` field are reserved. Decoders MUST preserve them and MUST NOT treat them as verified. The Cryptographic Signatures sketch is now marked non-normative, with warnings that a public key embedded in the label proves nothing and that `JSON.stringify` has no canonical form. A full signature scheme is planned for 1.4.0.
 - **Key derivation responsiveness**: Implementations SHOULD run key derivation off the UI thread. Implementations that offer fewer than the default 600,000 iterations SHOULD tell the user that it weakens resistance to guessing, and SHOULD recommend a high-entropy passphrase or `kdf=raw`.
@@ -1162,6 +1166,7 @@ Normative changes:
 - Added non-normative [Interoperability Notes](./docs/interoperability-notes.md) documenting known divergences between implementations
 - Refreshed Next Steps
 - Updated Next Steps for the released 1.3.0: marked cross-implementation interoperability and 1.3.0 complete, and added 1.4.0
+- Updated Next Steps for the released 1.4.0: marked 1.4.0 complete, and added 1.5.0
 
 ### Version 1.2.0 (January 26, 2026)
 
@@ -1204,4 +1209,5 @@ Normative changes:
 3. WOLS v1.2.0 released (January 26, 2026) — Complete
 4. Cross-language interoperability for embedded and encrypted labels — Complete in 1.3.0, with conformance vectors that both reference libraries pass; compact URLs still differ (see [Interoperability Notes](./docs/interoperability-notes.md))
 5. WOLS v1.3.0 released (November 15, 2026) — Complete
-6. Version 1.4.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals
+6. WOLS v1.4.0 released (November 17, 2026), with Ed25519 signatures that both reference libraries implement — Complete
+7. Version 1.5.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals
