@@ -1924,6 +1924,188 @@
       "expected": {
         "configError": true
       }
+    },
+    {
+      "id": "sign-nested-encrypted-url",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Sign-then-encrypt, last step: sign an encrypted URL whose plaintext is a signed embedded label (the `sign-embedded` label and token)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "kid": "acme-lab-1",
+        "key": "acme-lab-1"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\nencrypted-url\nacme-lab-1\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000",
+        "signature": "acme-lab-1.AB26a1dSX9U1pHeOG5mcSm_XaG4I6V6qHlhVbSP9hDobKTfViD_MiA1rONv0S2FZjOKmSuxc-uj-x_WQsh4vCA",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.AB26a1dSX9U1pHeOG5mcSm_XaG4I6V6qHlhVbSP9hDobKTfViD_MiA1rONv0S2FZjOKmSuxc-uj-x_WQsh4vCA"
+      }
+    },
+    {
+      "id": "nested-valid",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "Sign-then-encrypt: the URL signature verifies, the URL decrypts to a signed embedded label, and that label's own signature verifies after decryption",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.AB26a1dSX9U1pHeOG5mcSm_XaG4I6V6qHlhVbSP9hDobKTfViD_MiA1rONv0S2FZjOKmSuxc-uj-x_WQsh4vCA",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "valid",
+          "kid": "acme-lab-1",
+          "signingInput": "WOLS-SIG-v1\nencrypted-url\nacme-lab-1\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+        },
+        "decrypt": {
+          "success": true,
+          "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+        },
+        "inner": {
+          "status": "valid",
+          "kid": "mushoh-2026",
+          "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+        }
+      }
+    },
+    {
+      "id": "nested-inner-unsigned",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "A signed encrypted URL whose plaintext has no `signature`: outer valid, inner unsigned",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKmR1WI201Gcf5niSEvVbGle7w&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.552i5Ec5-Df5JWQynP0jDnNWcGZ2cmJV6kFo1k95R_YInZJBnkN7G7e5dtMHRUtNvCTwd0jnEbt_c8syO36MCg",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "valid",
+          "kid": "acme-lab-1",
+          "signingInput": "WOLS-SIG-v1\nencrypted-url\nacme-lab-1\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKmR1WI201Gcf5niSEvVbGle7w&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+        },
+        "decrypt": {
+          "success": true,
+          "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\"}"
+        },
+        "inner": {
+          "status": "unsigned"
+        }
+      }
+    },
+    {
+      "id": "nested-tampered-iterations",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "`i` changed after signing: the outer signature fails, which a scanner can see before spending PBKDF2 work. Decryption also fails, because the derived key changes",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100001&sig=acme-lab-1.AB26a1dSX9U1pHeOG5mcSm_XaG4I6V6qHlhVbSP9hDobKTfViD_MiA1rONv0S2FZjOKmSuxc-uj-x_WQsh4vCA",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "invalid"
+        },
+        "decrypt": {
+          "success": false,
+          "reason": "authentication-failed"
+        }
+      }
+    },
+    {
+      "id": "nested-reencrypted",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "The plaintext re-encrypted under the same passphrase with another IV, keeping the old `sig`: `e` and `iv` changed, so the outer signature fails, but the inner signature still verifies, because it covers the plaintext",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=rB60SLrmK3HO058te-db-_-Eeo48_6t6FbXR2UUxNiPZkd6R74gE8BW9X3VNqFgnNqwwAVtWptxxIpK3ANxbEZzwpdyAyixKtBW-2rgxI717kit7UEYfh54ZXbi54AHbU-HsFuI3cpl7EWvq7oJgHOKmrugO8oQhbiQlx9ZCqZlgUr-vFkfkEiOGOvZk6xGOovXUE0zUIQxuIy2ltdjt2ZjznAlHKrAQxPXJDjTX_EbcxuukoSnV7FL9vM_n2LBRyejFdvMyFTuBXncegQKdZ5XxVXctvGq5v6ZdGccZOB_ZIoWgnUoFkNtN6rsbjbirK_XBUNl7m8E6qN8iYkKsdem3sFD7BWwFmzDSn5JAECknBPb9dg-iFC1J-9B6cR0GugNQFCij6H1uFoBMFgS8jyebNzG6hJOxMXYTpiKSjma5C_uz3LccoaOfcaql_tAr-FpgLwlzWkLiWobRU0dVUHsa8KE2OrHS5v3DUlR2zDzNWGli2KmMZfa-YuIVcHHp67wzFt2_bXNO_RJXMVmV5lJYLLd_X0dh6V2ITCFNqYTL1JRm11m0-3K-KFemiJNZO2y2ug-XcI8xJvjWSrqCwHZT9DEeFYOTDs4EsyJT-xtYKU93XcVr&iv=cHFyc3R1dnd4eXp7&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.AB26a1dSX9U1pHeOG5mcSm_XaG4I6V6qHlhVbSP9hDobKTfViD_MiA1rONv0S2FZjOKmSuxc-uj-x_WQsh4vCA",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "invalid"
+        },
+        "decrypt": {
+          "success": true,
+          "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+        },
+        "inner": {
+          "status": "valid",
+          "kid": "mushoh-2026",
+          "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+        }
+      }
+    },
+    {
+      "id": "nested-inner-tampered",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "The embedded label was changed after it was signed, then encrypted and the URL signed: the outer signature is valid, and the inner signature is invalid",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe6ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrQW9Cl_SyUzypIXc-chF1iv&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=acme-lab-1.-GaezgwMbRC3N3qaj7iEqdXfH_uPPjjkzcgTKI0auoALIRPHIkwfcuEu5Ffs0GL5DPQD5AfrqQoH_303pgWODg",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "valid",
+          "kid": "acme-lab-1",
+          "signingInput": "WOLS-SIG-v1\nencrypted-url\nacme-lab-1\nwemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe6ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrQW9Cl_SyUzypIXc-chF1iv&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000"
+        },
+        "decrypt": {
+          "success": true,
+          "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_002\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+        },
+        "inner": {
+          "status": "invalid"
+        }
+      }
+    },
+    {
+      "id": "nested-inner-token-as-outer-sig",
+      "operation": "verifyNested",
+      "requirement": "MUST",
+      "description": "Domain separation: the inner (`embedded`) token copied into the URL's `sig`. Its kid is trusted, but it was signed in the `embedded` domain, so the outer signature is invalid. The inner signature still verifies",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=kZ_R69uBv6qB3O-gvfu-V17o6To9VSVo8ghDvW4yisPnbCUHnmspwbKNTIoGiWR0-ip2doMghixyuZlaE8tWbr0OE5QtcSeu0wpm465BDeRXhMTA2knRoy2MLuw8NRo_3QUxpHqKyNspbvfNxeCkwBq6U0ogw4rpSSDHZxv6NfCwiMG0JG8nS3iYP2_5FKhGbGx_UfDS_xwI5IVsZy1yBetZY-W3bcZeZfJ2sR_DZusyyKuXtQ7iSnfL2Hqmo9kCoMiDA19wLgwEl_MCfHKq60X1_-ng6pr3J7I6mP3jiwuu_Vfg48eg1ACPEo-ozGE958x664lgEjwZGsEoifwLvjGc1HUzkqYpR_IlwGWYS30XZaAOrsG1bEpChrW9n3z8WA7gYY67U5_Kw6ZVLVNTnZCd5VCDkXe5ikhp2wfot_PuI3YQSUYStuyCiCsvBkOgKyw6LKnAGlHMRfS3njF-c6yhsEDDIR6sgr3w9QLVEpBxBJLiZqnHWBi8YuHG8i-hAK2-uVfgvkaTLQr7Jl4azv-FzSIGxGOvqe0mcUAxgBKLn6HdGfxzgLT_RcQvhAnCM4ZrYOZH3L0lEWp6HPpN3EaIAw7NHrTO0wbWjD9qRuaaAnhduoO1&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000&sig=mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ",
+        "secret": {
+          "kdf": "pbkdf2",
+          "passphrase": "correct horse battery staple"
+        }
+      },
+      "expected": {
+        "outer": {
+          "status": "invalid"
+        },
+        "decrypt": {
+          "success": true,
+          "plaintext": "{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"id\":\"wemush:clx1a2b3c4\",\"version\":\"1.4.0\",\"type\":\"SUBSTRATE\",\"species\":\"Pleurotus ostreatus\",\"strain\":{\"name\":\"Blue Oyster PoHu\",\"generation\":\"F2\",\"clonalGeneration\":3},\"stage\":\"COLONIZATION\",\"created\":\"2025-12-16T10:30:00Z\",\"batch\":\"batch_2025_12_001\",\"organization\":\"org_mushoh\",\"signature\":\"mushoh-2026.jWe7n6cL3EfuR1HsxgpZAx5slE35q-F7y-3vsToiLLdh2f61r2n3VP1Rokm3hoDNG8L-06VNx54jYfI5NhxtDQ\"}"
+        },
+        "inner": {
+          "status": "valid",
+          "kid": "mushoh-2026",
+          "signingInput": "WOLS-SIG-v1\nembedded\nmushoh-2026\n{\"@context\":\"https://wemush.com/wols/v1\",\"@type\":\"Specimen\",\"batch\":\"batch_2025_12_001\",\"created\":\"2025-12-16T10:30:00Z\",\"id\":\"wemush:clx1a2b3c4\",\"organization\":\"org_mushoh\",\"species\":\"Pleurotus ostreatus\",\"stage\":\"COLONIZATION\",\"strain\":{\"clonalGeneration\":3,\"generation\":\"F2\",\"name\":\"Blue Oyster PoHu\"},\"type\":\"SUBSTRATE\",\"version\":\"1.4.0\"}"
+        }
+      }
     }
   ]
 }

@@ -1167,6 +1167,7 @@ Normative changes:
 - Refreshed Next Steps
 - Updated Next Steps for the released 1.3.0: marked cross-implementation interoperability and 1.3.0 complete, and added 1.4.0
 - Updated Next Steps for the released 1.4.0: marked 1.4.0 complete, and added 1.5.0
+- Added sign-then-encrypt conformance vectors to `signatures.json`: a new `verifyNested` operation (six cases) that verifies an encrypted URL's `sig`, decrypts it, and verifies the plaintext's own `signature`, plus a `sign-nested-encrypted-url` case. They test the existing [Plaintext or ciphertext](#plaintext-or-ciphertext) rules and change no requirement
 
 ### Version 1.2.0 (January 26, 2026)
 

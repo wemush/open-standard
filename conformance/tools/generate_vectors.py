@@ -24,7 +24,7 @@ from pathlib import Path
 import math
 import re
 
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignature, InvalidTag
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -1144,7 +1144,131 @@ def signature_cases() -> list[dict]:
             raise SystemExit(f"{c['id']}: computed {status}, expected {c['expected']['status']}")
         if status == "valid":
             c["expected"]["signingInput"] = msg.decode("utf-8")
-    return cases + key_set_cases(signed_text)
+    return cases + key_set_cases(signed_text) + nested_cases(label)
+
+
+# ---------------------------------------------------------------------------
+# Sign-then-encrypt: an embedded signature inside a signed encrypted URL
+# ---------------------------------------------------------------------------
+
+def _decrypt_nested(url: str, passphrase: str) -> str | None:
+    """Plaintext of a pbkdf2 URL built by nested_cases, or None if GCM fails."""
+    query = dict(p.split("=", 1) for p in url.split("?", 1)[1].split("&"))
+    unb64 = lambda v: base64.urlsafe_b64decode(v + "=" * (-len(v) % 4))  # noqa: E731
+    key = derive_key(passphrase, unb64(query["salt"]), int(query["i"]))
+    try:
+        return AESGCM(key).decrypt(unb64(query["iv"]), unb64(query["e"]), None).decode("utf-8")
+    except InvalidTag:
+        return None
+
+
+def nested_cases(label: dict) -> list[dict]:
+    """The label from signature_cases, signed as an embedded label, encrypted, and signed
+    again as an encrypted URL. Outer and inner signatures are verified independently."""
+    passphrase = "correct horse battery staple"
+    salt, iv, iterations = bytes(range(16)), bytes(range(100, 112)), 100_000  # FIXED, as above
+    secret = {"kdf": "pbkdf2", "passphrase": passphrase}
+    inner_kid, outer_kid = "mushoh-2026", "acme-lab-1"
+
+    def enc(plaintext: str, *, nonce: bytes = iv) -> str:
+        ct = AESGCM(derive_key(passphrase, salt, iterations)).encrypt(nonce, plaintext.encode("utf-8"), None)
+        return (f"{ENCRYPTED_PREFIX}clx1a2b3c4?e={b64url(ct)}&iv={b64url(nonce)}&kdf=pbkdf2"
+                f"&salt={b64url(salt)}&i={iterations}")
+
+    inner_text = serialize(sign_embedded_obj(label, inner_kid))
+    inner_tok = parse_label(inner_text)["signature"]
+    unsigned_url = enc(inner_text)
+    signed_url = sign_url(unsigned_url, outer_kid)
+    outer_tok = signed_url.rsplit("&sig=", 1)[1]
+
+    cases: list[dict] = []
+
+    # The outer token is reproducible with the ordinary `sign` operation. The inner token is
+    # the `sign-embedded` token: same label, same kid.
+    msg = signing_input(FORM_URL, outer_kid, unsigned_url.encode("ascii"))
+    cases.append({"id": "sign-nested-encrypted-url", "operation": "sign", "requirement": "MUST",
+                  "description": "Sign-then-encrypt, last step: sign an encrypted URL whose plaintext "
+                                 "is a signed embedded label (the `sign-embedded` label and token)",
+                  "input": {"form": FORM_URL, "url": unsigned_url, "kid": outer_kid,
+                            "key": TRUSTED[outer_kid]},
+                  "expected": {"signingInput": msg.decode("ascii"), "signature": outer_tok,
+                               "url": signed_url}})
+
+    def nested(cid, desc, url, outer, inner=None, *, plaintext=None, reason=None):
+        expected: dict = {"outer": {"status": outer}}
+        expected["decrypt"] = ({"success": True, "plaintext": plaintext} if reason is None
+                               else {"success": False, "reason": reason})
+        if inner is not None:
+            expected["inner"] = {"status": inner}
+        cases.append({"id": cid, "operation": "verifyNested", "requirement": "MUST",
+                      "description": desc,
+                      "input": {"form": FORM_URL, "url": url, "secret": secret},
+                      "expected": expected})
+
+    nested("nested-valid",
+           "Sign-then-encrypt: the URL signature verifies, the URL decrypts to a signed embedded "
+           "label, and that label's own signature verifies after decryption",
+           signed_url, "valid", "valid", plaintext=inner_text)
+
+    plain_text = serialize(label)
+    plain_url = enc(plain_text)
+    nested("nested-inner-unsigned",
+           "A signed encrypted URL whose plaintext has no `signature`: outer valid, inner unsigned",
+           sign_url(plain_url, outer_kid), "valid", "unsigned", plaintext=plain_text)
+
+    tampered_i = signed_url.replace(f"&i={iterations}&sig=", f"&i={iterations + 1}&sig=")
+    assert tampered_i != signed_url
+    nested("nested-tampered-iterations",
+           "`i` changed after signing: the outer signature fails, which a scanner can see before "
+           "spending PBKDF2 work. Decryption also fails, because the derived key changes",
+           tampered_i, "invalid", reason="authentication-failed")
+
+    reencrypted = f"{enc(inner_text, nonce=bytes(range(112, 124)))}&sig={outer_tok}"
+    nested("nested-reencrypted",
+           "The plaintext re-encrypted under the same passphrase with another IV, keeping the old "
+           "`sig`: `e` and `iv` changed, so the outer signature fails, but the inner signature "
+           "still verifies, because it covers the plaintext",
+           reencrypted, "invalid", "valid", plaintext=inner_text)
+
+    forged = serialize({**parse_label(inner_text), "batch": "batch_2025_12_002"})
+    nested("nested-inner-tampered",
+           "The embedded label was changed after it was signed, then encrypted and the URL signed: "
+           "the outer signature is valid, and the inner signature is invalid",
+           sign_url(enc(forged), outer_kid), "valid", "invalid", plaintext=forged)
+
+    nested("nested-inner-token-as-outer-sig",
+           "Domain separation: the inner (`embedded`) token copied into the URL's `sig`. Its kid is "
+           "trusted, but it was signed in the `embedded` domain, so the outer signature is invalid. "
+           "The inner signature still verifies",
+           f"{unsigned_url}&sig={inner_tok}", "invalid", "valid", plaintext=inner_text)
+
+    # Self-check, and fill in kid and signingInput for valid results.
+    for c in cases:
+        if c["operation"] == "sign":
+            check_signable_url(c["input"]["url"])
+            continue
+        url, x = c["input"]["url"], c["expected"]
+        if detect_form(url) != FORM_URL:
+            raise SystemExit(f"{c['id']}: form detection disagrees with input.form")
+        results = [("outer", *verify_url(url))]
+        text = _decrypt_nested(url, passphrase)
+        if (text is None) != (x["decrypt"]["success"] is False):
+            raise SystemExit(f"{c['id']}: decryption outcome differs from the expected one")
+        if text is not None:
+            if text != x["decrypt"]["plaintext"] or parse_label(text)["id"] != "wemush:clx1a2b3c4":
+                raise SystemExit(f"{c['id']}: plaintext differs")
+            results.append(("inner", *verify_embedded(text)))
+        elif "inner" in x:
+            raise SystemExit(f"{c['id']}: inner status without a plaintext")
+        for layer, status, message in results:
+            if status != x[layer]["status"]:
+                raise SystemExit(f"{c['id']}: {layer} computed {status}, expected {x[layer]['status']}")
+            if status == "valid":
+                tok = parse_token(url.rsplit("&sig=", 1)[1] if layer == "outer"
+                                  else parse_label(text)["signature"])
+                x[layer]["kid"] = tok[0]
+                x[layer]["signingInput"] = message.decode("utf-8")
+    return cases
 
 
 # ---------------------------------------------------------------------------
