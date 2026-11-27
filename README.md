@@ -1,6 +1,6 @@
 # WeMush Open Labeling Standard (WOLS)
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/wemush/open-standard/releases)
+[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](https://github.com/wemush/open-standard/releases)
 [![License](https://img.shields.io/badge/license-CC%20BY%204.0-green.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/wemush/open-standard)](https://github.com/wemush/open-standard/discussions)
 [![Stars](https://img.shields.io/github/stars/wemush/open-standard?style=social)](https://github.com/wemush/open-standard/stargazers)
