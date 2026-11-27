@@ -3,8 +3,8 @@
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
 **Status**: Active
-**Version**: 1.4.0
-**Date**: November 17, 2026
+**Version**: 1.4.1
+**Date**: November 27, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -1067,6 +1067,17 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
+### Version 1.4.1 (November 27, 2026)
+
+Patch release with no normative changes. Every requirement is the same as in 1.4.0, and every label that 1.4.0 allows decodes the same way.
+
+- **JSON-LD context**: Adds [`context/v1.jsonld`](./context/), the document that `"@context": "https://wemush.com/wols/v1"` names, now served at that URL as `application/ld+json`
+- **Conformance**: Adds sign-then-encrypt vectors to `signatures.json`: a new `verifyNested` operation (six cases) that verifies an encrypted URL's `sig`, decrypts it, and verifies the plaintext's own `signature`, plus a `sign-nested-encrypted-url` case. They test the existing [Plaintext or ciphertext](#plaintext-or-ciphertext) rules and change no requirement
+- **Interop harness**: The cross-library harness compares `_meta` with its standard keys read in either case, so libraries that write the 1.5 draft's camelCase `_meta` still match the 1.4.0 corpora
+- **Drafts for 1.5**: Adds the [data model and JSON Schema](./proposals/wols-1.5-data-model.md) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md) proposals, with draft schemas in [`schema/1.5/`](./schema/). Both are drafts and change nothing in 1.4.x
+- **Licensing**: The schemas, JSON-LD context, conformance vectors and tools, and example records are dedicated to the public domain under CC0 1.0. The specification stays CC BY 4.0
+- **Docs**: The implementation guide and FAQ describe the served context, and a worked example record chain is added under `examples/records/`
+
 ### Version 1.4.0 (November 17, 2026)
 
 Final release. It combines `1.4.0-rc.1` below with no further normative changes, and it includes the clarifications from `1.3.1-rc.1`. 1.3.1-rc.1 was not released as a final; its changes ship in 1.4.0, so there is no 1.3.1 release. Both reference libraries pass every conformance vector, including all 112 `MUST` cases in `signatures.json`: `@wemush/wols` 1.4.0 (TypeScript) and `wols` 1.4.0 (Python). Both also pass the 51-case cross-library interop matrix in each direction. Example labels now use `"version": "1.4.0"`.
@@ -1167,7 +1178,6 @@ Normative changes:
 - Refreshed Next Steps
 - Updated Next Steps for the released 1.3.0: marked cross-implementation interoperability and 1.3.0 complete, and added 1.4.0
 - Updated Next Steps for the released 1.4.0: marked 1.4.0 complete, and added 1.5.0
-- Added sign-then-encrypt conformance vectors to `signatures.json`: a new `verifyNested` operation (six cases) that verifies an encrypted URL's `sig`, decrypts it, and verifies the plaintext's own `signature`, plus a `sign-nested-encrypted-url` case. They test the existing [Plaintext or ciphertext](#plaintext-or-ciphertext) rules and change no requirement
 
 ### Version 1.2.0 (January 26, 2026)
 
