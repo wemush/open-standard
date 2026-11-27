@@ -73,9 +73,42 @@ def _check(condition: bool, message: str) -> None:
         raise CheckError(message)
 
 
+# WOLS 1.5 draft: `_meta` keys are camelCase on the wire, and decoders SHOULD
+# accept snake_case and re-emit camelCase. So a `_meta` written either way is
+# the same value: comparisons read the snake_case standard keys as camelCase.
+_META_WIRE_KEYS = {
+    "source_id": "sourceId",
+    "imported_at": "importedAt",
+    "source_system": "sourceSystem",
+    "schema_version": "schemaVersion",
+}
+
+
+def _wire_meta(meta: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in meta.items():
+        wire = _META_WIRE_KEYS.get(key)
+        if wire is None:
+            out[key] = value
+        elif wire not in meta:
+            out[wire] = value
+    return out
+
+
+def _with_wire_meta(value: Any) -> Any:
+    if isinstance(value, dict) and isinstance(value.get("_meta"), dict):
+        return {**value, "_meta": _wire_meta(value["_meta"])}
+    return value
+
+
 def _canonical(value: Any) -> str:
     # Type-strict comparison: True != 1 and 1 != 1.0 once serialized.
-    return json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+    return json.dumps(
+        _with_wire_meta(value),
+        sort_keys=True,
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
 
 
 def _same_doc(actual: Any, expected: dict[str, Any]) -> bool:
@@ -377,7 +410,13 @@ def verify_fields(case: dict[str, Any], exp: _Expected, doc: object) -> bool:
         legacy = (
             exp.legacy.get(key, _NO_LEGACY) if exp.legacy is not None else _NO_LEGACY
         )
-        match = _match_written(value, expected[key], legacy)
+        if key == "_meta":
+            value, want = {"_meta": value}, {"_meta": expected[key]}
+            if legacy is not _NO_LEGACY:
+                legacy = {"_meta": legacy}
+        else:
+            want = expected[key]
+        match = _match_written(value, want, legacy)
         _check(match is not None, what)
         saw_legacy = saw_legacy or match == "legacy"
 

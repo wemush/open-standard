@@ -52,12 +52,42 @@ function check(condition, message) {
   if (!condition) throw new CheckError(message);
 }
 
+// WOLS 1.5 draft: `_meta` keys are camelCase on the wire, and decoders SHOULD
+// accept snake_case and re-emit camelCase. So a `_meta` written either way is
+// the same value: comparisons read the snake_case standard keys as camelCase.
+const META_WIRE_KEYS = {
+  source_id: 'sourceId',
+  imported_at: 'importedAt',
+  source_system: 'sourceSystem',
+  schema_version: 'schemaVersion',
+};
+
+function wireMeta(meta) {
+  const out = {};
+  for (const [key, value] of Object.entries(meta)) {
+    const wire = Object.hasOwn(META_WIRE_KEYS, key) ? META_WIRE_KEYS[key] : undefined;
+    if (wire === undefined) out[key] = value;
+    else if (!Object.hasOwn(meta, wire)) out[wire] = value;
+  }
+  return out;
+}
+
+function withWireMeta(value) {
+  const meta = value !== null && typeof value === 'object' ? value._meta : undefined;
+  if (meta === null || typeof meta !== 'object' || Array.isArray(meta)) return value;
+  return { ...value, _meta: wireMeta(meta) };
+}
+
 /** Key-sorted JSON, so documents compare independently of member order. */
 function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  return canonicalJson(withWireMeta(value));
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
   if (value !== null && typeof value === 'object') {
     const keys = Object.keys(value).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+    return `{${keys.map(k => `${JSON.stringify(k)}:${canonicalJson(value[k])}`).join(',')}}`;
   }
   return JSON.stringify(value);
 }
@@ -333,7 +363,14 @@ async function verifyFields(wols, c, { expected, legacy }, doc) {
   );
   let sawLegacy = false;
   const written = (value, key, what) => {
-    const match = matchWritten(value, expected[key], legacy?.[key]);
+    const match =
+      key === '_meta'
+        ? matchWritten(
+            { _meta: value },
+            { _meta: expected[key] },
+            legacy?.[key] === undefined ? undefined : { _meta: legacy[key] }
+          )
+        : matchWritten(value, expected[key], legacy?.[key]);
     check(match !== undefined, what);
     if (match === 'legacy') sawLegacy = true;
   };
