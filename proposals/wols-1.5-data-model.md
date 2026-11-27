@@ -87,4 +87,4 @@ Term names are from Darwin Core, MIxS 6 and EPCIS 2.0 as published; the DwC-DP n
 2. Registry for `form`, `container.format`, measurement names and contamination agents: in the spec, or a separate `registries/` folder with its own process like custom namespaces?
 3. Should `Observation` and `Harvest` allow a signature, for supply-chain partners?
 4. Does a Bundle need a streaming form (JSON Lines) for large exports?
-5. License of the schema: CC BY 4.0 with the spec, or Apache 2.0 with the libraries? Code generators copy schema text into generated code, which argues for Apache 2.0 (or CC0) for `schema/`.
+5. ~~License of the schema~~ Settled in this PR: `schema/`, `conformance/` and `examples/records/` are CC0 1.0, because code generators and test suites copy them verbatim. The spec stays CC BY 4.0 and the libraries stay Apache 2.0.

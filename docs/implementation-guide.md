@@ -499,7 +499,7 @@ class WolsEncryptionError(WolsError):
     "qrcode": { "optional": true }
   },
   "keywords": ["wols", "wemush", "mycology", "qr-code", "traceability"],
-  "license": "MIT"
+  "license": "Apache-2.0"
 }
 ```
 
@@ -539,7 +539,7 @@ name = "wols"
 version = "1.4.0"
 description = "Official WOLS (WeMush Open Labeling Standard) library"
 readme = "README.md"
-license = "MIT"
+license = "Apache-2.0"
 requires-python = ">=3.9"
 keywords = ["wols", "wemush", "mycology", "qr-code", "traceability"]
 
