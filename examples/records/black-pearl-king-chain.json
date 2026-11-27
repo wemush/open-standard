@@ -1,0 +1,221 @@
+{
+  "@context": "https://wemush.com/wols/v1",
+  "@type": "Bundle",
+  "version": "1.5.0-draft",
+  "generated": "2026-11-27T15:00:00Z",
+  "publisher": {"name": "Example Farm", "organization": "org_examplefarm"},
+  "license": "CC-BY-4.0",
+  "strains": [
+    {
+      "id": "strain_bpk",
+      "name": "Black Pearl King",
+      "aliases": ["BPK", "King Oyster x Pearl Oyster"],
+      "taxon": {
+        "scientificName": "Pleurotus ostreatus × Pleurotus eryngii",
+        "rank": "hybrid",
+        "hybridOf": [
+          {"scientificName": "Pleurotus ostreatus", "role": "PARENT_A"},
+          {"scientificName": "Pleurotus eryngii", "role": "PARENT_B"}
+        ]
+      },
+      "origin": "Vendor culture",
+      "growthParameters": {
+        "colonization": {"temperature": {"min": 21, "max": 26, "optimal": 24, "unit": "Cel"}},
+        "fruiting": {
+          "temperature": {"min": 13, "max": 21, "optimal": 16, "unit": "Cel"},
+          "relativeHumidity": {"min": 85, "max": 95, "unit": "%"}
+        },
+        "incubationDays": {"min": 14, "max": 21}
+      }
+    }
+  ],
+  "recipes": [
+    {
+      "id": "recipe_masters_mix",
+      "name": "Master's Mix (50/50)",
+      "kind": "SUBSTRATE",
+      "ingredients": [
+        {"name": "Hardwood fuel pellets", "amount": {"value": 2.5, "unit": "kg"}, "role": "BASE"},
+        {"name": "Soybean hulls", "amount": {"value": 2.5, "unit": "kg"}, "role": "SUPPLEMENT"},
+        {"name": "Water", "amount": {"value": 6.0, "unit": "L"}, "role": "WATER"}
+      ],
+      "yields": {"value": 11, "unit": "kg"},
+      "hydration": {"value": 60, "unit": "%"},
+      "treatment": {
+        "method": "AUTOCLAVE",
+        "temperature": {"value": 121, "unit": "Cel"},
+        "duration": {"value": 150, "unit": "min"}
+      }
+    }
+  ],
+  "specimens": [
+    {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "id": "wemush:01JC8Z3K7Q0LC0000000000001",
+      "version": "1.5.0-draft",
+      "type": "CULTURE",
+      "form": "LIQUID_CULTURE",
+      "species": "Pleurotus ostreatus × Pleurotus eryngii",
+      "strain": {"name": "Black Pearl King", "generation": "F1", "clonalGeneration": 1, "transferDepth": 1},
+      "stage": "COLONIZATION",
+      "container": {"format": "JAR", "capacity": {"value": 500, "unit": "mL"}},
+      "created": "2026-10-01T14:00:00Z",
+      "strainRef": "strain_bpk"
+    },
+    {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "id": "wemush:01JC8Z3K7Q0GS0000000000001",
+      "version": "1.5.0-draft",
+      "type": "SPAWN",
+      "form": "GRAIN_SPAWN",
+      "species": "Pleurotus ostreatus × Pleurotus eryngii",
+      "strain": {
+        "name": "Black Pearl King",
+        "generation": "F1",
+        "clonalGeneration": 1,
+        "transferDepth": 2,
+        "lineage": "wemush:01JC8Z3K7Q0LC0000000000001"
+      },
+      "derivedFrom": [
+        {
+          "id": "wemush:01JC8Z3K7Q0LC0000000000001",
+          "relation": "EXPANSION",
+          "quantity": {"value": 10, "unit": "mL"}
+        }
+      ],
+      "stage": "COLONIZATION",
+      "container": {"format": "BAG", "capacity": {"value": 3, "unit": "[lb_av]"}},
+      "created": "2026-10-08T16:20:00Z",
+      "strainRef": "strain_bpk",
+      "inoculatedAt": "2026-10-08T16:20:00Z",
+      "inoculum": {"value": 10, "unit": "mL"}
+    },
+    {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "id": "wemush:01JC8Z3K7Q0GS0000000000002",
+      "version": "1.5.0-draft",
+      "type": "SPAWN",
+      "form": "GRAIN_SPAWN",
+      "species": "Pleurotus ostreatus × Pleurotus eryngii",
+      "strain": {
+        "name": "Black Pearl King",
+        "generation": "F1",
+        "clonalGeneration": 1,
+        "transferDepth": 2,
+        "lineage": "wemush:01JC8Z3K7Q0LC0000000000001"
+      },
+      "derivedFrom": [
+        {
+          "id": "wemush:01JC8Z3K7Q0LC0000000000001",
+          "relation": "EXPANSION",
+          "quantity": {"value": 10, "unit": "mL"}
+        }
+      ],
+      "stage": "COLONIZATION",
+      "container": {"format": "BAG", "capacity": {"value": 3, "unit": "[lb_av]"}},
+      "created": "2026-10-08T16:25:00Z",
+      "strainRef": "strain_bpk"
+    },
+    {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "id": "wemush:01JC8Z3K7Q0FB0000000000001",
+      "version": "1.5.0-draft",
+      "type": "FRUITING",
+      "form": "FRUITING_BLOCK",
+      "species": "Pleurotus ostreatus × Pleurotus eryngii",
+      "strain": {
+        "name": "Black Pearl King",
+        "generation": "F1",
+        "clonalGeneration": 1,
+        "transferDepth": 3,
+        "lineage": "wemush:01JC8Z3K7Q0GS0000000000001"
+      },
+      "derivedFrom": [
+        {
+          "id": "wemush:01JC8Z3K7Q0GS0000000000001",
+          "relation": "COMBINED",
+          "quantity": {"value": 0.5, "unit": "kg"}
+        },
+        {
+          "id": "wemush:01JC8Z3K7Q0GS0000000000002",
+          "relation": "COMBINED",
+          "quantity": {"value": 0.5, "unit": "kg"}
+        }
+      ],
+      "stage": "FRUITING",
+      "condition": "CONTAMINATED",
+      "container": {"format": "BAG", "capacity": {"value": 5, "unit": "[lb_av]"}},
+      "created": "2026-10-29T13:00:00Z",
+      "batch": "BPK-2026-10-29",
+      "organization": "org_examplefarm",
+      "strainRef": "strain_bpk",
+      "recipeRef": "recipe_masters_mix",
+      "inoculatedAt": "2026-10-29T13:00:00Z",
+      "substrateWetWeight": {"value": 2.27, "unit": "kg"},
+      "substrateDryWeight": {"value": 0.91, "unit": "kg"},
+      "location": {"name": "Fruiting room 1 / rack B"}
+    },
+    {
+      "@context": "https://wemush.com/wols/v1",
+      "@type": "Specimen",
+      "id": "wemush:01JC8Z3K7Q0HV0000000000001",
+      "version": "1.5.0-draft",
+      "type": "HARVEST",
+      "form": "FRESH",
+      "species": "Pleurotus ostreatus × Pleurotus eryngii",
+      "strain": {
+        "name": "Black Pearl King",
+        "generation": "F1",
+        "lineage": "wemush:01JC8Z3K7Q0FB0000000000001"
+      },
+      "derivedFrom": [{"id": "wemush:01JC8Z3K7Q0FB0000000000001", "relation": "REPACK"}],
+      "stage": "HARVEST",
+      "created": "2026-11-20T10:15:00Z",
+      "lot": "EXF-BPK-261120-A",
+      "organization": "org_examplefarm"
+    }
+  ],
+  "observations": [
+    {
+      "id": "obs_02",
+      "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+      "observedAt": "2026-11-12T08:30:00Z",
+      "kind": "ENVIRONMENT",
+      "stage": "PRIMORDIA",
+      "environment": {
+        "temperature": {"value": 16.5, "unit": "Cel"},
+        "relativeHumidity": {"value": 91, "unit": "%"},
+        "co2": {"value": 850, "unit": "[ppm]"}
+      },
+      "measurements": [{"name": "pinCount", "value": 14}],
+      "source": {"kind": "SENSOR", "device": "example-sensor-01"}
+    },
+    {
+      "id": "obs_01",
+      "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+      "observedAt": "2026-11-24T09:00:00Z",
+      "kind": "CONTAMINATION",
+      "condition": "CONTAMINATED",
+      "contamination": {"agent": "TRICHODERMA", "severity": "LOCALIZED", "action": "DISCARD"},
+      "outcome": "CONTAMINATION",
+      "note": "Green patch at the base after the first flush. Block discarded.",
+      "source": {"kind": "MANUAL", "software": "WeMush"}
+    }
+  ],
+  "harvests": [
+    {
+      "id": "hv_01",
+      "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+      "harvestedAt": "2026-11-20T10:00:00Z",
+      "flush": 1,
+      "freshWeight": {"value": 612, "unit": "g"},
+      "grade": "A",
+      "lot": "EXF-BPK-261120-A",
+      "output": "wemush:01JC8Z3K7Q0HV0000000000001"
+    }
+  ]
+}
