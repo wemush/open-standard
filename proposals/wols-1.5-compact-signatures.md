@@ -4,7 +4,7 @@
 **Target**: WOLS 1.5.0, a minor release, shipped first as `1.5.0-rc.1`
 **Depends on**: the compact URL parameter registry, the species code registry, and the compact URL conformance vectors ([ROADMAP.md, v1.5.0 goals 4 and 5](../ROADMAP.md#v150-goals))
 **Date**: November 19, 2026
-**Discussion**: To be opened in [GitHub Discussions](https://github.com/wemush/open-standard/discussions), as [GOVERNANCE.md](../GOVERNANCE.md#types-of-decisions) requires for RFCs. This file is the draft for that discussion.
+**Discussion**: [RFC: Compact URL signatures (WOLS 1.5)](https://github.com/orgs/wemush/discussions/32), as [GOVERNANCE.md](../GOVERNANCE.md#types-of-decisions) requires for RFCs. Comment there; send edits to this file as PRs.
 
 > The repository had no proposals directory before this one. This proposal starts `proposals/`, named `wols-{version}-{topic}.md`. If the project prefers to keep RFCs only in Discussions, this file can move there unchanged.
 
