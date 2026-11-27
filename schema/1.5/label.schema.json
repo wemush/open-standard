@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wemush.com/wols/schema/1.5/label.schema.json",
+  "title": "WOLS Specimen label",
+  "description": "DRAFT for WOLS 1.5 (non-normative until accepted). The embedded-format Specimen label. Every 1.4.0 label that is valid today stays valid. New members are optional, and 1.4 decoders treat them as unknown top-level members (a warning, not an error).",
+  "type": "object",
+  "required": ["@context", "@type", "id", "version", "type", "species"],
+  "properties": {
+    "@context": {
+      "const": "https://wemush.com/wols/v1",
+      "description": "JSON-LD context. The context document itself must be published at this URL (ROADMAP v1.5.0 deliverable)."
+    },
+    "@type": {"const": "Specimen"},
+    "id": {"$ref": "#/$defs/SpecimenId"},
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$",
+      "description": "Spec version the label was written against. Pre-release suffixes (1.5.0-rc.1) are allowed."
+    },
+    "type": {"$ref": "#/$defs/SpecimenType"},
+    "species": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Scientific name as printed. Kept for 1.x compatibility; `taxon` carries identifiers and hybrids."
+    },
+    "taxon": {"$ref": "#/$defs/Taxon"},
+    "form": {
+      "$ref": "#/$defs/SpecimenForm",
+      "description": "NEW in 1.5. The specific form within `type` (e.g. GRAIN_SPAWN within SPAWN). Replaces the lossy type-alias collapse."
+    },
+    "strain": {"$ref": "#/$defs/Strain"},
+    "derivedFrom": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/ParentLink"},
+      "description": "NEW in 1.5. Every parent specimen, with how it was used. When `strain.lineage` is also present it MUST equal the `id` of the first entry."
+    },
+    "stage": {"$ref": "#/$defs/GrowthStage"},
+    "condition": {"$ref": "#/$defs/Condition"},
+    "container": {"$ref": "#/$defs/Container"},
+    "created": {"type": "string", "format": "date-time"},
+    "batch": {"type": "string", "minLength": 1},
+    "lot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "NEW in 1.5. Traceability lot code (FSMA 204 TLC or a GS1 batch/lot, AI 10) for sellable product. Distinct from `batch`, which is a production grouping."
+    },
+    "organization": {"type": "string", "minLength": 1},
+    "creator": {"type": "string", "minLength": 1},
+    "custom": {
+      "type": "object",
+      "description": "Vendor namespaces. Each top-level key is a registered namespace.",
+      "additionalProperties": {"type": "object"}
+    },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "sourceId": {"type": "string"},
+        "sourceSystem": {"type": "string"},
+        "importedAt": {"type": "string", "format": "date-time"},
+        "schemaVersion": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": "string",
+      "description": "Ed25519 token `{kid}.{sig}` (spec grammar: kid 1-64 of ALPHA/DIGIT/-/_, sig 86 base64url chars). Kept as an opaque string here: a malformed token is a verification status (`malformed`), not a schema error, and decoders MUST preserve it."
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "SpecimenId": {
+      "type": "string",
+      "pattern": "^wemush:.+$",
+      "description": "`wemush:` plus any non-empty suffix. Encoders that place it in a URL MUST percent-encode the suffix."
+    },
+    "SpecimenType": {"enum": ["CULTURE", "SPAWN", "SUBSTRATE", "FRUITING", "HARVEST"]},
+    "SpecimenForm": {
+      "description": "Open vocabulary. Registered values are listed; unregistered values MUST use a `x-` prefix.",
+      "anyOf": [
+        {
+          "enum": ["AGAR_PLATE", "SLANT", "TISSUE_CULTURE", "LIQUID_CULTURE", "SPORE_SYRINGE", "SPORE_PRINT", "SPORE_SWAB", "GRAIN_SPAWN", "SAWDUST_SPAWN", "PLUG_SPAWN", "SUBSTRATE_BLOCK", "BULK_SUBSTRATE", "FRUITING_BLOCK", "FRUITING_BAG", "LOG", "BED", "FRESH", "DRIED", "PROCESSED", "EXTRACT", "LIVE_SAMPLE"]
+        },
+        {"type": "string", "pattern": "^x-[a-z0-9-]+$"}
+      ]
+    },
+    "GrowthStage": {
+      "enum": ["INOCULATION", "INCUBATION", "COLONIZATION", "PRIMORDIA", "FRUITING", "SENESCENCE", "HARVEST"]
+    },
+    "Condition": {
+      "enum": ["ACTIVE", "CONTAMINATED", "EXHAUSTED", "DISPOSED", "ARCHIVED"],
+      "description": "NEW in 1.5. Health or terminal state, orthogonal to `stage`. Absent means ACTIVE."
+    },
+    "Container": {
+      "type": "object",
+      "description": "NEW in 1.5. The vessel, so vessel words stop being type aliases.",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "anyOf": [
+            {
+              "enum": ["PETRI_DISH", "SLANT_TUBE", "JAR", "BOTTLE", "CARBOY", "SYRINGE", "BAG", "MONOTUB", "BUCKET", "COMPRESSED_BLOCK", "TRAY", "OTHER"]
+            },
+            {"type": "string", "pattern": "^x-[a-z0-9-]+$"}
+          ]
+        },
+        "capacity": {"$ref": "#/$defs/Quantity"}
+      },
+      "additionalProperties": false
+    },
+    "Taxon": {
+      "type": "object",
+      "description": "NEW in 1.5. Name plus resolvable identifiers. For a hybrid, give `hybridOf` and set `scientificName` to the hybrid formula.",
+      "required": ["scientificName"],
+      "properties": {
+        "scientificName": {"type": "string", "minLength": 1},
+        "authorship": {"type": "string"},
+        "rank": {"enum": ["species", "subspecies", "variety", "form", "genus", "hybrid"]},
+        "identifiers": {"type": "array", "items": {"$ref": "#/$defs/TaxonIdentifier"}},
+        "hybridOf": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["scientificName"],
+            "properties": {
+              "scientificName": {"type": "string", "minLength": 1},
+              "role": {"enum": ["PARENT_A", "PARENT_B", "UNKNOWN"]},
+              "identifiers": {"type": "array", "items": {"$ref": "#/$defs/TaxonIdentifier"}}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "TaxonIdentifier": {
+      "type": "object",
+      "required": ["scheme", "value"],
+      "properties": {
+        "scheme": {"enum": ["mycobank", "indexfungorum", "gbif", "col", "inaturalist", "ncbi"]},
+        "value": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "Strain": {
+      "type": "object",
+      "description": "1.5 makes `name` optional (generation without a named strain).",
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "generation": {
+          "oneOf": [
+            {"type": "string", "pattern": "^([FfGg][0-9]+|[Pp][0-9]*|[0-9]+)$"},
+            {
+              "type": "integer",
+              "minimum": 0,
+              "deprecated": true,
+              "description": "Accepted from 1.3.0 Python labels; decoders read it as its decimal string and warn."
+            }
+          ]
+        },
+        "clonalGeneration": {"type": "integer", "minimum": 0},
+        "transferDepth": {"type": "integer", "minimum": 0},
+        "lineage": {
+          "$ref": "#/$defs/SpecimenId",
+          "description": "Primary parent. Kept for 1.x readers; see top-level `derivedFrom`."
+        },
+        "source": {
+          "type": "string",
+          "examples": ["spore", "tissue", "agar", "liquid", "cross"],
+          "description": "How the strain was started. Free text in 1.x."
+        },
+        "accession": {
+          "type": "string",
+          "description": "NEW in 1.5. Culture-collection or vendor accession for the strain (e.g. a CCNo)."
+        }
+      },
+      "additionalProperties": true
+    },
+    "ParentLink": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/SpecimenId"},
+        "relation": {
+          "enum": ["SUBCULTURE", "EXPANSION", "SPAWN_TO_BULK", "COMBINED", "CLONE", "SPORE_ISOLATE", "CROSS", "REPACK"],
+          "description": "SUBCULTURE increments clonalGeneration and transferDepth; EXPANSION and SPAWN_TO_BULK increment transferDepth only; CROSS starts a new filial generation."
+        },
+        "quantity": {"$ref": "#/$defs/Quantity"}
+      },
+      "additionalProperties": false
+    },
+    "Quantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number"},
+        "unit": {
+          "type": "string",
+          "description": "UCUM case-sensitive code, e.g. g, kg, [oz_av], [lb_av], mL, L, Cel, [degF], %, [ppm], lx, h, min, d. Legacy `C` and `F` are accepted for temperature.",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

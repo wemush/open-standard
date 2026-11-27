@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wemush.com/wols/schema/1.5/bundle.schema.json",
+  "title": "WOLS records bundle",
+  "description": "DRAFT for WOLS 1.5 (non-normative until accepted). The exchange layer: what a lab, vendor or research project sends to another system. A bundle carries specimen labels plus the records the label can't hold (strains, recipes, observations, harvests). It is never printed in a QR code.",
+  "type": "object",
+  "required": ["@context", "@type", "version", "specimens"],
+  "properties": {
+    "@context": {"const": "https://wemush.com/wols/v1"},
+    "@type": {"const": "Bundle"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"},
+    "generated": {"type": "string", "format": "date-time"},
+    "publisher": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "organization": {"type": "string"},
+        "contact": {"type": "string", "format": "uri"}
+      },
+      "additionalProperties": false
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX identifier or URL for the data in this bundle, e.g. CC-BY-4.0 or CC0-1.0.",
+      "examples": ["CC0-1.0", "CC-BY-4.0"]
+    },
+    "specimens": {"type": "array", "items": {"$ref": "#/$defs/SpecimenRecord"}},
+    "strains": {"type": "array", "items": {"$ref": "#/$defs/StrainRecord"}},
+    "recipes": {"type": "array", "items": {"$ref": "#/$defs/Recipe"}},
+    "observations": {"type": "array", "items": {"$ref": "#/$defs/Observation"}},
+    "harvests": {"type": "array", "items": {"$ref": "#/$defs/Harvest"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "SpecimenRecord": {
+      "description": "A label plus the fields too large or too private to print.",
+      "allOf": [
+        {"$ref": "label.schema.json"},
+        {
+          "type": "object",
+          "properties": {
+            "strainRef": {"type": "string", "description": "`id` of a StrainRecord in this bundle."},
+            "recipeRef": {"type": "string", "description": "`id` of the Recipe this specimen was made on."},
+            "inoculatedAt": {"type": "string", "format": "date-time"},
+            "inoculum": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "substrateWetWeight": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "substrateDryWeight": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "location": {"$ref": "#/$defs/Location"},
+            "circularEconomy": {"$ref": "#/$defs/CircularEconomy"}
+          }
+        }
+      ]
+    },
+    "StrainRecord": {
+      "type": "object",
+      "required": ["id", "name", "taxon"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "aliases": {"type": "array", "items": {"type": "string"}},
+        "taxon": {"$ref": "label.schema.json#/$defs/Taxon"},
+        "accession": {"type": "string"},
+        "origin": {
+          "type": "string",
+          "description": "Where the strain came from: wild isolate, vendor, culture collection."
+        },
+        "isolatedAt": {"type": "string", "format": "date"},
+        "isolationSource": {"type": "string"},
+        "growthParameters": {
+          "type": "object",
+          "properties": {
+            "colonization": {"$ref": "#/$defs/EnvironmentRange"},
+            "fruiting": {"$ref": "#/$defs/EnvironmentRange"},
+            "incubationDays": {"$ref": "#/$defs/Range"},
+            "fruitingDays": {"$ref": "#/$defs/Range"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Recipe": {
+      "type": "object",
+      "description": "Replaces 1.4 SubstrateFormula. Ingredients are amounts with units (what people actually weigh); percentages are derived, not stored.",
+      "required": ["id", "name", "kind", "ingredients"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["AGAR", "LIQUID_CULTURE", "GRAIN", "SUBSTRATE", "CASING", "OTHER"]},
+        "ingredients": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "amount"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "amount": {"$ref": "label.schema.json#/$defs/Quantity"},
+              "role": {"enum": ["BASE", "SUPPLEMENT", "WATER", "ADDITIVE", "GELLING_AGENT", "NUTRIENT"]},
+              "supplier": {"type": "string"},
+              "foodonId": {
+                "type": "string",
+                "description": "Optional FoodOn term ID (FOODON_ followed by digits) for cross-system matching."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "yields": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "hydration": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "treatment": {
+          "type": "object",
+          "required": ["method"],
+          "properties": {
+            "method": {
+              "enum": ["AUTOCLAVE", "PRESSURE_COOKER", "PASTEURIZATION", "LIME", "COLD_WATER", "NONE", "OTHER"]
+            },
+            "temperature": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "duration": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "pressure": {"$ref": "label.schema.json#/$defs/Quantity"}
+          },
+          "additionalProperties": false
+        },
+        "instructions": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "Observation": {
+      "type": "object",
+      "description": "One dated fact about one specimen. Maps to Darwin Core MeasurementOrFact and an EPCIS ObjectEvent (bizStep inspecting).",
+      "required": ["id", "specimen", "observedAt", "kind"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "specimen": {"$ref": "label.schema.json#/$defs/SpecimenId"},
+        "observedAt": {"type": "string", "format": "date-time"},
+        "recordedAt": {"type": "string", "format": "date-time"},
+        "kind": {
+          "enum": ["NOTE", "MEASUREMENT", "ENVIRONMENT", "STAGE_CHANGE", "CONDITION_CHANGE", "CONTAMINATION", "INSPECTION", "PHOTO"]
+        },
+        "stage": {"$ref": "label.schema.json#/$defs/GrowthStage"},
+        "condition": {"$ref": "label.schema.json#/$defs/Condition"},
+        "measurements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Registered names: colonizationPercent, pinCount, growthRateMmPerDay, capDiameter, fruitBodyCount. Others MUST use a namespace prefix (e.g. mushoh:qcScore).",
+                "pattern": "^([a-z][A-Za-z0-9]*|[a-z0-9_]+:[A-Za-z0-9_]+)$"
+              },
+              "value": {"type": ["number", "string", "boolean"]},
+              "unit": {"type": "string"},
+              "method": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "environment": {"$ref": "#/$defs/Environment"},
+        "contamination": {
+          "type": "object",
+          "properties": {
+            "agent": {
+              "enum": ["TRICHODERMA", "BACTERIA", "COBWEB", "PENICILLIUM", "ASPERGILLUS", "RHIZOPUS", "LIPSTICK", "YEAST", "UNKNOWN", "OTHER"]
+            },
+            "suspectedTaxon": {"$ref": "label.schema.json#/$defs/Taxon"},
+            "severity": {"enum": ["SUSPECTED", "LOCALIZED", "SPREADING", "TOTAL"]},
+            "action": {"enum": ["MONITOR", "ISOLATE", "DISCARD", "TREAT"]}
+          },
+          "additionalProperties": false
+        },
+        "outcome": {"enum": ["SUCCESS", "PARTIAL_SUCCESS", "CONTAMINATION", "FAILURE", "INCONCLUSIVE"]},
+        "note": {"type": "string"},
+        "media": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": {"type": "string", "format": "uri"},
+              "mediaType": {"type": "string"},
+              "license": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "location": {"$ref": "#/$defs/Location"},
+        "source": {
+          "type": "object",
+          "properties": {
+            "kind": {"enum": ["MANUAL", "SENSOR", "IMPORT", "AI_ASSISTED"]},
+            "device": {"type": "string"},
+            "software": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Harvest": {
+      "type": "object",
+      "description": "One flush picked from one specimen. Maps to the FSMA 204 'harvesting' critical tracking event and an EPCIS ObjectEvent (bizStep harvesting).",
+      "required": ["id", "specimen", "harvestedAt", "freshWeight"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "specimen": {"$ref": "label.schema.json#/$defs/SpecimenId"},
+        "harvestedAt": {"type": "string", "format": "date-time"},
+        "flush": {"type": "integer", "minimum": 1},
+        "freshWeight": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "dryWeight": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "grade": {"enum": ["A", "B", "C", "REJECT", "UNGRADED"]},
+        "lot": {"type": "string", "description": "Traceability lot code assigned at initial packing."},
+        "output": {
+          "$ref": "label.schema.json#/$defs/SpecimenId",
+          "description": "The HARVEST-type specimen (the packed product) this harvest became, if it was labeled."
+        },
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "Environment": {
+      "type": "object",
+      "description": "Replaces 1.4 EnvironmentalData: one reading set at one time (the parent observation's observedAt).",
+      "properties": {
+        "temperature": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "relativeHumidity": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "co2": {"$ref": "label.schema.json#/$defs/Quantity"},
+        "light": {
+          "type": "object",
+          "properties": {
+            "intensity": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "photoperiod": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "spectrum": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "freshAirExchangesPerHour": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "EnvironmentRange": {
+      "type": "object",
+      "properties": {
+        "temperature": {"$ref": "#/$defs/QuantityRange"},
+        "relativeHumidity": {"$ref": "#/$defs/QuantityRange"},
+        "co2": {"$ref": "#/$defs/QuantityRange"}
+      },
+      "additionalProperties": false
+    },
+    "QuantityRange": {
+      "type": "object",
+      "required": ["unit"],
+      "properties": {
+        "min": {"type": "number"},
+        "max": {"type": "number"},
+        "optimal": {"type": "number"},
+        "unit": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "Range": {
+      "type": "object",
+      "properties": {"min": {"type": "number"}, "max": {"type": "number"}},
+      "additionalProperties": false
+    },
+    "Location": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "description": "Room, shelf or rack, e.g. 'Incubation A / shelf 3'."},
+        "latitude": {"type": "number", "minimum": -90, "maximum": 90},
+        "longitude": {"type": "number", "minimum": -180, "maximum": 180},
+        "gln": {
+          "type": "string",
+          "pattern": "^[0-9]{13}$",
+          "description": "GS1 Global Location Number, for supply-chain partners."
+        }
+      },
+      "additionalProperties": false
+    },
+    "CircularEconomy": {
+      "type": "object",
+      "description": "1.4 CircularEconomyData, attached to a specimen record.",
+      "properties": {
+        "wasteSource": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["BREWERY", "RESTAURANT", "FARM", "COFFEE_SHOP", "OTHER"]},
+            "partnerId": {"type": "string"},
+            "collectionDate": {"type": "string", "format": "date"},
+            "composition": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "sustainability": {
+          "type": "object",
+          "properties": {
+            "carbonOffset": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "wasteUtilized": {"$ref": "label.schema.json#/$defs/Quantity"},
+            "localSourcing": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
