@@ -291,7 +291,8 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
 - [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
-- [ ] Published JSON-LD context document at `https://wemush.com/wols/v1`
+- [x] Published JSON-LD context document at `https://wemush.com/wols/v1` ([`context/v1.jsonld`](./context/v1.jsonld), served since November 27, 2026)
+- [ ] Draft 1.5 proposals: [data model and JSON Schema](./proposals/wols-1.5-data-model.md) ([`schema/1.5/`](./schema/1.5/)) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md)
 
 ### v1.5.0 Success Metrics
 

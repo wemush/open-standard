@@ -495,6 +495,8 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 
 ### Next: Version 1.5.0 (not yet scheduled)
 
+Drafts under discussion: the [data model and JSON Schema](./proposals/wols-1.5-data-model.md) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md). Neither changes 1.4.0.
+
 - 🚧 Compact URL and species code registries, with compact URL conformance vectors
 - 🚧 HTTPS resolver form that phone cameras can open
 - 🚧 IoT sensor integration spec
