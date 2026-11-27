@@ -1,0 +1,23 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://wemush.com/wols/v1#",
+    "wols": "https://wemush.com/wols/v1#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "Specimen": "wols:Specimen",
+    "Bundle": "wols:Bundle",
+
+    "created": {"@id": "wols:created", "@type": "xsd:dateTime"},
+    "generated": {"@id": "wols:generated", "@type": "xsd:dateTime"},
+    "importedAt": {"@id": "wols:importedAt", "@type": "xsd:dateTime"},
+    "inoculatedAt": {"@id": "wols:inoculatedAt", "@type": "xsd:dateTime"},
+    "isolatedAt": {"@id": "wols:isolatedAt", "@type": "xsd:dateTime"},
+    "observedAt": {"@id": "wols:observedAt", "@type": "xsd:dateTime"},
+    "harvestedAt": {"@id": "wols:harvestedAt", "@type": "xsd:dateTime"},
+    "recordedAt": {"@id": "wols:recordedAt", "@type": "xsd:dateTime"},
+
+    "custom": {"@id": "wols:custom", "@type": "@json"},
+    "_meta": {"@id": "wols:meta", "@type": "@json"}
+  }
+}

@@ -425,7 +425,7 @@ You are free to:
 - ✅ Adapt — remix, transform, build upon
 - ✅ Commercial use — use in commercial products
 
-**Schema, Conformance Vectors and Example Records**: The JSON Schema in [`schema/`](schema/), the conformance vectors and tools in [`conformance/`](conformance/), and the example records in [`examples/records/`](examples/records/) are dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), so implementations and code generators can copy them without attribution requirements.
+**Schema, Conformance Vectors and Example Records**: The JSON Schema in [`schema/`](schema/), the JSON-LD context in [`context/`](context/), the conformance vectors and tools in [`conformance/`](conformance/), and the example records in [`examples/records/`](examples/records/) are dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), so implementations and code generators can copy them without attribution requirements.
 
 **Code Examples**: Code snippets in this documentation may also be used under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) for easy integration into your projects.
 
