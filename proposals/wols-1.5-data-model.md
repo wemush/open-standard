@@ -79,7 +79,7 @@ Term names are from Darwin Core, MIxS 6 and EPCIS 2.0 as published; the DwC-DP n
 - Every 1.4.0 `validate` vector passes the 1.5 label schema with the same verdict and the same `errorField` (checked by `conformance/tools/validate_schema.py`).
 - New members are optional and top-level or inside `strain`, where 1.4 decoders warn, not fail.
 - Signed labels: new members are part of the JCS body like any other member, so no signing change.
-- The JSON-LD context must define the new terms before 1.5 is final. The context document at `https://wemush.com/wols/v1` is still an unchecked deliverable.
+- The JSON-LD context must define the new terms before 1.5 is final. The context document is now [`context/v1.jsonld`](../context/v1.jsonld); its `@vocab` covers the new terms. It is not served at `https://wemush.com/wols/v1` yet.
 
 ## 6. Open questions
 
