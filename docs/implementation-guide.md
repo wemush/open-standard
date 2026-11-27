@@ -359,6 +359,17 @@ const specimen = await parseQRCodeImage('./label.png');
 
 ---
 
+## Resolving the Context and Schemas
+
+This section is non-normative. Validation compares `@context` as a string and never fetches it.
+
+- `https://wemush.com/wols/v1` serves the JSON-LD context in [`context/v1.jsonld`](../context/v1.jsonld) as `application/ld+json`, with open CORS. A browser that asks for HTML is redirected to the specification. JSON-LD processors can expand any WOLS label with it.
+- `https://wemush.com/wols/schema/1.5/label.schema.json` and `.../bundle.schema.json` serve the draft 1.5 JSON Schemas from [`schema/1.5/`](../schema/1.5/) at their `$id`s.
+- Paths below `/wols/v1/`, such as `/wols/v1/<id>`, are label URLs, not documents.
+- Offline tools should load the context from this repository instead of the network. `conformance/tools/check_context.py` shows how.
+
+---
+
 ## Validation
 
 ### Schema Validation Rules
