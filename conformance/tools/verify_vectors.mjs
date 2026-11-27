@@ -411,6 +411,15 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
         : verifySignature({ form: 'encrypted-url', url: r.url }, doc.trustStore);
       ok = ok && back.status === 'valid';
       detail = JSON.stringify(r);
+    } else if (c.operation === 'verifyNested') {
+      // Sign-then-encrypt: verify the URL, decrypt it, then verify the plaintext as an
+      // embedded label. The outer check never depends on decryption succeeding.
+      const outer = verifySignature({ form: 'encrypted-url', url: c.input.url }, doc.trustStore);
+      const d = await decrypt(c.input.url, c.input.secret);
+      const got = { outer, decrypt: d.success ? { success: true, plaintext: d.plaintext } : { success: false, reason: d.reason } };
+      if (d.success) got.inner = verifySignature({ form: 'embedded', label: d.plaintext }, doc.trustStore);
+      ok = eq(got, x) && c.input.form === 'encrypted-url' && detectForm(c.input.url) === c.input.form;
+      detail = JSON.stringify({ outer: outer.status, decrypt: d.success, inner: got.inner?.status });
     } else if (c.operation === 'loadKeySet') {
       let loaded;
       try { loaded = loadKeySet(c.input.keySet); } catch (e) {
