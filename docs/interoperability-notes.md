@@ -1,6 +1,6 @@
 # WOLS Interoperability Notes
 
-> **Status**: Non-normative. This document records where implementations of WOLS currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#next-v150).
+> **Status**: Non-normative. This document records where implementations of WOLS currently differ from each other or from [SPECIFICATION.md](../SPECIFICATION.md). Where this document and the specification disagree, **the specification is authoritative**. Proposed resolutions are tracked in [ROADMAP.md](../ROADMAP.md#next-v160).
 
 **Implementations reviewed**: `@wemush/wols` 1.4.0 (TypeScript), `wols` 1.4.0 (Python), and labels produced by the WeMush Platform. Both 1.4.0 libraries pass every [conformance vector](../conformance/README.md), including signatures, and decrypt each other's labels across the 51-case [interop matrix](../conformance/interop/README.md). Notes about 1.3.0 and 1.2.0 behavior are kept where older labels or libraries may still be in use.
 **Last reviewed**: November 17, 2026

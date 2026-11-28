@@ -7,10 +7,10 @@
 > - [`@wemush/wols`](https://github.com/wemush/specimen-labels-js) (npm) — TypeScript/JavaScript
 > - [`wols`](https://github.com/wemush/specimen-labels-py) (PyPI) — Python
 >
-> **Specification Version**: 1.4.0
+> **Specification Version**: 1.5.0
 > **Date**: November 17, 2026
 >
-> **Implementation status (non-normative)**: Some APIs described here are design targets that the 1.4.0 libraries do not ship yet: `createScanner`, `parseQRCodeImage`, and `encryptSpecimenFields` in TypeScript (partial encryption is available as `encryptSpecimen(specimen, { key, fields })`); `serialize_specimen` and the `to_qr_code*` functions in Python (shipped as `to_json`, `generate_qr_png`, `generate_qr_svg`, `generate_qr_base64`, and `scan_qr`). Where library behavior diverges from [SPECIFICATION.md](../SPECIFICATION.md), see [Interoperability Notes](./interoperability-notes.md).
+> **Implementation status (non-normative)**: Some APIs described here are design targets that the 1.5.0 libraries do not ship yet: `createScanner`, `parseQRCodeImage`, and `encryptSpecimenFields` in TypeScript (partial encryption is available as `encryptSpecimen(specimen, { key, fields })`); `serialize_specimen` and the `to_qr_code*` functions in Python (shipped as `to_json`, `generate_qr_png`, `generate_qr_svg`, `generate_qr_base64`, and `scan_qr`). Where library behavior diverges from [SPECIFICATION.md](../SPECIFICATION.md), see [Interoperability Notes](./interoperability-notes.md).
 
 ---
 
@@ -73,7 +73,7 @@ interface Specimen {
 
   // Required Fields
   id: string;                    // Format: "wemush:{cuid}" e.g., "wemush:clx1a2b3c4"
-  version: string;               // Semver, e.g., "1.4.0"
+  version: string;               // Semver, e.g., "1.5.0"
   type: SpecimenType;
   species: string;               // Scientific name
 
@@ -493,7 +493,7 @@ class WolsEncryptionError(WolsError):
 ```json
 {
   "name": "@wemush/wols",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Official WOLS (WeMush Open Labeling Standard) library",
   "type": "module",
   "main": "./dist/index.js",
@@ -547,7 +547,7 @@ src/
 # pyproject.toml
 [project]
 name = "wols"
-version = "1.4.0"
+version = "1.5.0"
 description = "Official WOLS (WeMush Open Labeling Standard) library"
 readme = "README.md"
 license = "Apache-2.0"

@@ -321,7 +321,8 @@ See [ROADMAP.md](../ROADMAP.md) for details:
 - **v1.2.0** (Jan 2026): ✅ Extended growth stages, type aliases, `_meta` namespace
 - **v1.3.0** (Nov 2026): ✅ Encrypted wire format, `PRIMORDIA` handling, `transferDepth`, conformance vectors
 - **v1.4.0** (Nov 2026): ✅ Ed25519 signatures, key set documents, numeric `strain.generation` tolerance, cross-library interop matrix
-- **v1.5.0** (release candidates): `1.5.0-rc.1` makes the [data model](../proposals/wols-1.5-data-model.md) normative; `1.5.0-rc.2` adds the compact URL and species code registries and [compact URL signatures](../proposals/wols-1.5-compact-signatures.md). The HTTPS resolver form and IoT integration move to a later release.
+- **v1.5.0** (Nov 2026): ✅ Normative [data model](../proposals/wols-1.5-data-model.md) and JSON Schema, Records Bundle, compact URL and species code registries, [compact URL signatures](../proposals/wols-1.5-compact-signatures.md)
+- **v1.6.0** (planned): HTTPS resolver form, IoT integration
 - **v2.0.0** (planned): Blockchain, standards alignment, supply chain
 
 ### Can I request features?

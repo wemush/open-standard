@@ -1,6 +1,6 @@
 # WeMush Open Labeling Standard (WOLS)
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](https://github.com/wemush/open-standard/releases)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/wemush/open-standard/releases)
 [![License](https://img.shields.io/badge/license-CC%20BY%204.0-green.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/wemush/open-standard)](https://github.com/wemush/open-standard/discussions)
 [![Stars](https://img.shields.io/github/stars/wemush/open-standard?style=social)](https://github.com/wemush/open-standard/stargazers)
@@ -158,7 +158,7 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix
-  version: string;               // Spec version (e.g., "1.4.0")
+  version: string;               // Spec version (e.g., "1.5.0")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name
 
@@ -199,7 +199,7 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -484,7 +484,7 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ `PRIMORDIA` type alias resolves to `FRUITING` with stage `PRIMORDIA`
 - ✅ [Conformance test vectors](./conformance/README.md), passed by both reference libraries
 
-#### Version 1.4.0 (Nov 2026) — Current
+#### Version 1.4.0 (Nov 2026)
 
 - ✅ Ed25519 signatures for embedded labels and encrypted URLs: a `{kid}.{sig}` token over RFC 8785 (JCS) canonical JSON or the exact URL bytes
 - ✅ Keys resolved only through a caller-supplied trust store, with optional `/.well-known/wols-keys.json` key set documents
@@ -493,13 +493,13 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Clarifications from 1.3.1-rc.1 (reserved `sig`, what encryption does and doesn't protect, ID path encoding), released as part of 1.4.0
 - ✅ `signatures.json` conformance vectors and a 51-case cross-library interop matrix, passed by both reference libraries
 
-### Next: Version 1.5.0 (release candidates)
+#### Version 1.5.0 (Nov 2026) — Current
 
-`1.5.0-rc.2` is the current release candidate; 1.4.1 stays the latest final release until a library passes every `MUST` vector. See the [changelog](./SPECIFICATION.md#changelog).
-
-- 🧪 Normative data model and JSON Schema, with the Records Bundle (`1.5.0-rc.1`)
-- 🧪 Compact URL rules, parameter registry and [species code registry](./registries/species-codes.json) (`1.5.0-rc.2`)
-- 🧪 Compact URL signatures, so labels under 40 mm can be signed (`1.5.0-rc.2`)
+- ✅ Normative data model and [JSON Schema](./schema/1.5/), with the Records Bundle for strains, recipes, observations and harvests
+- ✅ Optional members for taxon, form, multiple parents (`derivedFrom`), condition, container, lot and strain accession
+- ✅ Compact URL rules, parameter registry and [species code registry](./registries/species-codes.json), so compact URLs decode the same way in both libraries
+- ✅ Compact URL signatures, so labels under 40 mm can be signed
+- ✅ `data-model.json`, `bundle.json`, `compact.json` and `compact-signatures.json` conformance vectors, passed by both reference libraries
 
 ### Later
 

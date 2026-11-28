@@ -2,8 +2,8 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Release candidate (see [Governance](#governance))
-**Version**: 1.5.0-rc.2
+**Status**: Active
+**Version**: 1.5.0
 **Date**: November 28, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
@@ -415,7 +415,7 @@ Embedded format uses JSON-LD for semantic interoperability:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -643,7 +643,7 @@ PATCH /v1/specimens/{id}
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4d5e6f7g8",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "type": "SUBSTRATE",
   "species": "Pleurotus ostreatus",
   "strain": {
@@ -955,7 +955,7 @@ Organizations can add custom fields under reserved namespaces:
   "@context": "https://wemush.com/wols/v1",
   "@type": "Specimen",
   "id": "wemush:clx1a2b3c4",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "species": "Hericium erinaceus",
   "custom": {
     "mushoh": {
@@ -1005,7 +1005,7 @@ docker run --rm ghcr.io/wemush/specimen-labels-py create \
 
 **Conformance test vectors**: [`conformance/`](./conformance/README.md) contains language-neutral test cases (validation, `PRIMORDIA` handling, generation tracking, encrypted format, signatures) that implementations SHOULD pass.
 
-> **Interoperability note (non-normative):** The 1.4.0 reference libraries pass every conformance vector, including signatures, and round-trip each other's encrypted labels across the shared [interop matrix](./conformance/interop/README.md), so embedded and encrypted labels, and their signatures, interoperate across languages. Compact URLs still differ between them, and encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
+> **Interoperability note (non-normative):** The 1.5.0 reference libraries pass every conformance vector, including signatures and the 1.5 data model and compact URL files, and round-trip each other's encrypted labels across the shared [interop matrix](./conformance/interop/README.md), so embedded and encrypted labels, and their signatures, interoperate across languages. From 1.5, compact URLs also decode to the same label in both libraries. Encrypted labels made by the 1.2.0 libraries are not interchangeable. See [Interoperability Notes](./docs/interoperability-notes.md) before mixing implementations.
 
 **API**: `https://api.wemush.com/v1`
 
@@ -1168,8 +1168,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.5.0-rc.2 (release candidate; 1.4.1 remains the latest final release)
-**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
+**Current Version**: 1.5.0
+**Stability**: Active (feedback welcome)
 
 ---
 
@@ -1271,7 +1271,13 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
-### Version 1.5.0-rc.2 (November 28, 2026)
+### Version 1.5.0 (November 28, 2026)
+
+Final release. It combines `1.5.0-rc.1` and `1.5.0-rc.2` below with no further normative changes. Both reference libraries pass every `MUST` and `SHOULD` case in the four 1.5 files (`data-model.json`, `bundle.json`, `compact.json`, `compact-signatures.json`) and every earlier file: `@wemush/wols` 1.5.0-rc.2 (TypeScript) and `wols` 1.5.0rc2 (Python), whose 1.5.0 releases change only the version they write: from those releases, new labels are written with `"version": "1.5.0"`. Example labels now use `"version": "1.5.0"`.
+
+Open questions 1 (the print-and-scan test for signed compact URLs on small labels) and 9 (ID-only signed labels) in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) stay open. Neither changes the wire format: question 1 decides only whether a later release recommends a minimal signed-compact profile for small labels.
+
+#### 1.5.0-rc.2 (November 28, 2026)
 
 Second release candidate for 1.5.0. It settles the compact URL format and adds compact URL signatures. It includes everything in `1.5.0-rc.1` unchanged. Every compact URL that either reference library has written stays valid, and from 1.5 each one decodes to the same label in both libraries.
 
@@ -1301,7 +1307,7 @@ Conformance:
 - **Tools**: `verify_vectors.mjs` parses, signs and verifies compact URLs independently of the generator, and checks the fixes above. `validate_schema.py` reports the leaf field of a failed `anyOf`, and reports a bundle's outside parents as notes
 - **Proposal**: The [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is accepted into this candidate, except open questions 1 (the print-and-scan test) and 9 (ID-only signed labels), which stay open
 
-### Version 1.5.0-rc.1 (November 28, 2026)
+#### 1.5.0-rc.1 (November 28, 2026)
 
 First release candidate for 1.5.0. It makes the data model normative. Every 1.4.x label stays valid and decodes the same way. Compact URL registries and compact URL signatures followed in `1.5.0-rc.2`.
 
@@ -1474,4 +1480,5 @@ Normative changes:
 4. Cross-language interoperability for embedded and encrypted labels — Complete in 1.3.0, with conformance vectors that both reference libraries pass; compact URLs still differ (see [Interoperability Notes](./docs/interoperability-notes.md))
 5. WOLS v1.3.0 released (November 15, 2026) — Complete
 6. WOLS v1.4.0 released (November 17, 2026), with Ed25519 signatures that both reference libraries implement — Complete
-7. Version 1.5.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals
+7. WOLS v1.5.0 released (November 28, 2026), with a normative data model and JSON Schema, compact URL registries, and compact URL signatures that both reference libraries implement — Complete
+8. Version 1.6.0 — Not yet scheduled; see [ROADMAP.md](./ROADMAP.md) for scope and proposals
