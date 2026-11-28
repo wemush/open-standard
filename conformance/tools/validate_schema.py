@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""Check the draft 1.5 JSON Schemas against the conformance vectors and examples.
+"""Check the 1.5 JSON Schemas against the conformance vectors and examples.
 
-Draft tooling for proposals/wols-1.5-data-model.md. Needs `jsonschema` (>=4.18).
+The schemas are normative from 1.5.0-rc.1 (SPECIFICATION.md, Schema and Data
+Model). This tool enforces the sync rule: every `validate` and
+`validateBundle` vector gets the same verdict and the same error field from
+the schema plus the few rules JSON Schema can't express. Needs `jsonschema`
+(>=4.18).
 Run from the repository root:  python3 conformance/tools/validate_schema.py
 Exit status is non-zero if any check fails.
 """
@@ -17,7 +21,7 @@ from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = ROOT / "schema" / "1.5"
-VECTOR_FILES = ["embedded.json", "generation.json"]
+VECTOR_FILES = ["embedded.json", "generation.json", "data-model.json", "bundle.json"]
 EXAMPLES = sorted((ROOT / "examples" / "records").glob("*.json"))
 
 
@@ -62,26 +66,57 @@ def validators():
     )
 
 
+def error_path(e) -> str:
+    """Dot path of an error, naming the missing member for `required`."""
+    parts = [str(p) for p in e.absolute_path]
+    if e.validator == "required":
+        parts.append(e.message.split("'")[1])
+    return ".".join(parts)
+
+
 def first_error_path(errors) -> str:
     e = min(errors, key=lambda e: len(e.absolute_path))
-    path = ".".join(str(p) for p in e.absolute_path)
-    if not path and e.validator == "required":
-        path = e.message.split("'")[1]
-    return path
+    return error_path(e)
 
 
-def check_vectors(label_v) -> int:
+def label_rules(label: dict, prefix: str = "") -> list[tuple[str, str]]:
+    """Label rules JSON Schema can't express, as (error field, message)."""
+    problems = []
+    st = label.get("strain")
+    parents = label.get("derivedFrom")
+    if isinstance(st, dict) and isinstance(parents, list) and parents and isinstance(parents[0], dict):
+        if "lineage" in st and st["lineage"] != parents[0].get("id"):
+            problems.append((f"{prefix}strain.lineage", "strain.lineage must equal derivedFrom[0].id"))
+    return problems
+
+
+def check_vectors(label_v, bundle_v) -> int:
     failures = 0
     for name in VECTOR_FILES:
         for case in load(ROOT / "conformance" / "vectors" / name)["cases"]:
-            if case["operation"] != "validate":
+            op = case["operation"]
+            if op == "roundtrip":
+                # The expected output must itself be a valid label.
+                out = case["expected"]["output"]
+                ok = not list(label_v.iter_errors(out)) and not label_rules(out)
+                status = "ok  " if ok else "FAIL"
+                failures += not ok
+                print(f"{status} {name}:{case['id']} (roundtrip output valid)")
                 continue
-            errors = list(label_v.iter_errors(case["input"]))
+            if op == "validate":
+                errors = [error_path(e) for e in label_v.iter_errors(case["input"])]
+                rules = label_rules(case["input"])
+            elif op == "validateBundle":
+                errors = [error_path(e) for e in bundle_v.iter_errors(case["input"])]
+                rules = semantic_checks(case["input"]) if not errors else []
+            else:
+                continue
+            fields = errors + [f for f, _ in rules]
             want = case["expected"]["valid"]
-            got = not errors
+            got = not fields
             ok = got == want
             if ok and not want:
-                field = first_error_path(errors)
+                field = min(errors, key=lambda f: f.count(".")) if errors else fields[0]
                 ok = field == case["expected"]["errorField"]
             status = "ok  " if ok else "FAIL"
             failures += not ok
@@ -89,42 +124,41 @@ def check_vectors(label_v) -> int:
     return failures
 
 
-def semantic_checks(bundle: dict) -> list[str]:
-    """Rules JSON Schema can't express."""
+def semantic_checks(bundle: dict) -> list[tuple[str, str]]:
+    """Bundle rules JSON Schema can't express, as (error field, message)."""
     problems = []
     ids = {s["id"] for s in bundle.get("specimens", [])}
     strains = {s["id"] for s in bundle.get("strains", [])}
     recipes = {r["id"] for r in bundle.get("recipes", [])}
-    for s in bundle.get("specimens", []):
+    for i, s in enumerate(bundle.get("specimens", [])):
+        problems += label_rules(s, f"specimens.{i}.")
         st = s.get("strain", {})
-        parents = s.get("derivedFrom", [])
-        if st.get("lineage") and parents and st["lineage"] != parents[0]["id"]:
-            problems.append(f"{s['id']}: strain.lineage must equal derivedFrom[0].id")
-        for p in parents:
+        for j, p in enumerate(s.get("derivedFrom", [])):
             if p["id"] not in ids:
-                problems.append(f"{s['id']}: parent {p['id']} not in bundle")
+                problems.append((f"specimens.{i}.derivedFrom.{j}.id", f"{s['id']}: parent {p['id']} not in bundle"))
         if "transferDepth" in st and "clonalGeneration" in st and st["transferDepth"] < st["clonalGeneration"]:
             print(f"warn {s['id']}: transferDepth below clonalGeneration")
         if s.get("strainRef") and s["strainRef"] not in strains:
-            problems.append(f"{s['id']}: strainRef {s['strainRef']} not in bundle")
+            problems.append((f"specimens.{i}.strainRef", f"{s['id']}: strainRef {s['strainRef']} not in bundle"))
         if s.get("recipeRef") and s["recipeRef"] not in recipes:
-            problems.append(f"{s['id']}: recipeRef {s['recipeRef']} not in bundle")
-    for rec in bundle.get("observations", []) + bundle.get("harvests", []):
-        if rec["specimen"] not in ids:
-            problems.append(f"{rec['id']}: specimen {rec['specimen']} not in bundle")
+            problems.append((f"specimens.{i}.recipeRef", f"{s['id']}: recipeRef {s['recipeRef']} not in bundle"))
+    for kind in ("observations", "harvests"):
+        for i, rec in enumerate(bundle.get(kind, [])):
+            if rec["specimen"] not in ids:
+                problems.append((f"{kind}.{i}.specimen", f"{rec['id']}: specimen {rec['specimen']} not in bundle"))
     return problems
 
 
 def main() -> int:
     label_v, bundle_v = validators()
-    failures = check_vectors(label_v)
+    failures = check_vectors(label_v, bundle_v)
     for path in EXAMPLES:
         doc = load(path)
         errors = sorted(bundle_v.iter_errors(doc), key=lambda e: list(e.absolute_path))
         for e in errors:
             print(f"FAIL {path.name}: {'/'.join(map(str, e.absolute_path))}: {e.message}")
         problems = semantic_checks(doc)
-        for p in problems:
+        for _, p in problems:
             print(f"FAIL {path.name}: {p}")
         failures += len(errors) + len(problems)
         if not errors and not problems:

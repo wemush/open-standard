@@ -20,35 +20,142 @@ const TYPES = ['CULTURE', 'SPAWN', 'SUBSTRATE', 'FRUITING', 'HARVEST'];
 const STAGES = ['INOCULATION', 'INCUBATION', 'COLONIZATION', 'PRIMORDIA', 'FRUITING', 'SENESCENCE', 'HARVEST'];
 const ALIASES = { PINNING: 'FRUITING', FLUSH: 'FRUITING', FRUIT: 'FRUITING', FIRST_FLUSH: 'FRUITING' };
 const KNOWN = new Set(['@context', '@type', 'id', 'version', 'type', 'species', 'strain', 'stage', 'created',
-  'batch', 'organization', 'creator', 'custom', '_meta', 'signature']);
+  'batch', 'organization', 'creator', 'custom', '_meta', 'signature',
+  // 1.5.0-rc.1
+  'taxon', 'form', 'derivedFrom', 'condition', 'container', 'lot']);
 const GENERATION = /^(P|P\d+|F\d+|G\d+|\d+)$/;
+// 1.5.0-rc.1 data model (schema/1.5/label.schema.json)
+const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+const EXT = /^x-[a-z0-9-]+$/;
+const FORMS = ['AGAR_PLATE', 'SLANT', 'TISSUE_CULTURE', 'LIQUID_CULTURE', 'SPORE_SYRINGE', 'SPORE_PRINT',
+  'SPORE_SWAB', 'GRAIN_SPAWN', 'SAWDUST_SPAWN', 'PLUG_SPAWN', 'SUBSTRATE_BLOCK', 'BULK_SUBSTRATE',
+  'FRUITING_BLOCK', 'FRUITING_BAG', 'LOG', 'BED', 'FRESH', 'DRIED', 'PROCESSED', 'EXTRACT', 'LIVE_SAMPLE'];
+const CONDITIONS = ['ACTIVE', 'CONTAMINATED', 'EXHAUSTED', 'DISPOSED', 'ARCHIVED'];
+const CONTAINERS = ['PETRI_DISH', 'SLANT_TUBE', 'JAR', 'BOTTLE', 'CARBOY', 'SYRINGE', 'BAG', 'MONOTUB', 'BUCKET',
+  'COMPRESSED_BLOCK', 'TRAY', 'OTHER'];
+const RELATIONS = ['SUBCULTURE', 'EXPANSION', 'SPAWN_TO_BULK', 'COMBINED', 'CLONE', 'SPORE_ISOLATE', 'CROSS', 'REPACK'];
+const SCHEMES = ['mycobank', 'indexfungorum', 'gbif', 'col', 'inaturalist', 'ncbi'];
+const META_CAMEL = { source_id: 'sourceId', source_system: 'sourceSystem', imported_at: 'importedAt',
+  schema_version: 'schemaVersion' };
 
 // --- Validation -------------------------------------------------------------
-function validate(s) {
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isId = (v) => typeof v === 'string' && v.startsWith('wemush:') && v.length > 'wemush:'.length;
+const nonEmpty = (v) => typeof v === 'string' && v.length > 0;
+
+function checkQuantity(q, path, errors) {
+  if (!isObj(q)) { errors.push(path); return; }
+  if (typeof q.value !== 'number') errors.push(`${path}.value`);
+  if (!nonEmpty(q.unit)) errors.push(`${path}.unit`);
+}
+
+function checkTaxon(t, errors) {
+  if (!isObj(t)) { errors.push('taxon'); return; }
+  if (!nonEmpty(t.scientificName)) errors.push('taxon.scientificName');
+  (t.identifiers ?? []).forEach((id, i) => {
+    if (!SCHEMES.includes(id?.scheme)) errors.push(`taxon.identifiers.${i}.scheme`);
+    if (!nonEmpty(id?.value)) errors.push(`taxon.identifiers.${i}.value`);
+  });
+  if (t.hybridOf !== undefined && !(Array.isArray(t.hybridOf) && t.hybridOf.length >= 2)) errors.push('taxon.hybridOf');
+}
+
+function validate(s, prefix = '') {
   const errors = [], warnings = [];
-  if (s['@context'] !== CONTEXT) errors.push('@context');
-  if (s['@type'] !== 'Specimen') errors.push('@type');
-  if (typeof s.id !== 'string' || !s.id.startsWith('wemush:') || s.id.length === 'wemush:'.length) errors.push('id');
-  if (!TYPES.includes(s.type)) errors.push('type');
-  if (typeof s.species !== 'string' || !s.species) errors.push('species');
-  if (s.stage !== undefined && !STAGES.includes(s.stage)) errors.push('stage');
+  const err = (f) => errors.push(prefix + f), warn = (f) => warnings.push(prefix + f);
+  if (s['@context'] !== CONTEXT) err('@context');
+  if (s['@type'] !== 'Specimen') err('@type');
+  if (!isId(s.id)) err('id');
+  if (typeof s.version !== 'string' || !VERSION.test(s.version)) err('version');
+  if (!TYPES.includes(s.type)) err('type');
+  if (typeof s.species !== 'string' || !s.species) err('species');
+  if (s.stage !== undefined && !STAGES.includes(s.stage)) err('stage');
   const st = s.strain;
   if (st !== undefined) {
-    if (typeof st?.name !== 'string') errors.push('strain.name');
+    // 1.5.0-rc.1: strain.name is optional.
+    if (st.name !== undefined && !nonEmpty(st.name)) err('strain.name');
     if (st.generation !== undefined) {
       // A JSON integer is read as its decimal string, with a warning (1.4.0, SHOULD).
       const numeric = Number.isSafeInteger(st.generation);
-      if (numeric) warnings.push('strain.generation');
-      if (!GENERATION.test(numeric ? String(st.generation) : st.generation)) errors.push('strain.generation');
+      if (numeric) warn('strain.generation');
+      if (!GENERATION.test(numeric ? String(st.generation) : st.generation)) err('strain.generation');
     }
     for (const k of ['clonalGeneration', 'transferDepth']) {
-      if (st[k] !== undefined && !(Number.isInteger(st[k]) && st[k] >= 0)) errors.push(`strain.${k}`);
+      if (st[k] !== undefined && !(Number.isInteger(st[k]) && st[k] >= 0)) err(`strain.${k}`);
     }
     if (Number.isInteger(st.transferDepth) && Number.isInteger(st.clonalGeneration) &&
-        st.transferDepth < st.clonalGeneration) warnings.push('strain.transferDepth');
+        st.transferDepth < st.clonalGeneration) warn('strain.transferDepth');
   }
-  for (const k of Object.keys(s)) if (!KNOWN.has(k)) warnings.push(k);
+  // 1.5.0-rc.1 members
+  if (s.taxon !== undefined) checkTaxon(s.taxon, { push: err });
+  if (s.form !== undefined && !(FORMS.includes(s.form) || (typeof s.form === 'string' && EXT.test(s.form)))) err('form');
+  if (s.condition !== undefined && !CONDITIONS.includes(s.condition)) err('condition');
+  if (s.lot !== undefined && !nonEmpty(s.lot)) err('lot');
+  if (s.container !== undefined) {
+    const c = s.container;
+    if (!isObj(c)) err('container');
+    else {
+      if (!(CONTAINERS.includes(c.format) || (typeof c.format === 'string' && EXT.test(c.format)))) err('container.format');
+      if (c.capacity !== undefined) checkQuantity(c.capacity, 'container.capacity', { push: err });
+    }
+  }
+  if (s.derivedFrom !== undefined) {
+    const d = s.derivedFrom;
+    if (!Array.isArray(d) || d.length === 0) err('derivedFrom');
+    else {
+      d.forEach((p, i) => {
+        if (!isId(p?.id)) err(`derivedFrom.${i}.id`);
+        if (p?.relation !== undefined && !RELATIONS.includes(p.relation)) err(`derivedFrom.${i}.relation`);
+        if (p?.quantity !== undefined) checkQuantity(p.quantity, `derivedFrom.${i}.quantity`, { push: err });
+      });
+      if (isObj(st) && st.lineage !== undefined && st.lineage !== d[0]?.id) err('strain.lineage');
+    }
+  }
+  for (const k of Object.keys(s)) if (!KNOWN.has(k)) warn(k);
   return { valid: errors.length === 0, errors, warnings };
+}
+
+// --- Decode then encode (1.5.0-rc.1) --------------------------------------------
+// Unknown members are kept; standard snake_case `_meta` keys become camelCase.
+function roundtrip(text) {
+  const label = JSON.parse(text);
+  if (isObj(label._meta)) {
+    label._meta = Object.fromEntries(Object.entries(label._meta).map(([k, v]) => [META_CAMEL[k] ?? k, v]));
+  }
+  return JSON.parse(JSON.stringify(label));
+}
+
+function canonical(v) {
+  if (Array.isArray(v)) return v.map(canonical);
+  if (isObj(v)) return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical(v[k])]));
+  return v;
+}
+
+// --- Bundles (1.5.0-rc.1) ---------------------------------------------------------
+// The checks the bundle vectors exercise: header, each specimen as a label,
+// required record members, and references inside the bundle.
+function validateBundle(b) {
+  const errors = [];
+  if (b['@context'] !== CONTEXT) errors.push('@context');
+  if (b['@type'] !== 'Bundle') errors.push('@type');
+  if (typeof b.version !== 'string' || !VERSION.test(b.version)) errors.push('version');
+  if (!Array.isArray(b.specimens)) { errors.push('specimens'); return { valid: false, errors }; }
+  const ids = new Set(b.specimens.map((s) => s?.id));
+  const strains = new Set((b.strains ?? []).map((s) => s?.id));
+  b.specimens.forEach((s, i) => {
+    const r = validate(s, `specimens.${i}.`);
+    errors.push(...r.errors.filter((f) => !f.endsWith('.strainRef')));
+    if (s.strainRef !== undefined && !strains.has(s.strainRef)) errors.push(`specimens.${i}.strainRef`);
+  });
+  (b.observations ?? []).forEach((o, i) => {
+    for (const k of ['id', 'specimen', 'observedAt', 'kind']) if (o[k] === undefined) errors.push(`observations.${i}.${k}`);
+    if (o.specimen !== undefined && !ids.has(o.specimen)) errors.push(`observations.${i}.specimen`);
+  });
+  (b.harvests ?? []).forEach((h, i) => {
+    for (const k of ['id', 'specimen', 'harvestedAt', 'freshWeight']) if (h[k] === undefined) errors.push(`harvests.${i}.${k}`);
+    if (h.freshWeight !== undefined) checkQuantity(h.freshWeight, `harvests.${i}.freshWeight`, errors);
+    if (h.specimen !== undefined && !ids.has(h.specimen)) errors.push(`harvests.${i}.specimen`);
+  });
+  return { valid: errors.length === 0, errors };
 }
 
 // --- Creation (type alias handling) ----------------------------------------
@@ -373,6 +480,14 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       ok = r.valid === x.valid &&
         (!x.errorField || r.errors.includes(x.errorField)) &&
         (!x.warningField || r.warnings.includes(x.warningField));
+      detail = JSON.stringify(r);
+    } else if (c.operation === 'roundtrip') {
+      const r = roundtrip(c.input.text);
+      ok = eq(canonical(r), canonical(x.output));
+      detail = JSON.stringify(r);
+    } else if (c.operation === 'validateBundle') {
+      const r = validateBundle(c.input);
+      ok = r.valid === x.valid && (!x.errorField || r.errors.includes(x.errorField));
       detail = JSON.stringify(r);
     } else if (c.operation === 'create') {
       const r = create(c.input);

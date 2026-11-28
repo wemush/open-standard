@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wemush.com/wols/schema/1.5/bundle.schema.json",
   "title": "WOLS records bundle",
-  "description": "DRAFT for WOLS 1.5 (non-normative until accepted). The exchange layer: what a lab, vendor or research project sends to another system. A bundle carries specimen labels plus the records the label can't hold (strains, recipes, observations, harvests). It is never printed in a QR code.",
+  "description": "Normative for WOLS 1.5 (from 1.5.0-rc.1). The exchange layer: what a lab, vendor or research project sends to another system. A bundle carries specimen labels plus the records the label can't hold (strains, recipes, observations, harvests). It is never printed in a QR code.",
   "type": "object",
   "required": ["@context", "@type", "version", "specimens"],
   "properties": {

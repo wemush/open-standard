@@ -32,6 +32,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 SPEC_VERSION = "1.3.0"
 SIG_SPEC_VERSION = "1.4.0"
+DM_SPEC_VERSION = "1.5.0-rc.1"
 CONTEXT = "https://wemush.com/wols/v1"
 OUT = Path(__file__).resolve().parent.parent / "vectors"
 
@@ -199,6 +200,203 @@ def generation_cases() -> list[dict]:
              "Decoders SHOULD accept a JSON integer `generation` (written by one 1.3.0 implementation) "
              "as its decimal string, with a warning (added in 1.4.0-rc.1)",
              {"name": "Blue Oyster", "generation": 1}, True, req="SHOULD", warn="strain.generation"),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Data model (1.5.0-rc.1)
+# ---------------------------------------------------------------------------
+
+def label15(id_: str = "wemush:clx1a2b3c4", **fields: object) -> dict:
+    return specimen(id_, **{"version": DM_SPEC_VERSION, **fields})
+
+
+GRAIN = "wemush:01JC8Z3K7Q0GS0000000000001"
+GRAIN_B = "wemush:01JC8Z3K7Q0GS0000000000002"
+CULTURE = "wemush:01JC8Z3K7Q0LC0000000000001"
+
+
+def data_model_cases() -> list[dict]:
+    ok = lambda cid, desc, obj, req="MUST": {  # noqa: E731
+        "id": cid, "operation": "validate", "requirement": req,
+        "description": desc, "input": obj, "expected": {"valid": True},
+    }
+    bad = lambda cid, desc, obj, field: {  # noqa: E731
+        "id": cid, "operation": "validate", "requirement": "MUST",
+        "description": desc, "input": obj,
+        "expected": {"valid": False, "errorField": field},
+    }
+    rt = lambda cid, desc, obj, out, req="MUST": {  # noqa: E731
+        "id": cid, "operation": "roundtrip", "requirement": req, "description": desc,
+        "input": {"text": serialize(obj)}, "expected": {"output": out},
+    }
+    combined = label15(
+        "wemush:01JC8Z3K7Q0SB0000000000001", type="SUBSTRATE", form="BULK_SUBSTRATE",
+        strain={"name": "Black Pearl King", "generation": "F1", "clonalGeneration": 2,
+                "transferDepth": 4, "lineage": GRAIN},
+        derivedFrom=[
+            {"id": GRAIN, "relation": "COMBINED", "quantity": {"value": 500, "unit": "g"}},
+            {"id": GRAIN_B, "relation": "COMBINED", "quantity": {"value": 500, "unit": "g"}},
+        ])
+    every = label15(
+        "wemush:01JC8Z3K7Q0FB0000000000001", type="FRUITING", form="FRUITING_BLOCK",
+        species="Pleurotus ostreatus × Pleurotus eryngii",
+        taxon={"scientificName": "Pleurotus ostreatus × Pleurotus eryngii", "rank": "hybrid",
+               "hybridOf": [{"scientificName": "Pleurotus ostreatus", "role": "PARENT_A"},
+                            {"scientificName": "Pleurotus eryngii", "role": "PARENT_B"}]},
+        strain={"name": "Black Pearl King", "accession": "EXF-0042", "lineage": GRAIN},
+        derivedFrom=[{"id": GRAIN, "relation": "SPAWN_TO_BULK"}],
+        stage="PRIMORDIA", condition="ACTIVE",
+        container={"format": "BAG", "capacity": {"value": 2.5, "unit": "kg"}},
+        created="2026-11-10T09:00:00Z", batch="B-2026-11-10", lot="EXF-BPK-261120-A")
+    return [
+        # --- Valid labels using the 1.5 members ---------------------------------
+        ok("dm-version-prerelease", "`version` MAY carry a pre-release suffix", label15()),
+        ok("dm-minimal-no-stage-created",
+           "`stage` and `created` are optional; a label without them is valid", label15()),
+        ok("dm-strain-name-optional",
+           "`strain.name` is optional, so a generation can be recorded for an unnamed strain",
+           label15(strain={"generation": "F1", "clonalGeneration": 2})),
+        ok("dm-strain-accession", "`strain.accession` carries a culture-collection accession",
+           label15(strain={"name": "Blue Oyster", "accession": "CBS 123.45"})),
+        ok("dm-taxon-identifiers", "`taxon` with resolvable identifiers",
+           label15(taxon={"scientificName": "Pleurotus ostreatus", "authorship": "(Jacq.) P. Kumm.",
+                          "rank": "species",
+                          "identifiers": [{"scheme": "mycobank", "value": "MB#355596"},
+                                          {"scheme": "gbif", "value": "5240178"}]})),
+        ok("dm-taxon-hybrid", "A hybrid taxon lists at least two parents in `hybridOf`",
+           every),
+        ok("dm-form-registered", "A registered `form` value", label15(type="SPAWN", form="GRAIN_SPAWN")),
+        ok("dm-form-extension", "An unregistered `form` uses the `x-` prefix",
+           label15(type="SPAWN", form="x-koji-rice")),
+        ok("dm-derived-from-combined",
+           "`derivedFrom` lists several parents; `strain.lineage` equals the first one", combined),
+        ok("dm-derived-from-without-lineage", "`derivedFrom` without `strain.lineage` is valid",
+           label15(type="SPAWN", derivedFrom=[{"id": CULTURE, "relation": "EXPANSION"}])),
+        ok("dm-condition", "`condition` is separate from `stage`",
+           label15(stage="COLONIZATION", condition="CONTAMINATED")),
+        ok("dm-container", "`container` with a UCUM capacity",
+           label15(container={"format": "JAR", "capacity": {"value": 1, "unit": "L"}})),
+        ok("dm-container-extension", "An unregistered container format uses the `x-` prefix",
+           label15(container={"format": "x-grow-sock"})),
+        ok("dm-lot", "`lot` is a traceability lot code, separate from `batch`",
+           label15(type="HARVEST", stage="HARVEST", batch="B-7", lot="EXF-BPK-261120-A")),
+        ok("dm-meta-camel-case", "`_meta` with its standard keys in camelCase",
+           label15(_meta={"sourceId": "spec_42", "sourceSystem": "example-lims",
+                          "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7"})),
+        # --- Invalid labels -------------------------------------------------------
+        bad("dm-version-malformed", "`version` MUST be MAJOR.MINOR.PATCH with an optional pre-release",
+            label15(version="1.5"), "version"),
+        bad("dm-lineage-mismatch",
+            "When both are present, `strain.lineage` MUST equal `derivedFrom[0].id`",
+            label15(strain={"name": "Blue Oyster", "lineage": GRAIN_B},
+                    derivedFrom=[{"id": GRAIN, "relation": "EXPANSION"}]), "strain.lineage"),
+        bad("dm-derived-from-empty", "`derivedFrom`, when present, MUST have at least one entry",
+            label15(derivedFrom=[]), "derivedFrom"),
+        bad("dm-derived-from-bad-id", "Each `derivedFrom` id MUST be a WOLS specimen id",
+            label15(derivedFrom=[{"id": "clx1a2b3c4"}]), "derivedFrom.0.id"),
+        bad("dm-derived-from-missing-id", "Each `derivedFrom` entry MUST have an `id`",
+            label15(derivedFrom=[{"relation": "EXPANSION"}]), "derivedFrom.0.id"),
+        bad("dm-derived-from-bad-relation", "`relation` MUST be a defined relation",
+            label15(derivedFrom=[{"id": GRAIN, "relation": "SPLIT"}]), "derivedFrom.0.relation"),
+        bad("dm-form-unprefixed", "An unregistered `form` without the `x-` prefix is invalid",
+            label15(form="KOJI_RICE"), "form"),
+        bad("dm-condition-invalid", "`condition` MUST be a defined Condition",
+            label15(condition="MOLDY"), "condition"),
+        bad("dm-container-missing-format", "`container` MUST have a `format`",
+            label15(container={"capacity": {"value": 1, "unit": "L"}}), "container.format"),
+        bad("dm-quantity-missing-unit", "A quantity MUST have a `unit`",
+            label15(container={"format": "JAR", "capacity": {"value": 1}}), "container.capacity.unit"),
+        bad("dm-quantity-string-value", "A quantity `value` MUST be a number",
+            label15(container={"format": "JAR", "capacity": {"value": "1", "unit": "L"}}),
+            "container.capacity.value"),
+        bad("dm-taxon-missing-name", "`taxon` MUST have a `scientificName`",
+            label15(taxon={"rank": "species"}), "taxon.scientificName"),
+        bad("dm-taxon-bad-scheme", "Taxon identifier schemes are a closed list",
+            label15(taxon={"scientificName": "Pleurotus ostreatus",
+                           "identifiers": [{"scheme": "wikipedia", "value": "Oyster_mushroom"}]}),
+            "taxon.identifiers.0.scheme"),
+        bad("dm-taxon-hybrid-one-parent", "`hybridOf` MUST list at least two parents",
+            label15(taxon={"scientificName": "Pleurotus × sp.", "rank": "hybrid",
+                           "hybridOf": [{"scientificName": "Pleurotus ostreatus"}]}),
+            "taxon.hybridOf"),
+        bad("dm-lot-empty", "`lot`, when present, MUST be a non-empty string",
+            label15(lot=""), "lot"),
+        # --- Decode then encode ---------------------------------------------------
+        rt("rt-unknown-member-preserved",
+           "A member the decoder doesn't know MUST survive decode and re-encode",
+           label15(metadata={"note": "x"}), label15(metadata={"note": "x"})),
+        rt("rt-unknown-strain-member-preserved",
+           "A member the decoder doesn't know inside `strain` MUST survive decode and re-encode",
+           label15(strain={"name": "Blue Oyster", "x-vendorGrade": "A"}),
+           label15(strain={"name": "Blue Oyster", "x-vendorGrade": "A"})),
+        rt("rt-new-members-preserved",
+           "Every 1.5 member survives decode and re-encode unchanged", every, every),
+        rt("rt-signature-preserved",
+           "A `signature` member is kept unchanged, even when it is not a well-formed token",
+           label15(signature="not-a-token"), label15(signature="not-a-token")),
+        rt("rt-meta-snake-case",
+           "Decoders SHOULD accept snake_case `_meta` keys and re-encode them in camelCase",
+           label15(_meta={"source_id": "spec_42", "source_system": "example-lims",
+                          "imported_at": "2026-11-20T10:00:00Z", "schema_version": "7",
+                          "vendor_note": "kept as is"}),
+           label15(_meta={"sourceId": "spec_42", "sourceSystem": "example-lims",
+                          "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7",
+                          "vendor_note": "kept as is"}),
+           req="SHOULD"),
+    ]
+
+
+def bundle_cases() -> list[dict]:
+    fb = "wemush:01JC8Z3K7Q0FB0000000000001"
+
+    def bundle(**over: object) -> dict:
+        doc = {
+            "@context": CONTEXT, "@type": "Bundle", "version": DM_SPEC_VERSION,
+            "publisher": {"name": "Example Farm"}, "license": "CC-BY-4.0",
+            "strains": [{"id": "strain_po", "name": "Blue Oyster",
+                         "taxon": {"scientificName": "Pleurotus ostreatus"}}],
+            "specimens": [{**label15(fb, type="FRUITING", stage="FRUITING"), "strainRef": "strain_po",
+                           "substrateDryWeight": {"value": 1000, "unit": "g"}}],
+            "observations": [{"id": "obs_1", "specimen": fb, "observedAt": "2026-11-12T08:30:00Z",
+                              "kind": "ENVIRONMENT",
+                              "environment": {"temperature": {"value": 16.5, "unit": "Cel"}}}],
+            "harvests": [{"id": "hv_1", "specimen": fb, "harvestedAt": "2026-11-20T10:00:00Z",
+                          "flush": 1, "freshWeight": {"value": 612, "unit": "g"}}],
+        }
+        doc.update(over)
+        return doc
+
+    def case(cid, desc, doc, valid, field=None):
+        exp = {"valid": valid}
+        if field:
+            exp["errorField"] = field
+        return {"id": cid, "operation": "validateBundle", "requirement": "MUST",
+                "description": desc, "input": doc, "expected": exp}
+
+    base = bundle()
+    return [
+        case("bundle-valid", "A small bundle with a strain, specimen, observation and harvest",
+             base, True),
+        case("bundle-minimal", "A bundle needs only its header and `specimens`",
+             {"@context": CONTEXT, "@type": "Bundle", "version": DM_SPEC_VERSION, "specimens": []}, True),
+        case("bundle-wrong-type", "`@type` MUST be `Bundle`",
+             {**base, "@type": "Specimen"}, False, "@type"),
+        case("bundle-missing-specimens", "`specimens` is required",
+             {k: v for k, v in base.items() if k != "specimens"}, False, "specimens"),
+        case("bundle-observation-unknown-specimen",
+             "An observation MUST refer to a specimen in the same bundle",
+             bundle(observations=[{**base["observations"][0], "specimen": "wemush:missing"}]),
+             False, "observations.0.specimen"),
+        case("bundle-harvest-missing-weight", "A harvest MUST have a `freshWeight`",
+             bundle(harvests=[{k: v for k, v in base["harvests"][0].items() if k != "freshWeight"}]),
+             False, "harvests.0.freshWeight"),
+        case("bundle-strain-ref-unknown", "A specimen's `strainRef` MUST name a strain in the bundle",
+             bundle(specimens=[{**base["specimens"][0], "strainRef": "strain_missing"}]),
+             False, "specimens.0.strainRef"),
+        case("bundle-specimen-invalid-label", "Each specimen MUST also be a valid label",
+             bundle(specimens=[{**base["specimens"][0], "stage": "PINNING"}]),
+             False, "specimens.0.stage"),
     ]
 
 
@@ -1447,6 +1645,11 @@ def main() -> None:
     write("signatures.json", "Ed25519 signatures over embedded labels and encrypted URLs",
           "Privacy & Security > Cryptographic Signatures", signature_cases(),
           version=SIG_SPEC_VERSION, extra=signature_metadata())
+    write("data-model.json", "Data model: 1.5 label members, JSON Schema rules and round trips",
+          "Core Data Model > Schema and Data Model (1.5.0)", data_model_cases(),
+          version=DM_SPEC_VERSION)
+    write("bundle.json", "Records bundle validation (for implementations that support Bundles)",
+          "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=DM_SPEC_VERSION)
     sums = "".join(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}\n"
                    for f in sorted(OUT.glob("*.json")))
     (OUT / "SHA256SUMS").write_text(sums)
