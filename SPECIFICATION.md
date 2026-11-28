@@ -188,6 +188,8 @@ Implementations SHOULD normalize to filial notation (F{n}) by default.
 
 **Type (1.4.0)**: `strain.generation` is a JSON string in every notation, including the numeric one (`"1"`, not `1`). Generators MUST write it as a string. Decoders SHOULD accept a JSON integer in its place, because one implementation's 1.3.0 release (`wols` for Python) wrote one. A decoder that accepts it SHOULD treat it as its decimal string (`1` is read as `"1"`), validate that string like any other value, and report a warning. Printed labels can't be recalled, so these labels should keep decoding.
 
+**Case and `P{n}` (1.5.0)**: the accepted forms are `F{n}`, `G{n}`, `P`, `P{n}` and `{n}`. Decoders and validators MUST read the letters in either case (`f2` is `F2`), in a label and in the compact `sg` parameter, because 1.4 validators differed on case and labels with lowercase values are already printed. Generators MUST write the letters uppercase.
+
 ### Generation, Subculture, and Transfer Tracking (v1.3.0)
 
 The `strain` object carries three independent counters. Implementations MUST NOT use one to represent another.
@@ -235,6 +237,10 @@ Every 1.4.x `validate` vector gets the same verdict and the same error field fro
 - `stage` and `created` are optional. Generators SHOULD write both.
 - `strain.name` is optional, so `generation`, `clonalGeneration` and `transferDepth` can be recorded for a strain that has no name.
 - `version` MUST be `MAJOR.MINOR.PATCH`, optionally followed by a pre-release suffix (`-` and dot-separated alphanumerics, such as `1.5.0-rc.1`).
+- `created`, when present, MUST be an RFC 3339 date-time with a time offset (`2026-11-10T08:00:00Z`). A date without a time is invalid.
+- `batch`, `organization` and `creator` may be empty strings, because 1.4 generators wrote them. Generators SHOULD omit an empty value rather than write `""`.
+- `strain.lineage` SHOULD be a WOLS specimen ID, but any non-empty string is valid, because 1.4 generators wrote platform identifiers there.
+- `custom` is an object. Each of its keys SHOULD be a [registered namespace](#custom-namespaces) whose value is an object, but other values are valid, because 1.4 generators wrote them.
 
 #### New members (all optional)
 
@@ -256,11 +262,24 @@ Every 1.4.x `validate` vector gets the same verdict and the same error field fro
 
 - **Unknown members**: a top-level member that this version doesn't define is valid. Validators SHOULD warn on it and recommend `custom`. Decoders MUST keep every top-level member they don't recognize, and every member they don't recognize inside `strain`, `custom` or `_meta`, and MUST write it back unchanged when they re-serialize the label. Members that 1.4 decoders didn't know, including all of the 1.5 members above, are covered by this rule.
 - **`signature`**: decoders MUST keep a `signature` member unchanged, whether or not it is a well-formed token. A malformed token is a [verification status](#cryptographic-signatures), not a validation error.
-- **`_meta` keys**: generators MUST write the standard `_meta` keys in camelCase (`sourceId`, `sourceSystem`, `importedAt`, `schemaVersion`). Decoders SHOULD accept `source_id`, `source_system`, `imported_at` and `schema_version`, which the Python `wols` 1.4.0 library wrote, and SHOULD re-encode them in camelCase. Other `_meta` keys are kept as they are.
+- **`_meta` keys**: generators MUST write the standard `_meta` keys in camelCase (`sourceId`, `sourceSystem`, `importedAt`, `schemaVersion`). Decoders SHOULD accept `source_id`, `source_system`, `imported_at` and `schema_version`, which the Python `wols` 1.4.0 library wrote, and SHOULD re-encode them in camelCase. When a label has both spellings of the same key, decoders MUST use the camelCase value and MUST keep the snake_case member unchanged, so neither value is lost. Other `_meta` keys are kept as they are.
+
+#### Field-level encryption
+
+A label MAY carry a [field-level encryption object](#3-encrypted-format-researchcommercial) in place of the value of any member except `@context`, `@type`, `id`, `version`, `type`, `species` and `signature`. Those seven identify the label and MUST stay in plaintext; a validator MUST report an encrypted one as an error on that member. For an encrypted member the schema checks only the object's shape. The plaintext is checked after decryption, against the same rules as an unencrypted value. When `derivedFrom` or `strain` is encrypted, the `strain.lineage` rule is checked after decryption.
 
 #### Compatibility
 
-All of the members above are optional, so every 1.4.x label stays valid and decodes the same way. A 1.4 decoder that reads a 1.5 label treats the new members as unknown members, which it warns on and, from 1.5, keeps. Signed labels need no change: the new members are part of the [JCS body](#cryptographic-signatures) like any other member. The new rules make two kinds of label invalid that a 1.4 validator would have accepted with a warning: a label that uses one of the new member names with a value this section doesn't allow, and a label whose `version` isn't `MAJOR.MINOR.PATCH`. No 1.4 generator wrote either, since the names were undefined and every generator writes the specification version.
+All of the members above are optional, so a 1.4.x label stays valid and decodes the same way unless it is one of the cases below. A 1.4 decoder that reads a 1.5 label treats the new members as unknown members, which it warns on and, from 1.5, keeps. Signed labels need no change: the new members are part of the [JCS body](#cryptographic-signatures) like any other member.
+
+The 1.5 rules make these labels invalid:
+
+- A label that uses one of the new member names with a value this section doesn't allow. The names were undefined in 1.4, so no 1.4 generator wrote them.
+- A label whose `version` isn't `MAJOR.MINOR.PATCH`. Every 1.4 generator writes the specification version.
+- A label whose `created` isn't an RFC 3339 date-time. The TypeScript library already rejected these in 1.4; the Python library accepted a date without a time.
+- A label with an encrypted `@context`, `@type`, `id`, `version`, `type` or `species`. Neither reference library wrote one.
+
+Every other 1.4.x `validate` vector gets the same verdict from the 1.5 schema, and the `data-model.json` vectors cover the 1.4 values listed above that stay valid: empty strings, a non-ID `strain.lineage`, non-object `custom` values, lowercase generations and encrypted members.
 
 ### Records Bundle (v1.5.0)
 
@@ -288,7 +307,7 @@ interface Bundle {
 - **Observation**: one dated fact about one specimen. `id`, `specimen`, `observedAt` and `kind` are required; `recordedAt` and `source` say when and how it was recorded. `environment` replaces `EnvironmentalData`, and its values take their time from the observation.
 - **Harvest**: one flush from one specimen. `id`, `specimen`, `harvestedAt` and `freshWeight` are required.
 
-References inside a bundle MUST resolve within it: every `observations[].specimen` and `harvests[].specimen` MUST be the `id` of a specimen in `specimens`, every `strainRef` the `id` of a strain in `strains`, and every `recipeRef` the `id` of a recipe in `recipes`. The full member list is in the schema, and a worked chain is in [`examples/records/`](./examples/records/).
+References inside a bundle MUST resolve within it: every `observations[].specimen` and `harvests[].specimen` MUST be the `id` of a specimen in `specimens`, every `strainRef` the `id` of a strain in `strains`, and every `recipeRef` the `id` of a recipe in `recipes`. `strainRef` and `recipeRef`, when present, MUST be non-empty. A `derivedFrom` parent is a label reference, not a bundle reference: it need not be in the bundle, and validators MUST NOT report it as an error. The full member list is in the schema, and a worked chain is in [`examples/records/`](./examples/records/).
 
 ---
 
@@ -326,7 +345,9 @@ From 1.5.0 the compact format is normative, with the parameter registry and the 
 - **Scheme**: Generators SHOULD write `wemush://`. Decoders MUST accept `wemush://v1/` and `web+wemush://v1/`, which the Python `wols` library writes by default. Decoders MAY accept other forms, such as `https://{host}/{path}/v1/{id}`. An HTTPS resolver form will be defined separately.
 - **Version**: The `v1` path segment signals major version 1 only. It doesn't say which minor version or registry contents a label was written with, and doesn't need to, because the registries are append-only. Decoders MUST reject any other version segment.
 - **ID**: One path segment after `v1/`, the ID suffix without `wemush:`, percent-encoded with the same rules as the [encrypted format](#3-encrypted-format-researchcommercial). The decoded ID is `wemush:` followed by the percent-decoded segment. In the path, `+` is a literal character. A URL whose segment is `encrypted` followed by another segment is an encrypted URL, not a compact URL.
+- **Fragment**: Decoders MUST reject a URL that contains `#`. Generators never write one, and a fragment would hide the rest of the URL from some readers.
 - **Query**: Parameters are separated by `&`. Values are percent-decoded as UTF-8, and in values `+` decodes to a space. Decoders MUST reject a malformed escape, an escape that decodes to invalid UTF-8, and a registered parameter that appears more than once.
+- **Empty parts**: Decoders MUST ignore an empty segment (`&&`, `?&` or a trailing `&`), and generators MUST NOT write one. A parameter with an empty value, or with no `=`, has the empty string as its value. An empty `s` is the same as a missing `s`. An empty `ty`, `st`, `t` or `sg` is invalid, as any other value outside its syntax is. An empty `td` is ignored with a warning, as for any malformed `td`. An empty `b` or `sn` decodes to the empty string.
 - **Unregistered parameters**: Decoders MUST NOT reject a URL because of a parameter they don't recognize, and SHOULD make it available to the caller, marked as unrecognized. New parameters defined outside this specification MUST use an `x-` prefix (for example `x-acme-room`), so that they never collide with a name registered later.
 
 | Parameter | Required | Label member | Value |
@@ -334,7 +355,7 @@ From 1.5.0 the compact format is normative, with the parameter registry and the 
 | `s` | Yes | `species` | A registered species code, or the full scientific name. Generators MUST write the registered code when the species has one, and the full name otherwise. |
 | `ty` | No | `type` | A canonical [SpecimenType](#specimen-types). Decoders MUST reject any other value. |
 | `st` | No | `stage` | A [GrowthStage](#specimen-types), either its full name or its 3-letter code: `INO`, `INC`, `COL`, `PRI`, `FRU`, `SEN`, `HAR`. Generators MAY write either. Decoders MUST accept both, and MUST reject any other value. |
-| `t` | No | `created` | Unix time in seconds (UTC), as plain decimal digits. It decodes to an RFC 3339 UTC date-time with no fractional seconds (`1734307200` is `2024-12-16T00:00:00Z`). Decoders MUST reject anything other than digits. |
+| `t` | No | `created` | Unix time in seconds (UTC), as plain decimal digits. It decodes to an RFC 3339 UTC date-time with no fractional seconds (`1734307200` is `2024-12-16T00:00:00Z`). Decoders MUST reject anything other than digits, and a value above `253402300799` (`9999-12-31T23:59:59Z`), which RFC 3339 can't write. A time in the future is valid. |
 | `b` | No | `batch` | The batch identifier. |
 | `sn` | No | `strain.name` | The strain name. |
 | `sg` | No | `strain.generation` | The filial generation, in the [Generation Notation](#generation-notation-v120). Decoders read it whether or not `sn` is present. Decoders MUST reject a value outside the notation. |
@@ -802,7 +823,7 @@ A compact URL is signed like an encrypted URL: the body is the URL exactly as pr
 
 These rules apply only when a compact URL carries `sig`. They don't change how compact URLs decode.
 
-**What a `valid` result reports.** It reports the kid, as for every form. It SHOULD also report the parameters decoded from the verified body, using the [Compact URL rules](#compact-url-rules-v150) (in values `+` is a space; in the path it is literal), and SHOULD report parameters the verifier doesn't recognize separately, marked unrecognized. Applications SHOULD display those values, not a second parse, and SHOULD NOT present an unrecognized parameter as a verified fact.
+**What a `valid` result reports.** It reports the kid, as for every form. It SHOULD also report the parameters decoded from the verified body, using the [Compact URL rules](#compact-url-rules-v150) (in values `+` is a space; in the path it is literal). Those parameters are every parameter in the body, which excludes `sig`, including ones the verifier doesn't recognize. It SHOULD also list the ones it doesn't recognize separately, marked unrecognized. Applications SHOULD display those values, not a second parse, and SHOULD NOT present an unrecognized parameter as a verified fact.
 
 **Signing.** The signer builds the complete unsigned compact URL as it will be printed. The signed URL is that URL, then `&sig=`, then the token. A signer MUST refuse to sign a URL that has no query or an empty one, already has `sig`, or breaks any rule above. Signers emit only `wemush://v1/`, even where their unsigned output uses `web+wemush://`. Signers SHOULD write parameters in the registry order, with unregistered parameters last.
 
@@ -1263,10 +1284,21 @@ Normative changes:
 - **Compact URL signatures**: a third signed form, `compact-url`, over the exact URL bytes before `&sig=`, with extra `malformed` rules for parameters and escapes, signer refusals, and a SHOULD to report verified parameters. An optional unwrap step handles `web+wemush://` and the `https://{host}/wols/` handler form before verification ([Compact URL signatures](#compact-url-signatures-v150)). The one 1.4.0 rule that changes is "a URL that isn't a `wemush://v1/encrypted/` URL is `malformed` with a `sig` parameter", which now excludes signable compact URLs; 1.4.0 generators never signed one
 - **Security considerations**: resolved data isn't signed, and applications SHOULD check that a kid is expected for the label's ID namespace
 
+Fixes to `1.5.0-rc.1`, found while implementing it in both reference libraries. Each one keeps a label that 1.4 generators printed valid, or settles a rule the two libraries read differently:
+
+- **Field-level encryption**: the 1.5 schema rejected labels with encrypted members, which 1.3.0 allows. Any member except `@context`, `@type`, `id`, `version`, `type`, `species` and `signature` may now hold an encryption object, and its plaintext is checked after decryption ([Field-level encryption](#field-level-encryption))
+- **1.4 values**: empty `batch`, `organization` and `creator`, a `strain.lineage` that isn't a WOLS ID, and `custom` values that aren't objects are valid again. The WeMush Platform writes the last two on printed labels. Generators SHOULD avoid them
+- **`created`**: MUST be an RFC 3339 date-time. The schema already said so; the Compatibility list now does too, and no longer claims that every 1.4.x label stays valid
+- **Generation**: letters are read in either case, and `P{n}` is accepted, in labels and in `sg`. Generators MUST write uppercase
+- **`_meta`**: when both spellings of a key are present, the camelCase value is used and the snake_case member is kept
+- **Bundles**: a `derivedFrom` parent need not be in the bundle. `strainRef` and `recipeRef` MUST be non-empty
+- **Compact URLs**: decoders MUST reject `#`, ignore empty segments, and reject a `t` above `253402300799`. An empty value is the empty string, and an empty `s` is a missing one. A verified compact URL's parameters include unrecognized ones
+
 Conformance:
 
-- **New vectors**: `compact.json` (36 `MUST` and 1 `SHOULD` cases, a new `parseCompact` operation), with the registry tables copied into the file, and `compact-signatures.json` (54 `MUST` cases for `sign` and `verify`, 6 `SHOULD` cases for a new `unwrap` operation), with a short test kid `w1` in its trust store. `signatures.json` doesn't change
-- **Tools**: `verify_vectors.mjs` parses, signs and verifies compact URLs independently of the generator
+- **New vectors**: `compact.json` (42 `MUST` and 1 `SHOULD` cases, a new `parseCompact` operation), with the registry tables copied into the file, and `compact-signatures.json` (54 `MUST` cases for `sign` and `verify`, 6 `SHOULD` cases for a new `unwrap` operation), with a short test kid `w1` in its trust store. `signatures.json` doesn't change
+- **Updated vectors**: `data-model.json` gains 9 cases (43 `MUST` and 1 `SHOULD` in all) and `bundle.json` 4 (12 `MUST`), for the fixes above. Both files are now marked `1.5.0-rc.2`
+- **Tools**: `verify_vectors.mjs` parses, signs and verifies compact URLs independently of the generator, and checks the fixes above. `validate_schema.py` reports the leaf field of a failed `anyOf`, and reports a bundle's outside parents as notes
 - **Proposal**: The [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is accepted into this candidate, except open questions 1 (the print-and-scan test) and 9 (ID-only signed labels), which stay open
 
 ### Version 1.5.0-rc.1 (November 28, 2026)

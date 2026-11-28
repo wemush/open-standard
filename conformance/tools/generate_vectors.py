@@ -215,6 +215,9 @@ def label15(id_: str = "wemush:clx1a2b3c4", **fields: object) -> dict:
 GRAIN = "wemush:01JC8Z3K7Q0GS0000000000001"
 GRAIN_B = "wemush:01JC8Z3K7Q0GS0000000000002"
 CULTURE = "wemush:01JC8Z3K7Q0LC0000000000001"
+# The shape of a field-level encryption object (1.3.0). Validation checks the shape only.
+ENC = {"encrypted": True, "algorithm": "AES-256-GCM", "payload": "AAAAAAAAAAAAAAAAAAAAAA",
+       "iv": "AAAAAAAAAAAAAAAA", "kdf": "raw"}
 
 
 def data_model_cases() -> list[dict]:
@@ -285,6 +288,22 @@ def data_model_cases() -> list[dict]:
         ok("dm-meta-camel-case", "`_meta` with its standard keys in camelCase",
            label15(_meta={"sourceId": "spec_42", "sourceSystem": "example-lims",
                           "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7"})),
+        # --- 1.4 labels that stay valid (1.5.0-rc.2) --------------------------------
+        ok("dm-encrypted-fields",
+           "Field-level encryption objects (1.3.0) are valid in place of any member that may be encrypted",
+           label15(strain=ENC, stage=ENC, created=ENC, batch=ENC, organization=ENC, custom=ENC, lot=ENC,
+                   derivedFrom=ENC)),
+        ok("dm-custom-non-object-value",
+           "A `custom` value need not be an object; the WeMush Platform writes `_platformType` as a string",
+           label15(custom={"_platformType": "GRAIN_SPAWN", "mushoh": {"qcChecked": True}})),
+        ok("dm-lineage-not-an-id", "A 1.4 `strain.lineage` that isn't a WOLS ID stays valid",
+           label15(strain={"name": "Blue Oyster", "lineage": "clx0parent01"})),
+        ok("dm-empty-batch", "An empty `batch`, `organization` or `creator` stays valid, as in 1.4",
+           label15(batch="", organization="", creator="")),
+        ok("dm-generation-lowercase", "Generation letters are read in either case",
+           label15(strain={"name": "Blue Oyster", "generation": "f2"})),
+        ok("dm-generation-parental-number", "`P` takes an optional number, like `F` and `G`",
+           label15(strain={"name": "Blue Oyster", "generation": "P2"})),
         # --- Invalid labels -------------------------------------------------------
         bad("dm-version-malformed", "`version` MUST be MAJOR.MINOR.PATCH with an optional pre-release",
             label15(version="1.5"), "version"),
@@ -323,6 +342,10 @@ def data_model_cases() -> list[dict]:
             "taxon.hybridOf"),
         bad("dm-lot-empty", "`lot`, when present, MUST be a non-empty string",
             label15(lot=""), "lot"),
+        bad("dm-created-not-date-time", "`created` MUST be an RFC 3339 date-time, not a date alone",
+            label15(created="2026-11-10"), "created"),
+        bad("dm-encrypted-species", "`species` is never encrypted, so an encryption object there is invalid",
+            label15(species=ENC), "species"),
         # --- Decode then encode ---------------------------------------------------
         rt("rt-unknown-member-preserved",
            "A member the decoder doesn't know MUST survive decode and re-encode",
@@ -345,6 +368,11 @@ def data_model_cases() -> list[dict]:
                           "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7",
                           "vendor_note": "kept as is"}),
            req="SHOULD"),
+        rt("rt-meta-both-spellings",
+           "When `_meta` has both spellings of a key, the camelCase value is used and the snake_case "
+           "member is kept unchanged",
+           label15(_meta={"sourceId": "spec_42", "source_id": "old_7"}),
+           label15(_meta={"sourceId": "spec_42", "source_id": "old_7"})),
     ]
 
 
@@ -398,6 +426,21 @@ def bundle_cases() -> list[dict]:
         case("bundle-specimen-invalid-label", "Each specimen MUST also be a valid label",
              bundle(specimens=[{**base["specimens"][0], "stage": "PINNING"}]),
              False, "specimens.0.stage"),
+        case("bundle-parent-outside", "A `derivedFrom` parent need not be in the bundle",
+             bundle(specimens=[{**base["specimens"][0],
+                                "derivedFrom": [{"id": "wemush:01JC8Z3K7Q0GS0000000000001",
+                                                 "relation": "SPAWN_TO_BULK"}]}]), True),
+        case("bundle-recipe-ref", "A specimen's `recipeRef` resolves to a recipe in the bundle",
+             bundle(recipes=[{"id": "recipe_mm", "name": "Masters Mix", "kind": "SUBSTRATE",
+                              "ingredients": [{"name": "Hardwood sawdust", "amount": {"value": 500, "unit": "g"}},
+                                              {"name": "Soybean hulls", "amount": {"value": 500, "unit": "g"}}]}],
+                    specimens=[{**base["specimens"][0], "recipeRef": "recipe_mm"}]), True),
+        case("bundle-recipe-ref-unknown", "A specimen's `recipeRef` MUST name a recipe in the bundle",
+             bundle(specimens=[{**base["specimens"][0], "recipeRef": "recipe_missing"}]),
+             False, "specimens.0.recipeRef"),
+        case("bundle-strain-ref-empty", "`strainRef`, when present, MUST be a non-empty string",
+             bundle(specimens=[{**base["specimens"][0], "strainRef": ""}]),
+             False, "specimens.0.strainRef"),
     ]
 
 
@@ -472,7 +515,18 @@ def compact_cases() -> list[dict]:
         ok("compact-sig-kept", "A `sig` parameter is kept unchanged and never reported as verified",
            f"{base}?s=POSTR&st=COL&sig=w1.{'A' * 86}",
            {"id": rid, "species": po, "stage": "COLONIZATION", "sig": f"w1.{'A' * 86}"}),
+        ok("compact-empty-segments", "Empty segments (`&&`, a leading or trailing `&`) are ignored",
+           f"{base}?&s=POSTR&&st=COL&", {"id": rid, "species": po, "stage": "COLONIZATION"}),
+        ok("compact-empty-value", "A parameter with an empty value, or no `=`, has the empty string as its value",
+           f"{base}?s=POSTR&b&x-note=", {"id": rid, "species": po, "batch": "", "unrecognized": {"x-note": ""}}),
+        ok("compact-timestamp-max", "`t` up to 253402300799 (9999-12-31T23:59:59Z) is accepted",
+           f"{base}?s=POSTR&t=253402300799", {"id": rid, "species": po, "created": "9999-12-31T23:59:59Z"}),
         bad("compact-missing-species", "`s` is required", f"{base}?st=COL", "missing-parameter"),
+        bad("compact-empty-species", "An empty `s` is the same as a missing one", f"{base}?s=&st=COL",
+            "missing-parameter"),
+        bad("compact-timestamp-too-large", "A `t` past 9999-12-31T23:59:59Z can't be a date-time",
+            f"{base}?s=POSTR&t=253402300800", "invalid-parameter"),
+        bad("compact-fragment", "A compact URL has no fragment", f"{base}?s=POSTR#B2", "invalid-url"),
         bad("compact-missing-id", "The ID segment must be non-empty", "wemush://v1/?s=POSTR", "invalid-url"),
         bad("compact-wrong-scheme", "Only `wemush://` and `web+wemush://` are required to be read; "
             "`wemush:` without `//` is not a compact URL", "wemush:v1/clx1a2b3c4?s=POSTR", "invalid-url"),
@@ -2048,9 +2102,9 @@ def main() -> None:
           version=SIG_SPEC_VERSION, extra=signature_metadata())
     write("data-model.json", "Data model: 1.5 label members, JSON Schema rules and round trips",
           "Core Data Model > Schema and Data Model (1.5.0)", data_model_cases(),
-          version=DM_SPEC_VERSION)
+          version=COMPACT_SPEC_VERSION)
     write("bundle.json", "Records bundle validation (for implementations that support Bundles)",
-          "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=DM_SPEC_VERSION)
+          "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=COMPACT_SPEC_VERSION)
     write("compact.json", "Compact URL parsing, parameter registry and species codes",
           "QR Code Encoding > Compact Format (Compact URL rules; Species Code Registry)", compact_cases(),
           version=COMPACT_SPEC_VERSION, extra=species_registry())

@@ -74,6 +74,19 @@ def error_path(e) -> str:
     return ".".join(parts)
 
 
+def leaf_errors(errors):
+    """Errors with every `anyOf` replaced by the errors of its first branch.
+
+    Members that may hold a field-level encryption object are `anyOf: [the member, EncryptedField]`.
+    The first branch says why the value is wrong, with the member's own error field.
+    """
+    for e in errors:
+        if e.validator == "anyOf" and e.context:
+            yield from leaf_errors(c for c in e.context if c.relative_schema_path[0] == 0)
+        else:
+            yield e
+
+
 def first_error_path(errors) -> str:
     e = min(errors, key=lambda e: len(e.absolute_path))
     return error_path(e)
@@ -104,10 +117,10 @@ def check_vectors(label_v, bundle_v) -> int:
                 print(f"{status} {name}:{case['id']} (roundtrip output valid)")
                 continue
             if op == "validate":
-                errors = [error_path(e) for e in label_v.iter_errors(case["input"])]
+                errors = [error_path(e) for e in leaf_errors(label_v.iter_errors(case["input"]))]
                 rules = label_rules(case["input"])
             elif op == "validateBundle":
-                errors = [error_path(e) for e in bundle_v.iter_errors(case["input"])]
+                errors = [error_path(e) for e in leaf_errors(bundle_v.iter_errors(case["input"]))]
                 rules = semantic_checks(case["input"]) if not errors else []
             else:
                 continue
@@ -133,14 +146,16 @@ def semantic_checks(bundle: dict) -> list[tuple[str, str]]:
     for i, s in enumerate(bundle.get("specimens", [])):
         problems += label_rules(s, f"specimens.{i}.")
         st = s.get("strain", {})
-        for j, p in enumerate(s.get("derivedFrom", [])):
+        # A parent may be outside the bundle (1.5.0-rc.2): a bundle can carry part of a history.
+        parents = s.get("derivedFrom")
+        for p in parents if isinstance(parents, list) else []:
             if p["id"] not in ids:
-                problems.append((f"specimens.{i}.derivedFrom.{j}.id", f"{s['id']}: parent {p['id']} not in bundle"))
+                print(f"note {s['id']}: parent {p['id']} is not in this bundle")
         if "transferDepth" in st and "clonalGeneration" in st and st["transferDepth"] < st["clonalGeneration"]:
             print(f"warn {s['id']}: transferDepth below clonalGeneration")
-        if s.get("strainRef") and s["strainRef"] not in strains:
+        if "strainRef" in s and s["strainRef"] not in strains:
             problems.append((f"specimens.{i}.strainRef", f"{s['id']}: strainRef {s['strainRef']} not in bundle"))
-        if s.get("recipeRef") and s["recipeRef"] not in recipes:
+        if "recipeRef" in s and s["recipeRef"] not in recipes:
             problems.append((f"specimens.{i}.recipeRef", f"{s['id']}: recipeRef {s['recipeRef']} not in bundle"))
     for kind in ("observations", "harvests"):
         for i, rec in enumerate(bundle.get(kind, [])):

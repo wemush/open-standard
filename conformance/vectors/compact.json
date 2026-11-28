@@ -463,6 +463,57 @@
       }
     },
     {
+      "id": "compact-empty-segments",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Empty segments (`&&`, a leading or trailing `&`) are ignored",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?&s=POSTR&&st=COL&"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "COLONIZATION"
+        }
+      }
+    },
+    {
+      "id": "compact-empty-value",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A parameter with an empty value, or no `=`, has the empty string as its value",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&b&x-note="
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "batch": "",
+          "unrecognized": {
+            "x-note": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "compact-timestamp-max",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`t` up to 253402300799 (9999-12-31T23:59:59Z) is accepted",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&t=253402300799"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "created": "9999-12-31T23:59:59Z"
+        }
+      }
+    },
+    {
       "id": "compact-missing-species",
       "operation": "parseCompact",
       "requirement": "MUST",
@@ -473,6 +524,45 @@
       "expected": {
         "refused": true,
         "reason": "missing-parameter"
+      }
+    },
+    {
+      "id": "compact-empty-species",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "An empty `s` is the same as a missing one",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=&st=COL"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "missing-parameter"
+      }
+    },
+    {
+      "id": "compact-timestamp-too-large",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A `t` past 9999-12-31T23:59:59Z can't be a date-time",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&t=253402300800"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-parameter"
+      }
+    },
+    {
+      "id": "compact-fragment",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A compact URL has no fragment",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR#B2"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-url"
       }
     },
     {

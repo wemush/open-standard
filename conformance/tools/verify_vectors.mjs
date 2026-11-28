@@ -23,7 +23,10 @@ const KNOWN = new Set(['@context', '@type', 'id', 'version', 'type', 'species', 
   'batch', 'organization', 'creator', 'custom', '_meta', 'signature',
   // 1.5.0-rc.1
   'taxon', 'form', 'derivedFrom', 'condition', 'container', 'lot']);
-const GENERATION = /^(P|P\d+|F\d+|G\d+|\d+)$/;
+// 1.5.0-rc.2: letters are read in either case.
+const GENERATION = /^(P\d*|F\d+|G\d+|\d+)$/i;
+const RFC3339 = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:\d{2})$/;
+const MAX_T = 253402300799;
 // 1.5.0-rc.1 data model (schema/1.5/label.schema.json)
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const EXT = /^x-[a-z0-9-]+$/;
@@ -42,6 +45,10 @@ const META_CAMEL = { source_id: 'sourceId', source_system: 'sourceSystem', impor
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isId = (v) => typeof v === 'string' && v.startsWith('wemush:') && v.length > 'wemush:'.length;
 const nonEmpty = (v) => typeof v === 'string' && v.length > 0;
+// 1.5.0-rc.2: a field-level encrypted value; its plaintext is checked after decryption.
+const isEnc = (v) => isObj(v) && v.encrypted === true;
+const encShapeOk = (v) => v.algorithm === 'AES-256-GCM' && ['payload', 'iv', 'kdf'].every((k) => typeof v[k] === 'string') &&
+  (v.salt === undefined || typeof v.salt === 'string') && (v.iterations === undefined || Number.isInteger(v.iterations));
 
 function checkQuantity(q, path, errors) {
   if (!isObj(q)) { errors.push(path); return; }
@@ -59,9 +66,16 @@ function checkTaxon(t, errors) {
   if (t.hybridOf !== undefined && !(Array.isArray(t.hybridOf) && t.hybridOf.length >= 2)) errors.push('taxon.hybridOf');
 }
 
-function validate(s, prefix = '') {
+function validate(label, prefix = '') {
   const errors = [], warnings = [];
   const err = (f) => errors.push(prefix + f), warn = (f) => warnings.push(prefix + f);
+  // Encrypted members are checked for shape only; identifying members may not be encrypted.
+  const NEVER_ENC = ['@context', '@type', 'id', 'version', 'type', 'species', 'signature'];
+  const s = {};
+  for (const [k, v] of Object.entries(label)) {
+    if (isEnc(v) && !NEVER_ENC.includes(k)) { if (!encShapeOk(v)) err(k); }
+    else s[k] = v;
+  }
   if (s['@context'] !== CONTEXT) err('@context');
   if (s['@type'] !== 'Specimen') err('@type');
   if (!isId(s.id)) err('id');
@@ -69,6 +83,7 @@ function validate(s, prefix = '') {
   if (!TYPES.includes(s.type)) err('type');
   if (typeof s.species !== 'string' || !s.species) err('species');
   if (s.stage !== undefined && !STAGES.includes(s.stage)) err('stage');
+  if (s.created !== undefined && !(typeof s.created === 'string' && RFC3339.test(s.created))) err('created');
   const st = s.strain;
   if (st !== undefined) {
     // 1.5.0-rc.1: strain.name is optional.
@@ -110,7 +125,7 @@ function validate(s, prefix = '') {
       if (isObj(st) && st.lineage !== undefined && st.lineage !== d[0]?.id) err('strain.lineage');
     }
   }
-  for (const k of Object.keys(s)) if (!KNOWN.has(k)) warn(k);
+  for (const k of Object.keys(label)) if (!KNOWN.has(k)) warn(k);
   return { valid: errors.length === 0, errors, warnings };
 }
 
@@ -119,7 +134,10 @@ function validate(s, prefix = '') {
 function roundtrip(text) {
   const label = JSON.parse(text);
   if (isObj(label._meta)) {
-    label._meta = Object.fromEntries(Object.entries(label._meta).map(([k, v]) => [META_CAMEL[k] ?? k, v]));
+    // 1.5.0-rc.2: when both spellings are present, the camelCase value wins and the snake_case member is kept.
+    const m = label._meta;
+    label._meta = Object.fromEntries(Object.entries(m).map(([k, v]) =>
+      [META_CAMEL[k] && !(META_CAMEL[k] in m) ? META_CAMEL[k] : k, v]));
   }
   return JSON.parse(JSON.stringify(label));
 }
@@ -141,10 +159,12 @@ function validateBundle(b) {
   if (!Array.isArray(b.specimens)) { errors.push('specimens'); return { valid: false, errors }; }
   const ids = new Set(b.specimens.map((s) => s?.id));
   const strains = new Set((b.strains ?? []).map((s) => s?.id));
+  const recipes = new Set((b.recipes ?? []).map((r) => r?.id));
   b.specimens.forEach((s, i) => {
     const r = validate(s, `specimens.${i}.`);
     errors.push(...r.errors.filter((f) => !f.endsWith('.strainRef')));
     if (s.strainRef !== undefined && !strains.has(s.strainRef)) errors.push(`specimens.${i}.strainRef`);
+    if (s.recipeRef !== undefined && !recipes.has(s.recipeRef)) errors.push(`specimens.${i}.recipeRef`);
   });
   (b.observations ?? []).forEach((o, i) => {
     for (const k of ['id', 'specimen', 'observedAt', 'kind']) if (o[k] === undefined) errors.push(`observations.${i}.${k}`);
@@ -525,6 +545,7 @@ function parseCompact(url, registry) {
   try { id = decodeURIComponent(segment); } catch { return refuse('invalid-encoding'); }
   const params = new Map(), unrecognized = {}, warnings = [];
   for (const pair of q < 0 || q === after.length - 1 ? [] : after.slice(q + 1).split('&')) {
+    if (pair === '') continue; // 1.5.0-rc.2: empty segments are ignored.
     const eqAt = pair.indexOf('=');
     const name = eqAt < 0 ? pair : pair.slice(0, eqAt);
     let value;
@@ -547,7 +568,7 @@ function parseCompact(url, registry) {
     label.stage = stage;
   }
   if (params.has('t')) {
-    if (!/^\d+$/.test(params.get('t'))) return refuse('invalid-parameter');
+    if (!/^\d+$/.test(params.get('t')) || Number(params.get('t')) > MAX_T) return refuse('invalid-parameter');
     label.created = new Date(Number(params.get('t')) * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
   }
   if (params.has('b')) label.batch = params.get('b');

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wemush.com/wols/schema/1.5/label.schema.json",
   "title": "WOLS Specimen label",
-  "description": "Normative for WOLS 1.5 (from 1.5.0-rc.1; where this schema and the specification prose differ, the schema wins). The embedded-format Specimen label. Every 1.4.0 label that is valid today stays valid. New members are optional, and 1.4 decoders treat them as unknown top-level members (a warning, not an error).",
+  "description": "Normative for WOLS 1.5 (from 1.5.0-rc.1; where this schema and the specification prose differ, the schema wins). The embedded-format Specimen label. New members are optional, and 1.4 decoders treat them as unknown top-level members (a warning, not an error). Every member other than @context, @type, id, version, type, species and signature may instead hold a field-level encryption object (1.3.0); its plaintext is checked after decryption. The specification lists the few 1.4 labels this schema rejects (Schema and Data Model, Compatibility).",
   "type": "object",
   "required": ["@context", "@type", "id", "version", "type", "species"],
   "properties": {
@@ -23,44 +23,45 @@
       "minLength": 1,
       "description": "Scientific name as printed. Kept for 1.x compatibility; `taxon` carries identifiers and hybrids."
     },
-    "taxon": {"$ref": "#/$defs/Taxon"},
+    "taxon": {"anyOf": [{"$ref": "#/$defs/Taxon"}, {"$ref": "#/$defs/EncryptedField"}]},
     "form": {
-      "$ref": "#/$defs/SpecimenForm",
+      "anyOf": [{"$ref": "#/$defs/SpecimenForm"}, {"$ref": "#/$defs/EncryptedField"}],
       "description": "NEW in 1.5. The specific form within `type` (e.g. GRAIN_SPAWN within SPAWN). Replaces the lossy type-alias collapse."
     },
-    "strain": {"$ref": "#/$defs/Strain"},
+    "strain": {"anyOf": [{"$ref": "#/$defs/Strain"}, {"$ref": "#/$defs/EncryptedField"}]},
     "derivedFrom": {
-      "type": "array",
-      "minItems": 1,
-      "items": {"$ref": "#/$defs/ParentLink"},
+      "anyOf": [{"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/ParentLink"}}, {"$ref": "#/$defs/EncryptedField"}],
       "description": "NEW in 1.5. Every parent specimen, with how it was used. When `strain.lineage` is also present it MUST equal the `id` of the first entry."
     },
-    "stage": {"$ref": "#/$defs/GrowthStage"},
-    "condition": {"$ref": "#/$defs/Condition"},
-    "container": {"$ref": "#/$defs/Container"},
-    "created": {"type": "string", "format": "date-time"},
-    "batch": {"type": "string", "minLength": 1},
+    "stage": {"anyOf": [{"$ref": "#/$defs/GrowthStage"}, {"$ref": "#/$defs/EncryptedField"}]},
+    "condition": {"anyOf": [{"$ref": "#/$defs/Condition"}, {"$ref": "#/$defs/EncryptedField"}]},
+    "container": {"anyOf": [{"$ref": "#/$defs/Container"}, {"$ref": "#/$defs/EncryptedField"}]},
+    "created": {"anyOf": [{"type": "string", "format": "date-time"}, {"$ref": "#/$defs/EncryptedField"}], "description": "RFC 3339 date-time with a time offset."},
+    "batch": {"anyOf": [{"type": "string"}, {"$ref": "#/$defs/EncryptedField"}]},
     "lot": {
-      "type": "string",
-      "minLength": 1,
+      "anyOf": [{"type": "string", "minLength": 1}, {"$ref": "#/$defs/EncryptedField"}],
       "description": "NEW in 1.5. Traceability lot code (FSMA 204 TLC or a GS1 batch/lot, AI 10) for sellable product. Distinct from `batch`, which is a production grouping."
     },
-    "organization": {"type": "string", "minLength": 1},
-    "creator": {"type": "string", "minLength": 1},
+    "organization": {"anyOf": [{"type": "string"}, {"$ref": "#/$defs/EncryptedField"}]},
+    "creator": {"anyOf": [{"type": "string"}, {"$ref": "#/$defs/EncryptedField"}]},
     "custom": {
-      "type": "object",
-      "description": "Vendor namespaces. Each top-level key is a registered namespace.",
-      "additionalProperties": {"type": "object"}
+      "anyOf": [{"type": "object"}, {"$ref": "#/$defs/EncryptedField"}],
+      "description": "Vendor extensions. Each top-level key SHOULD be a registered namespace holding an object; other values are valid, because 1.4 labels carry them."
     },
     "_meta": {
-      "type": "object",
-      "properties": {
-        "sourceId": {"type": "string"},
-        "sourceSystem": {"type": "string"},
-        "importedAt": {"type": "string", "format": "date-time"},
-        "schemaVersion": {"type": "string"}
-      },
-      "additionalProperties": true
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "sourceId": {"type": "string"},
+            "sourceSystem": {"type": "string"},
+            "importedAt": {"type": "string", "format": "date-time"},
+            "schemaVersion": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        {"$ref": "#/$defs/EncryptedField"}
+      ]
     },
     "signature": {
       "type": "string",
@@ -69,6 +70,20 @@
   },
   "additionalProperties": true,
   "$defs": {
+    "EncryptedField": {
+      "type": "object",
+      "description": "A field-level encryption object (1.3.0) in place of a member's value. Only its shape is checked here.",
+      "required": ["encrypted", "algorithm", "payload", "iv", "kdf"],
+      "properties": {
+        "encrypted": {"const": true},
+        "algorithm": {"const": "AES-256-GCM"},
+        "payload": {"type": "string"},
+        "iv": {"type": "string"},
+        "kdf": {"type": "string"},
+        "salt": {"type": "string"},
+        "iterations": {"type": "integer"}
+      }
+    },
     "SpecimenId": {
       "type": "string",
       "pattern": "^wemush:.+$",
@@ -162,8 +177,9 @@
         "clonalGeneration": {"type": "integer", "minimum": 0},
         "transferDepth": {"type": "integer", "minimum": 0},
         "lineage": {
-          "$ref": "#/$defs/SpecimenId",
-          "description": "Primary parent. Kept for 1.x readers; see top-level `derivedFrom`."
+          "type": "string",
+          "minLength": 1,
+          "description": "Primary parent, which SHOULD be a WOLS specimen ID. Kept for 1.x readers; see top-level `derivedFrom`. 1.4 labels may carry another identifier here."
         },
         "source": {
           "type": "string",

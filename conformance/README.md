@@ -1,6 +1,6 @@
 # WOLS Conformance Test Vectors
 
-Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.5.0-rc.2**: the 1.3.0 wire format, which later versions don't change, the 1.4.0 signature scheme and numeric `generation` tolerance, the 1.5 data model, and the 1.5 compact URL rules. Each file's `wolsVersion` is the version that defines its cases: `1.3.0` for the wire-format files, `1.4.0` for `signatures.json`, `1.5.0-rc.1` for `data-model.json` and `bundle.json`, and `1.5.0-rc.2` for `compact.json` and `compact-signatures.json`. Cases added later to an older file are marked in their descriptions. An implementation of 1.4.x passes every file except the four 1.5 files. See [SPECIFICATION.md](../SPECIFICATION.md).
+Shared, language-neutral test cases that every WOLS implementation should pass. They target **WOLS 1.5.0-rc.2**: the 1.3.0 wire format, which later versions don't change, the 1.4.0 signature scheme and numeric `generation` tolerance, the 1.5 data model, and the 1.5 compact URL rules. Each file's `wolsVersion` is the version that defines its cases: `1.3.0` for the wire-format files, `1.4.0` for `signatures.json`, and `1.5.0-rc.2` for `data-model.json`, `bundle.json`, `compact.json` and `compact-signatures.json`. Cases added later to an older file are marked in their descriptions. An implementation of 1.4.x passes every file except the four 1.5 files. See [SPECIFICATION.md](../SPECIFICATION.md).
 
 ## Files
 
@@ -205,6 +205,6 @@ Results against the `1.4.0` vectors, November 2026:
 
 Each cell shows `MUST` cases passed, then `SHOULD` cases passed. `signatures.json` has only `MUST` cases (13 `sign`, 72 `verify`, 28 `loadKeySet`, 6 `verifyNested`). The seven sign-then-encrypt cases were added after 1.4.0 was released; the libraries pass them with the 1.4.0 code, once their conformance runners know `verifyNested`. Both libraries vendor these vectors with matching `SHA256SUMS`, and both pass the 51-case [interop matrix](./interop/README.md) in each direction.
 
-The `1.5.0-rc.1` files (`data-model.json`, `bundle.json`) are new, and no library passes them yet. `compact.json` and `compact-signatures.json` (`1.5.0-rc.2`) are newer still. The libraries' `1.5.0-rc.1` releases already accept pre-release versions and keep unknown members (TypeScript) and write camelCase `_meta` (Python); the new members and the `roundtrip` and `validateBundle` operations come next.
+The four 1.5 files (`data-model.json`, `bundle.json`, `compact.json`, `compact-signatures.json`) are newer than any released library. The libraries' `1.5.0-rc.1` releases already accept pre-release versions and keep unknown members (TypeScript) and write camelCase `_meta` (Python). Both libraries' next release candidates implement the four files, and their table rows will be added when those are released.
 
 Against the 1.3.0 libraries, the signed-label decoding cases `decrypt-signed-url` and `signed-label-valid` pass: both decrypt a signed URL and keep its `sig` token unchanged, and both validate a signed embedded label. The 1.3.0 libraries can't sign or verify.

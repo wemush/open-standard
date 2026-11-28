@@ -40,8 +40,8 @@
         {
           "type": "object",
           "properties": {
-            "strainRef": {"type": "string", "description": "`id` of a StrainRecord in this bundle."},
-            "recipeRef": {"type": "string", "description": "`id` of the Recipe this specimen was made on."},
+            "strainRef": {"type": "string", "minLength": 1, "description": "`id` of a StrainRecord in this bundle."},
+            "recipeRef": {"type": "string", "minLength": 1, "description": "`id` of the Recipe this specimen was made on."},
             "inoculatedAt": {"type": "string", "format": "date-time"},
             "inoculum": {"$ref": "label.schema.json#/$defs/Quantity"},
             "substrateWetWeight": {"$ref": "label.schema.json#/$defs/Quantity"},
