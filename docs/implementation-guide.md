@@ -685,20 +685,6 @@ From 1.5.0-rc.2 the codes are a registry in the specification. See the [Species 
 
 To register a code, open a pull request against [github.com/wemush/open-standard](https://github.com/wemush/open-standard), as [`registries/README.md`](../registries/README.md) describes.
 
-----|---|
-|POSTR|Pleurotus ostreatus|
-|PCITRI|Pleurotus citrinopileatus|
-|PDJAR|Pleurotus djamor|
-|PERYN|Pleurotus eryngii|
-|HERIN|Hericium erinaceus|
-|GLUCI|Ganoderma lucidum|
-|LPUDE|Laetiporus pudens|
-|LLENC|Lentinula edodes|
-|APOLY|Agrocybe polyphylla|
-|STRUG|Stropharia rugosoannulata|
-
-Additional codes can be registered at [github.com/wemush/open-standard](https://github.com/wemush/open-standard).
-
 ---
 
 ## Contact
