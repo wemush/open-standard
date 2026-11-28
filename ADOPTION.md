@@ -338,7 +338,7 @@ Organizations using WOLS can display these badges on their websites:
 **Version Badge**:
 
 ```markdown
-[![WOLS v1.4.0](https://img.shields.io/badge/WOLS-v1.4.0-blue)](https://github.com/wemush/open-standard)
+[![WOLS v1.5.0](https://img.shields.io/badge/WOLS-v1.5.0-blue)](https://github.com/wemush/open-standard)
 ```
 
 ### Logo Usage

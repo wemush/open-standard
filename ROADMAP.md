@@ -2,8 +2,8 @@
 
 Strategic roadmap for the WeMush Open Labeling Standard (WOLS) project.
 
-**Current Version**: 1.4.0
-**Last Updated**: November 17, 2026
+**Current Version**: 1.5.0
+**Last Updated**: November 28, 2026
 **Planning Horizon**: 2025-2027
 
 ## Vision
@@ -45,8 +45,12 @@ By 2027, WOLS will be the dominant standard for cultivation specimen tracking ac
 └─ Numeric strain.generation tolerance for decoders
 └─ Cross-library interop matrix
 
-Next: v1.5.0 📋 IoT, Analytics & Interoperability
-└─ Compact URL and species code registries
+2026 Q4: v1.5.0 ✅ Data Model & Compact URLs
+└─ Normative data model and JSON Schema, Records Bundle
+└─ Compact URL parameter and species code registries
+└─ Compact URL signatures
+
+Next: v1.6.0 📋 IoT, Analytics & Interoperability
 └─ HTTPS resolver form
 └─ IoT sensor specs
 └─ Advanced analytics
@@ -176,7 +180,7 @@ Closes the cross-implementation gaps found while integrating the WeMush Platform
 
 - **November 2026**: 1.3.0-rc.1, 1.3.0-rc.2, and the final 1.3.0 release, with both libraries ✅
 
-## Current: v1.4.0 (November 2026)
+## Released: v1.4.0 (November 2026)
 
 ### Status: ✅ v1.4.0 RELEASED
 
@@ -198,6 +202,28 @@ Lets a verifier check that a label was signed with a key it trusts and hasn't ch
 ### Timeline
 
 - **November 2026**: 1.3.1-rc.1, 1.4.0-rc.1, and the final 1.4.0 release, with both libraries ✅
+
+## Current: v1.5.0 (November 2026)
+
+### Status: ✅ v1.5.0 RELEASED
+
+### Theme: **Data Model & Compact URLs**
+
+Makes the label data model normative with a JSON Schema, adds the Records Bundle for the records a label can't hold, and settles the compact URL format so compact URLs decode the same way everywhere and can be signed.
+
+### Deliverables
+
+- [x] `1.5.0-rc.1`: normative JSON Schema and data model (required-field clarity, multiple parents, generation without a named strain, extended data attachment through the Records Bundle, specimen condition, container), with [`data-model.json`](./conformance/vectors/data-model.json) and [`bundle.json`](./conformance/vectors/bundle.json) vectors ✅ DONE
+- [x] `1.5.0-rc.2`: compact URL parameter registry, species code registry and compact URL signatures, with [`compact.json`](./conformance/vectors/compact.json) and [`compact-signatures.json`](./conformance/vectors/compact-signatures.json) vectors ✅ DONE
+- [x] Published JSON-LD context document at `https://wemush.com/wols/v1` ([`context/v1.jsonld`](./context/v1.jsonld), served since November 27, 2026) ✅ DONE
+- [x] `@wemush/wols` 1.5.0 ([specimen-labels-js](https://github.com/wemush/specimen-labels-js)) passes every conformance vector ✅ DONE
+- [x] `wols` 1.5.0 ([specimen-labels-py](https://github.com/wemush/specimen-labels-py)) passes every conformance vector ✅ DONE
+
+The print-and-scan test for signed compact URLs on small labels (open question 1 in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md)) stays open. It changes no wire format; it decides whether a later release recommends a minimal signed-compact profile for small labels.
+
+### Timeline
+
+- **November 2026**: 1.5.0-rc.1, 1.5.0-rc.2, and the final 1.5.0 release, with both libraries ✅
 
 ## Real-World Integration Learnings
 
@@ -239,15 +265,15 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 | SENESCENCE | ✅ | End-of-life monitoring |
 | HARVEST | ✅ | Final harvest stage |
 
-## Next: v1.5.0
+## Next: v1.6.0
 
-### Status: 🧪 RELEASE CANDIDATE (`1.5.0-rc.2`, November 28, 2026)
+### Status: 📋 PLANNED
 
 ### Theme: **IoT & Analytics**
 
 Focus on enterprise features, IoT integration, and supply chain tracking.
 
-### v1.5.0 Goals
+### v1.6.0 Goals
 
 1. **IoT Sensor Integration Specification**
    - Standard for encoding sensor data in WOLS labels
@@ -265,7 +291,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - Wholesale/retail integration specs
 
 4. **Enhanced Security Features**
-   - **Compact URL signing**: Follows the compact URL vectors. The signature scheme itself shipped in [1.4.0](#current-v140-november-2026).
+   - **Minimal signed-compact profile**: Whether to recommend one for labels under 40 mm, after the print-and-scan test. Compact URL signing itself shipped in [1.5.0](#current-v150-november-2026).
    - Blockchain-ready verification hooks
    - Multi-signature support for supply chains
 
@@ -273,40 +299,34 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
    These proposals close gaps documented in [Interoperability Notes](./docs/interoperability-notes.md). Each one needs a decision through the [contribution process](./SPECIFICATION.md#contribution-process) before it becomes normative.
 
-   - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2. *In `1.5.0-rc.2`: every parameter is normative, including the platform's `td`; decoders accept both stage spellings and generators may write either; `v1` names the major version only, and the registries are append-only, so no minor version needs signaling; external parameters use an `x-` prefix.*
-   - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table. *In `1.5.0-rc.2`: the five-letter table is the registry, with 17 more species; unregistered species are written by full name; the two-letter codes are legacy codes that decoders still read.*
-   - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL. *Not in 1.5: rc.2 only lets decoders accept such a URL; the form itself moves to a later release.*
+   - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2. *Done in 1.5.0: every parameter is normative, including the platform's `td`; decoders accept both stage spellings and generators may write either; `v1` names the major version only, and the registries are append-only, so no minor version needs signaling; external parameters use an `x-` prefix.*
+   - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table. *Done in 1.5.0: the five-letter table is the registry, with 17 more species; unregistered species are written by full name; the two-letter codes are legacy codes that decoders still read.*
+   - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL. *Not in 1.5: 1.5.0 only lets decoders accept such a URL; the form itself moves to a later release.*
    - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional, and the TypeScript library sets `created` only when the caller passes it.
-   - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks). *In `1.5.0-rc.1` as the new `derivedFrom` member, so `strain.lineage` stays a single ID for 1.4 readers.*
+   - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks). *Done in 1.5.0 as the new `derivedFrom` member, so `strain.lineage` stays a single ID for 1.4 readers.*
    - **Generation without a named strain**: Let specimens record `generation` and `clonalGeneration` when `strain.name` is unknown.
    - **Extended data attachment**: Define where `EnvironmentalData`, `SubstrateFormula`, and `CircularEconomyData` attach to a specimen, and align the REST example (`metadata`, `observations`) with the core model.
    - **Specimen condition**: Add an optional field for terminal or abnormal states (for example contaminated, disposed, archived). Today implementations must map a contaminated specimen to a growth stage, which loses information.
    - **Container/vessel (optional)**: Add an optional field for vessel and size (petri dish, jar, bag, monotub). Several current type aliases (`PETRI`, `BAG`, `BUCKET`) describe vessels rather than specimen types.
 
-### v1.5.0 Deliverables
+### v1.6.0 Deliverables
 
 - [ ] IoT Integration Guide
 - [ ] Analytics specification
 - [ ] Supply chain guide
 - [ ] Enhanced security documentation
 - [ ] API specification document (REST, GraphQL)
-- [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
-- [x] Published JSON-LD context document at `https://wemush.com/wols/v1` ([`context/v1.jsonld`](./context/v1.jsonld), served since November 27, 2026)
-- [x] Draft 1.5 proposals: [data model and JSON Schema](./proposals/wols-1.5-data-model.md) ([`schema/1.5/`](./schema/1.5/)) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md)
-- [x] `1.5.0-rc.1`: normative JSON Schema and data model (required-field clarity, multiple parents, generation without a named strain, extended data attachment through the Records Bundle, specimen condition, container), with [`data-model.json`](./conformance/vectors/data-model.json) and [`bundle.json`](./conformance/vectors/bundle.json) vectors
-- [x] `1.5.0-rc.2`: compact URL parameter registry, species code registry and compact URL signatures, with [`compact.json`](./conformance/vectors/compact.json) and [`compact-signatures.json`](./conformance/vectors/compact-signatures.json) vectors
-- [ ] A maintained library passes every `MUST` vector of the final candidate
 
-### v1.5.0 Success Metrics
+### v1.6.0 Success Metrics
 
 - 🎯 25+ organizations
 - 🎯 5+ supply chain integrations
 - 🎯 1 academic paper published using WOLS
 - 🎯 100+ GitHub stars
 
-### v1.5.0 Timeline
+### v1.6.0 Timeline
 
-`1.5.0-rc.1` (data model) and `1.5.0-rc.2` (compact URL registries and signatures) are out for feedback. The final release follows once a library passes every `MUST` vector and the print-and-scan test in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is done. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
 ## Long-Term: v2.0.0
 
@@ -398,7 +418,9 @@ Track community-requested features and their status:
 | Migration utilities | 1 | ✅ Released | v1.2.0 |
 | Extended growth stages | 1 | ✅ Released | v1.2.0 |
 | Cryptographic signatures | - | ✅ Released | v1.4.0 |
-| IoT sensor integration | - | 📋 Planned | v1.5.0 |
+| Normative data model and JSON Schema | - | ✅ Released | v1.5.0 |
+| Compact URL registries and signatures | - | ✅ Released | v1.5.0 |
+| IoT sensor integration | - | 📋 Planned | v1.6.0 |
 | Blockchain verification | - | 📋 Planned | v2.0.0 |
 | Mobile app example | - | 💭 Considering | TBD |
 | Video documentation | - | 💭 Considering | TBD |
@@ -550,9 +572,9 @@ Features prioritized by:
 
 ---
 
-**Last Updated**: November 17, 2026
+**Last Updated**: November 28, 2026
 **Next Review**: February 2027
-**Version**: 1.4.0 (Roadmap document version)
+**Version**: 1.5.0 (Roadmap document version)
 
 ---
 
