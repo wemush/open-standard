@@ -83,7 +83,7 @@ const qrDataUrl = await toQRCodeDataURL(masterCulture, { size: 300, errorCorrect
 
 **Example - Spawn Batch**:
 
-> **Note**: WOLS 1.2 defines the `SubstrateFormula` and `EnvironmentalData` structures but not yet where they attach on a Specimen, so this example carries them under `custom.mushOhio`. A standard placement is proposed for 1.3 in [ROADMAP.md](../ROADMAP.md).
+> **Note**: A printed label has no standard place for substrate, environment or yield data, so this example carries them under `custom.mushOhio`. From WOLS 1.5.0, systems that exchange this data can send it next to the labels in a [Records Bundle](../SPECIFICATION.md#records-bundle-v150), as recipes, observations and harvests (see [`records/black-pearl-king-chain.json`](./records/black-pearl-king-chain.json) for a worked chain).
 
 ```typescript
 const spawnBatch = {
@@ -212,7 +212,7 @@ const harvestedBlock = {
   custom: {
     mushOhio: {
       ...(block.custom?.mushOhio as object),
-      // WOLS 1.2 has no standard yield field, so yields live in custom too.
+      // A label has no standard yield field, so yields live in custom too (a Records Bundle uses harvests).
       yields: [
         {
           date: "2026-01-12T06:00:00Z",

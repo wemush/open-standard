@@ -106,19 +106,21 @@ print(f"Created: {specimen.created}")
 
 - **Public data option**: Share openly for research
 - **Encrypted data option**: Protect proprietary strains
-- **Cryptographic signatures** *(Ed25519, since 1.4.0)*: Verify that a label came from a key you trust
+- **Cryptographic signatures** *(Ed25519, since 1.4.0; compact URLs since 1.5.0)*: Verify that a label came from a key you trust
 
 ### 📈 Research-Grade
 
-- **Complete lineage tracking**: Parent → child relationships
+- **Complete lineage tracking**: Parent → child relationships, including several parents per specimen (`derivedFrom`, since 1.5.0)
 - **Environmental data**: Temp, humidity, CO₂, light
 - **Substrate composition**: Reproducible formulations
+- **Records Bundle** *(since 1.5.0)*: Exchange labels together with strains, recipes, observations and harvests
 - **Statistical analysis ready**: Export to CSV, JSON, or SQL
 
 ### 🔌 Extensible
 
 - **Custom namespaces**: Add organization-specific fields
 - **Multiple encoding formats**: Compact, embedded, or encrypted
+- **Normative JSON Schema** *(since 1.5.0)*: Validate labels and bundles against [`schema/1.5/`](./schema/1.5/)
 - **API-first design**: Integrate with IoT sensors, equipment, or software
 
 ---
@@ -150,6 +152,8 @@ print(f"Created: {specimen.created}")
 
 ### Core Data Model
 
+The [JSON Schema](./schema/1.5/label.schema.json) is the normative definition from 1.5.0. This interface summarizes it.
+
 ```typescript
 interface SpecimenLabel {
   // JSON-LD Context (Required)
@@ -163,23 +167,31 @@ interface SpecimenLabel {
   species: string;               // Scientific name
 
   // Taxonomy & Genetics
+  taxon?: Taxon;                 // Name plus resolvable identifiers (v1.5.0)
+  form?: SpecimenForm;           // Specific form within `type`, e.g. GRAIN_SPAWN (v1.5.0)
   strain?: {
-    name: string;                // Strain name or identifier
+    name?: string;               // Strain name or identifier (optional from v1.5.0)
     generation?: string;         // Filial generation (e.g., "F1", "F2", "P")
     clonalGeneration?: number;   // Subculture/clone count
+    transferDepth?: number;      // Transfers from the original culture (v1.3.0)
     lineage?: string;            // Parent specimen ID reference
     source?: string;             // "spore", "tissue", "agar", "liquid"
+    accession?: string;          // Culture-collection or vendor accession (v1.5.0)
   };
+  derivedFrom?: ParentLink[];    // Every parent, with how it was used (v1.5.0)
 
   // Lifecycle Tracking
-  stage: GrowthStage;            // Current growth stage (7 stages in v1.2.0)
-  created: string;               // ISO 8601 timestamp
+  stage?: GrowthStage;           // Current growth stage (7 stages since v1.2.0)
+  condition?: Condition;         // ACTIVE | CONTAMINATED | EXHAUSTED | DISPOSED | ARCHIVED (v1.5.0)
+  container?: Container;         // The vessel and its capacity (v1.5.0)
+  created?: string;              // RFC 3339 date-time with offset
   batch?: string;                // Associated batch identifier
+  lot?: string;                  // Traceability lot code for sellable product (v1.5.0)
 
   // Attribution & Extensibility
   organization?: string;         // Organization ID
   custom?: Record<string, any>;  // Extensible fields
-  _meta?: Record<string, any>;   // Implementation metadata (v1.2.0)
+  _meta?: Record<string, any>;   // Implementation metadata (v1.2.0; camelCase keys from v1.5.0)
   signature?: string;            // Signature token "{kid}.{sig}" (v1.4.0)
 }
 ```
@@ -299,6 +311,7 @@ WeMush will be that implementation.
 - 📘 [Full Specification](./SPECIFICATION.md) ([View Online](https://wemush.com/open-standard/specification))
 - 🚀 [Getting Started Guide](./docs/getting-started.md)
 - 🔧 [Implementation Guide](./docs/implementation-guide.md)
+- 📐 [JSON Schemas](./schema/README.md) and [Registries](./registries/README.md)
 - 🔐 [Privacy & Security](./SPECIFICATION.md#privacy--security)
 - 🎨 [Design Principles](./SPECIFICATION.md#design-principles)
 - 💡 [Use Cases](./SPECIFICATION.md#use-cases)
@@ -498,7 +511,7 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Normative data model and [JSON Schema](./schema/1.5/), with the Records Bundle for strains, recipes, observations and harvests
 - ✅ Optional members for taxon, form, multiple parents (`derivedFrom`), condition, container, lot and strain accession
 - ✅ Compact URL rules, parameter registry and [species code registry](./registries/species-codes.json), so compact URLs decode the same way in both libraries
-- ✅ Compact URL signatures, so labels under 40 mm can be signed
+- ✅ Compact URL signatures, which bring the smallest signed QR code at 203 dpi from about 40 mm down to about 23 mm (whether labels that small scan reliably is still an open question)
 - ✅ `data-model.json`, `bundle.json`, `compact.json` and `compact-signatures.json` conformance vectors, passed by both reference libraries
 
 ### Later

@@ -90,7 +90,7 @@ const spawn = {
 
 Spawn colonizes in 2 weeks:
 
-> **Note**: WOLS 1.2 defines the `SubstrateFormula` and `EnvironmentalData` structures but not yet where they attach on a Specimen, so this example carries them under `custom.sarah`. A standard placement is proposed for 1.3 in [ROADMAP.md](../ROADMAP.md).
+> **Note**: A printed label has no standard place for substrate, environment or yield data, so this example carries them under `custom.sarah`. From WOLS 1.5.0, systems that exchange this data can send it next to the labels in a [Records Bundle](../SPECIFICATION.md#records-bundle-v150), as recipes, observations and harvests (see [`records/black-pearl-king-chain.json`](./records/black-pearl-king-chain.json) for a worked chain).
 
 ```typescript
 const block = {
@@ -173,7 +173,7 @@ const harvested = {
   custom: {
     sarah: {
       ...pinning.custom.sarah,
-      // WOLS 1.2 has no standard yield field, so yields live in custom too.
+      // A label has no standard yield field, so yields live in custom too (a Records Bundle uses harvests).
       yields: [
         {
           date: "2026-01-26T09:00:00Z",
