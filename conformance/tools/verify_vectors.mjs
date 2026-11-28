@@ -362,7 +362,47 @@ function parseIJsonObject(text) {
   return label;
 }
 
-const detectForm = (text) => (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(text) ? 'encrypted-url' : 'embedded');
+// From 1.5.0: a URL with the compact shape takes the compact rules; any other URL the encrypted URL rules.
+const COMPACT_PREFIX = 'wemush://v1/';
+function isCompactShape(url) {
+  if (!url.startsWith(COMPACT_PREFIX) || url.startsWith(ENCRYPTED_PREFIX)) return false;
+  const q = url.indexOf('?');
+  const seg = url.slice(COMPACT_PREFIX.length, q === -1 ? url.length : q);
+  return seg !== '' && !seg.includes('/');
+}
+const detectForm = (text) => (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(text)
+  ? (isCompactShape(text) ? 'compact-url' : 'encrypted-url') : 'embedded');
+
+const strictDecode = (s) => { try { decodeURIComponent(s); } catch { throw new Malformed('escape'); } };
+function checkCompactParts(url, params) {
+  if (!isCompactShape(url)) throw new Malformed('not a compact URL');
+  const seen = new Set();
+  for (const p of params) {
+    if (p === '') throw new Malformed('empty parameter');
+    const at = p.indexOf('=');
+    const name = at === -1 ? p : p.slice(0, at);
+    if (!/^[A-Za-z0-9_-]+$/.test(name)) throw new Malformed('parameter name');
+    if (seen.has(name)) throw new Malformed('duplicate parameter');
+    seen.add(name);
+    strictDecode(at === -1 ? '' : p.slice(at + 1));
+  }
+  strictDecode(url.slice(COMPACT_PREFIX.length, url.indexOf('?')));
+}
+function signableCompact(url) {
+  const q = url.indexOf('?');
+  if (q === -1 || q === url.length - 1) return false;
+  const params = url.slice(q + 1).split('&');
+  if (params.some((p) => p.split('=')[0] === 'sig')) return false;
+  if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#')) return false;
+  try { checkCompactParts(url, params); } catch (e) { if (e instanceof Malformed) return false; throw e; }
+  return true;
+}
+function unwrapWolsUrl(text) {
+  const m = /^https:\/\/[^/?#]+\/wols\/([\s\S]+)$/.exec(text);
+  if (m) { try { text = decodeURIComponent(m[1]); } catch { return null; } }
+  if (text.startsWith(`web+${COMPACT_PREFIX}`)) text = text.slice(4);
+  return text.startsWith(COMPACT_PREFIX) ? text : null;
+}
 
 function signableUrl(url) {
   const q = url.indexOf('?');
@@ -380,18 +420,20 @@ function verifySignature(input, store) {
       ({ kid, raw } = parseToken(label.signature));
       const { signature: _, ...body } = label;
       message = signingInput('embedded', kid, jcs(body));
-    } else if (input.form === 'encrypted-url') {
+    } else if (input.form === 'encrypted-url' || input.form === 'compact-url') {
       const url = input.url;
+      const compact = input.form === 'compact-url';
       const q = url.indexOf('?');
       const params = q === -1 ? [] : url.slice(q + 1).split('&');
       const names = params.map((p) => p.split('=')[0]);
       if (!names.includes('sig')) return { status: 'unsigned' };
-      if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#') || !url.startsWith(ENCRYPTED_PREFIX)) throw new Malformed('url');
+      if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#') || (!compact && !url.startsWith(ENCRYPTED_PREFIX))) throw new Malformed('url');
       if (names.filter((n) => n === 'sig').length !== 1 || names.at(-1) !== 'sig' || params.length < 2 ||
           !params.at(-1).startsWith('sig=')) throw new Malformed('sig position');
       const last = params.at(-1);
+      if (compact) checkCompactParts(url, params.slice(0, -1));
       ({ kid, raw } = parseToken(last.slice(4)));
-      message = signingInput('encrypted-url', kid, url.slice(0, url.length - last.length - 1));
+      message = signingInput(input.form, kid, url.slice(0, url.length - last.length - 1));
     } else {
       throw new Malformed('unknown form');
     }
@@ -416,12 +458,12 @@ function signSignature(input, keys) {
     const { signature: _, ...body } = parsed;
     message = signingInput('embedded', input.kid, jcs(body));
   } else {
-    if (!signableUrl(input.url)) return { refused: true };
-    message = signingInput('encrypted-url', input.kid, input.url);
+    if (!(input.form === 'compact-url' ? signableCompact(input.url) : signableUrl(input.url))) return { refused: true };
+    message = signingInput(input.form, input.kid, input.url);
   }
   const signature = `${input.kid}.${edSign(null, message, priv).toString('base64url')}`;
   const out = { signingInput: message.toString('utf8'), signature };
-  if (input.form === 'encrypted-url') out.url = `${input.url}&sig=${signature}`;
+  if (input.form !== 'embedded') out.url = `${input.url}&sig=${signature}`;
   return out;
 }
 
@@ -549,6 +591,10 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       const r = validateBundle(c.input);
       ok = r.valid === x.valid && (!x.errorField || r.errors.includes(x.errorField));
       detail = JSON.stringify(r);
+    } else if (c.operation === 'unwrap') {
+      const r = unwrapWolsUrl(c.input.text);
+      ok = r === x.url && (r === null || verifySignature({ form: 'compact-url', url: r }, doc.trustStore).status === 'valid');
+      detail = JSON.stringify(r);
     } else if (c.operation === 'parseCompact') {
       const r = parseCompact(c.input.url, doc);
       ok = x.refused ? r.refused === true && r.reason === x.reason
@@ -589,7 +635,7 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       // A signature this verifier made must also verify.
       const back = c.input.form === 'embedded'
         ? verifySignature({ form: 'embedded', label: JSON.stringify({ ...JSON.parse(c.input.label), signature: r.signature }) }, doc.trustStore)
-        : verifySignature({ form: 'encrypted-url', url: r.url }, doc.trustStore);
+        : verifySignature({ form: c.input.form, url: r.url }, doc.trustStore);
       ok = ok && back.status === 'valid';
       detail = JSON.stringify(r);
     } else if (c.operation === 'verifyNested') {

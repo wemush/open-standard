@@ -686,12 +686,13 @@ PATCH /v1/specimens/{id}
 
 *(v1.4.0. Replaces the 1.3.x reservation and the earlier non-normative sketch.)*
 
-A signature lets a verifier check two things: the label's bytes were signed with a private key the verifier already trusts, and they haven't changed since. 1.4.0 defines signatures for two forms:
+A signature lets a verifier check two things: the label's bytes were signed with a private key the verifier already trusts, and they haven't changed since. Signatures are defined for three forms:
 
 - **Embedded labels** (JSON-LD), in the top-level `signature` member
 - **Encrypted URLs**, in the `sig` parameter
+- **Compact URLs** (from 1.5.0), in the `sig` parameter ([Compact URL signatures](#compact-url-signatures-v150))
 
-**Compact URLs can't be signed in 1.4.0.** Their parameter set and code registries aren't normative yet (see [ROADMAP.md](./ROADMAP.md)), so there are no fixed bytes to sign. Compact signing will be defined together with the compact URL conformance vectors. See [Not in 1.4.0](#not-in-140) for the other deliberate limits.
+In 1.4.x compact URLs couldn't be signed, because their parameter set and code registries weren't normative. 1.5.0 makes them normative ([Compact URL rules](#compact-url-rules-v150)) and signs a compact URL's exact bytes, as for encrypted URLs. See [Not in 1.4.0](#not-in-140) for the other deliberate limits.
 
 Signing and verifying are separate operations from decoding. Nothing in this section changes how a label decodes (see [Decoding and compatibility](#decoding-and-compatibility)).
 
@@ -729,7 +730,7 @@ signing input = "WOLS-SIG-v1" LF form LF kid LF body
 ```
 
 - `LF` is a single line feed (U+000A).
-- `form` is `embedded` for an embedded label, or `encrypted-url` for an encrypted URL.
+- `form` is `embedded` for an embedded label, `encrypted-url` for an encrypted URL, or `compact-url` for a compact URL (from 1.5.0).
 - `kid` is the token's kid, exactly as it appears in the token.
 - `body` is the form's canonical bytes, defined below.
 
@@ -786,6 +787,36 @@ Verifiers MUST NOT re-normalize the body. Parameter order, the scheme, the path,
 
 Example: the unsigned URL `wemush://v1/encrypted/clx1a2b3c4?e=…&iv=ZGVmZ2hpamtsbW5v&kdf=pbkdf2&salt=AAECAwQFBgcICQoLDA0ODw&i=100000` is the body. The signed URL ends `…&i=100000&sig=mushoh-2026.nZzo…gBw` (vector `sign-encrypted-url`).
 
+##### Compact URL signatures (v1.5.0)
+
+A compact URL is signed like an encrypted URL: the body is the URL exactly as printed, with the trailing `&sig=` parameter removed, under the form tag `compact-url`. Nothing is decoded, re-encoded or reordered. The [`compact-signatures.json`](./conformance/vectors/compact-signatures.json) vectors cover this section.
+
+**Signable compact URLs.** A URL is a signable compact URL when it starts with exactly `wemush://v1/` (lowercase), followed by one non-empty path segment that contains no `/`, and isn't an encrypted URL (`wemush://v1/encrypted/…`). A compact ID that is literally `encrypted` (`wemush://v1/encrypted?…`) is a compact URL. Other routes under `wemush://v1/`, such as `v1/batch/…`, aren't signable, and are `malformed` when they carry `sig`.
+
+**Verification.** The verifier finds `sig`, the token and the body exactly as in steps 1, 3 and 4 of [Encrypted URL body](#encrypted-url-body), with the signing input `"WOLS-SIG-v1" LF "compact-url" LF kid LF body`. The URL is **malformed** if any of these hold:
+
+- **The encrypted URL rules**: A character outside U+0021 through U+007E; a `#`; more than one `sig`; `sig` not last, or the only parameter; `sig` without `=`.
+- **Shape**: It isn't a signable compact URL.
+- **Parameters**: An empty parameter (`&&`, or `?&`). A parameter name, other than `sig`, that appears more than once, so that `s=POSTR&s=AMELL` can't display differently in first-wins and last-wins readers. A parameter name that doesn't match `1*( ALPHA / DIGIT / "_" / "-" )`, so that `%73` can't be read as `s` by a decoding reader.
+- **Escapes**: A malformed percent escape, or an escape that decodes to invalid UTF-8, in the path segment or any value.
+
+These rules apply only when a compact URL carries `sig`. They don't change how compact URLs decode.
+
+**What a `valid` result reports.** It reports the kid, as for every form. It SHOULD also report the parameters decoded from the verified body, using the [Compact URL rules](#compact-url-rules-v150) (in values `+` is a space; in the path it is literal), and SHOULD report parameters the verifier doesn't recognize separately, marked unrecognized. Applications SHOULD display those values, not a second parse, and SHOULD NOT present an unrecognized parameter as a verified fact.
+
+**Signing.** The signer builds the complete unsigned compact URL as it will be printed. The signed URL is that URL, then `&sig=`, then the token. A signer MUST refuse to sign a URL that has no query or an empty one, already has `sig`, or breaks any rule above. Signers emit only `wemush://v1/`, even where their unsigned output uses `web+wemush://`. Signers SHOULD write parameters in the registry order, with unregistered parameters last.
+
+**Short kids.** A kid costs one byte per character on every label. Kids for compact labels SHOULD be 1 to 3 characters, such as `w1`, which the token grammar already allows. An issuer MAY register a short compact kid and a long kid for the same key; the kid is signed, so a signature can't be moved between them. A kid is unique only within a trust store, so a store that loads several issuers must refuse duplicate kids, as [key set loading](#key-identification-and-the-trust-store) already does. Never reassign a retired kid to a new key: choose a scheme with room to grow, such as `w1` to `w9`, then `wa` to `wz`.
+
+**Wrapped URLs.** The verifier accepts only `wemush://v1/`. A `web+wemush://` URL with `sig` is `malformed`, as for encrypted URLs. Libraries SHOULD provide a separate, optional unwrap step that runs before verification, with exactly two transforms in this order:
+
+1. For `https://{host}/wols/{x}`, percent-decode `{x}` exactly once.
+2. Remove a leading `web+` from `web+wemush://v1/…`.
+
+The result is used only if it starts with `wemush://v1/`. Nothing else is rewritten; in particular, an outer query is never merged in, and `{x}` is never decoded twice. An unwrap that changes any other byte makes the signature fail as `invalid`, so unwrapping can cause a false failure but never a false `valid`.
+
+**Size.** The token adds `&sig=`, the kid, `.` and 86 characters to the URL: 94 bytes with a two-character kid. A typical signed compact URL is 150 to 210 bytes. At 203 dpi and ECC M, that brings the smallest QR that can carry a signature with at least 3 printer dots per module down from about 40 mm (signed embedded) to about 23 mm. Whether smaller labels scan reliably is a print-and-scan question, not a rule (see the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md#6-size-budget)).
+
 #### Plaintext or ciphertext
 
 Signatures cover what is printed. For an encrypted URL that is the ciphertext; for an embedded label with field-level encryption, it is the encrypted field objects.
@@ -837,7 +868,7 @@ Verification takes a label (embedded label text, or an encrypted URL) and a trus
   3. Token and URL rules: `malformed`.
   4. Trust store lookup: `unknown-kid` when the kid isn't there.
   5. The signature: `invalid` or `valid`. An [unusable trust-store entry](#key-identification-and-the-trust-store) gives `invalid`.
-- **Choosing the form**: A verifier that takes a single string decides its form from its start. Text that starts with a URI scheme (`ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"`, RFC 3986 §3.1) takes the encrypted URL rules. Anything else is parsed as embedded label JSON. A URL that isn't a `wemush://v1/encrypted/` URL is then `unsigned` without a `sig` parameter and `malformed` with one.
+- **Choosing the form**: A verifier that takes a single string decides its form from its start. Text that starts with a URI scheme (`ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"`, RFC 3986 §3.1) takes the URL rules. Anything else is parsed as embedded label JSON. Among URLs, one that starts with `wemush://v1/` followed by a single path segment, and isn't a `wemush://v1/encrypted/` URL, takes the [compact URL rules](#compact-url-signatures-v150) (from 1.5.0). Every other URL takes the encrypted URL rules, so a URL that is neither a `wemush://v1/encrypted/` URL nor a signable compact URL is `unsigned` without a `sig` parameter and `malformed` with one.
 - **Only `valid` is authentic.** Only a `valid` result may be presented as signed, authentic, or unmodified. A `valid` result MUST also report its kid.
 - **Other statuses**: A verifier MAY report the kid with `unknown-kid` or `invalid`, for diagnostics. It MUST NOT present `unknown-kid` as valid; "signed by an unknown key" is an accurate description.
 - Verification never fails decoding, and decoding never verifies.
@@ -877,13 +908,15 @@ Other considerations:
   - **Limiting the damage**: Keep private keys offline or in hardware where possible. A key per site or device limits what one compromise affects.
 - **Trust store distribution**: The trust store is the root of trust. How it reaches the verifier (shipped with the app, pinned, or fetched over HTTPS from a host chosen in advance) determines what `valid` means. A key set document is only as trustworthy as its host and the way the verifier chose that host. Kids from different issuers must not collide within one store.
 - **Display what you verified**: Applications SHOULD display the values from the same parse they verified, not from a separate parse of the label text.
+- **Resolved data isn't signed** (compact URLs): A compact URL is a reference. Its signature covers only the printed parameters. Data fetched from a resolver by ID is authenticated by TLS and the resolver, and applications MUST NOT present it as verified by the label's signature.
+- **Issuer policy**: Any trusted kid can sign any ID. In a trust store with several issuers, one issuer can sign a label whose ID or organization belongs to another, and it verifies `valid` under the first issuer's kid. Applications SHOULD check that the kid is one they expect for the label's ID namespace or organization, and SHOULD always show the signer.
 
 #### Not in 1.4.0
 
 These are deliberate limits of this version, recorded so implementations don't fill the gaps on their own:
 
-- **Compact URLs**: They can't be signed. Compact signing waits for the compact parameter and species code registries, and will be defined with the compact URL conformance vectors.
-- **Other URL forms**: Only `wemush://v1/encrypted/` URLs can be signed or verified, and signers emit only that form. `web+wemush://` and any future HTTPS resolver form are `malformed` when they carry `sig`.
+- **Compact URLs**: They can't be signed in 1.4.x. *From 1.5.0 they can* ([Compact URL signatures](#compact-url-signatures-v150)).
+- **Other URL forms**: Only `wemush://v1/encrypted/` URLs, and from 1.5.0 signable compact URLs, can be signed or verified, and signers emit only those forms. `web+wemush://` and any future HTTPS resolver form are `malformed` when they carry `sig`. From 1.5.0 an optional unwrap step can turn some of them into a `wemush://v1/` URL before verification.
 - **Key validity periods**: Trust-store entries have no `notBefore` or `notAfter`. Revoke a key by removing its kid. Validity periods may come in a later version; without a trusted timestamp they couldn't distinguish a backdated label anyway.
 - **Kid syntax**: The kid stays `[A-Za-z0-9_-]{1,64}`. Domain-style kids with `.` or `:` aren't supported.
 - **Other algorithms and multiple signatures**: Ed25519 is the only algorithm, and a label carries at most one signature per form. A future scheme would use a new domain tag (not `WOLS-SIG-v1`). A key set document may already list keys for other algorithms; 1.4.0 verifiers skip them.
@@ -1022,11 +1055,18 @@ interface VerificationResult {
 signSpecimen(label: string | object, options: { privateKey: Uint8Array; kid: string }): Promise<string>
 // Unsigned encrypted URL. Returns the URL with `&sig=` and the token appended.
 signEncryptedUrl(url: string, options: { privateKey: Uint8Array; kid: string }): Promise<string>
+// From 1.5.0. Unsigned compact URL, as it will be printed. Returns it with `&sig=` and the token appended.
+signCompactUrl(url: string, options: { privateKey: Uint8Array; kid: string }): Promise<string>
 
-// Accepts embedded label text, a parsed JSON object, or an encrypted URL. Never throws for a
-// bad signature; every outcome is a status.
+// Accepts embedded label text, a parsed JSON object, an encrypted URL, or (from 1.5.0) a compact
+// URL. Never throws for a bad signature; every outcome is a status.
 verifySpecimen(label: string | object, trustStore: TrustStore): Promise<VerificationResult>
+
+// From 1.5.0, optional: the unwrap step before verification. Returns the wemush://v1/ URL, or null.
+unwrapWolsUrl(text: string): string | null
 ```
+
+From 1.5.0, `VerificationResult` MAY also carry `form` (`'embedded' | 'encrypted-url' | 'compact-url'`), and for a `valid` compact URL SHOULD carry `params` (the verified parameters, decoded) and `unrecognizedParams` (the names of parameters the verifier doesn't recognize). A compact URL parser SHOULD keep the raw `sig` value with the parsed reference, so that a re-emitted URL stays signed.
 
 A verifier SHOULD accept the label text exactly as scanned. When it accepts a parsed object, it MUST be the raw JSON value, not the library's own specimen model (see [Canonicalize what was received](#embedded-body)).
 
@@ -1212,7 +1252,7 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ### Version 1.5.0-rc.2 (November 28, 2026)
 
-Second release candidate for 1.5.0. It settles the compact URL format. It includes everything in `1.5.0-rc.1` unchanged. Every compact URL that either reference library has written stays valid, and from 1.5 each one decodes to the same label in both libraries.
+Second release candidate for 1.5.0. It settles the compact URL format and adds compact URL signatures. It includes everything in `1.5.0-rc.1` unchanged. Every compact URL that either reference library has written stays valid, and from 1.5 each one decodes to the same label in both libraries.
 
 Normative changes:
 
@@ -1220,10 +1260,14 @@ Normative changes:
 - **Parameter registry**: `s`, `ty`, `st`, `t`, `b`, `sn`, `sg`, `td` and `sig`, each with its syntax. `st` takes a full stage name or a three-letter code. `td` (`strain.transferDepth`) is new. Unregistered parameters MUST NOT make a URL invalid, and new parameters outside the specification MUST start with `x-`
 - **Species Code Registry**: an append-only registry of 27 five-letter codes, with a machine-readable copy in [`registries/species-codes.json`](./registries/species-codes.json). Generators MUST write the registered code when one exists. The 24 two-letter codes that earlier Python releases wrote are legacy codes: decoders MUST read them and generators MUST NOT write them ([Species Code Registry](#species-code-registry-v150))
 
+- **Compact URL signatures**: a third signed form, `compact-url`, over the exact URL bytes before `&sig=`, with extra `malformed` rules for parameters and escapes, signer refusals, and a SHOULD to report verified parameters. An optional unwrap step handles `web+wemush://` and the `https://{host}/wols/` handler form before verification ([Compact URL signatures](#compact-url-signatures-v150)). The one 1.4.0 rule that changes is "a URL that isn't a `wemush://v1/encrypted/` URL is `malformed` with a `sig` parameter", which now excludes signable compact URLs; 1.4.0 generators never signed one
+- **Security considerations**: resolved data isn't signed, and applications SHOULD check that a kid is expected for the label's ID namespace
+
 Conformance:
 
-- **New vectors**: `compact.json` (36 `MUST` and 1 `SHOULD` cases, a new `parseCompact` operation), with the registry tables copied into the file
-- **Tools**: `verify_vectors.mjs` parses compact URLs independently
+- **New vectors**: `compact.json` (36 `MUST` and 1 `SHOULD` cases, a new `parseCompact` operation), with the registry tables copied into the file, and `compact-signatures.json` (54 `MUST` cases for `sign` and `verify`, 6 `SHOULD` cases for a new `unwrap` operation), with a short test kid `w1` in its trust store. `signatures.json` doesn't change
+- **Tools**: `verify_vectors.mjs` parses, signs and verifies compact URLs independently of the generator
+- **Proposal**: The [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is accepted into this candidate, except open questions 1 (the print-and-scan test) and 9 (ID-only signed labels), which stay open
 
 ### Version 1.5.0-rc.1 (November 28, 2026)
 

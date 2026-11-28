@@ -1,0 +1,877 @@
+{
+  "wolsVersion": "1.5.0-rc.2",
+  "description": "Ed25519 signatures over compact URLs",
+  "specSection": "Privacy & Security > Cryptographic Signatures > Compact URL signatures (1.5.0)",
+  "signingDomain": "WOLS-SIG-v1",
+  "testKeys": {
+    "mushoh-2026": {
+      "seedBase64url": "nmZ96bzKA4895n6UU0TsUATfSUVyfH30brZ5FSlpRvM",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to",
+      "trusted": true
+    },
+    "acme-lab-1": {
+      "seedBase64url": "I2201tuO06DmTUNv8hg37THu1TIkAuCpjLHyhRtn2Bk",
+      "publicKeyBase64url": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA",
+      "trusted": true
+    },
+    "attacker-1": {
+      "seedBase64url": "qc1vDaTu20DOXJ4Y8bManNasd0PKY2IHy_bWnRQ9qpg",
+      "publicKeyBase64url": "HBM5fYMP0BenkRfYgtn3h6wj-deDwAk6Eltkb0PWfr4",
+      "trusted": false
+    }
+  },
+  "trustStore": {
+    "mushoh-2026": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+    },
+    "mushoh-alias": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+    },
+    "acme-lab-1": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "mj4xN_P2kbWmyZmUixRTIjb8CCtJHmDYkc7NJDKnUHA"
+    },
+    "w1": {
+      "alg": "Ed25519",
+      "publicKeyBase64url": "_Xjcp4sgkJNoEkWum4ZM1qTsy7MTKr3Sk6dbrHip2to"
+    }
+  },
+  "cases": [
+    {
+      "id": "sign-compact-url",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Sign a compact URL: its exact bytes under the `compact-url` form tag (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200",
+        "kid": "mushoh-2026",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nmushoh-2026\nwemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200",
+        "signature": "mushoh-2026.xbXvsW0_g4BwDvX5ga6GWovQLK_3PomihF75mBm_yPLRu_nB7rfpSs8OWXr2vNA2ixbrDCtwOXoR8L_FlzxkBA",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=mushoh-2026.xbXvsW0_g4BwDvX5ga6GWovQLK_3PomihF75mBm_yPLRu_nB7rfpSs8OWXr2vNA2ixbrDCtwOXoR8L_FlzxkBA"
+      }
+    },
+    {
+      "id": "sign-compact-url-short-kid",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "The same URL under the short kid `w1`, which maps to the same key (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200",
+        "signature": "w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      }
+    },
+    {
+      "id": "sign-compact-url-plus",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "`+` in a value and the TypeScript parameter set are signed as written (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2",
+        "signature": "w1.bDF_yZMa-EkgTz5LlskOdUItlFiHiGCE_SCHJ4_J8qBueMOrvsLxGNAQ0RRJUzniUWkbPc4yqkZTGnJaPLHzAw",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2&sig=w1.bDF_yZMa-EkgTz5LlskOdUItlFiHiGCE_SCHJ4_J8qBueMOrvsLxGNAQ0RRJUzniUWkbPc4yqkZTGnJaPLHzAw"
+      }
+    },
+    {
+      "id": "sign-compact-url-percent-encoded-id",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Percent-encoding in the ID segment is signed exactly as written (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster",
+        "signature": "w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA",
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster&sig=w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      }
+    },
+    {
+      "id": "sign-compact-url-extension",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "`td` and an `x-` parameter are covered like any other parameter (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2",
+        "signature": "w1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg",
+        "url": "wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2&sig=w1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg"
+      }
+    },
+    {
+      "id": "sign-compact-url-id-encrypted",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "An ID that is literally `encrypted` is a compact URL (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/encrypted?s=POSTR",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/encrypted?s=POSTR",
+        "signature": "w1.cCxO1ryQ5Raz-vu-gvFbO3k2GgmoRMCIwANe4-h7leHV6CutOZjL4uigOoNj4vvdLsTf8FEeRtB1d8NHPQFACQ",
+        "url": "wemush://v1/encrypted?s=POSTR&sig=w1.cCxO1ryQ5Raz-vu-gvFbO3k2GgmoRMCIwANe4-h7leHV6CutOZjL4uigOoNj4vvdLsTf8FEeRtB1d8NHPQFACQ"
+      }
+    },
+    {
+      "id": "sign-refuse-compact-no-query",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a compact URL with no query (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-empty-query",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a compact URL with an empty query (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-already-signed",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a URL that already has `sig` (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-duplicate-name",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a repeated parameter name (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&s=LLENC",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-empty-parameter",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse an empty parameter (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&&st=COLONIZATION&t=1734307200",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-non-ascii",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a character outside U+0021 to U+007E (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sn=Blue Oyster",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-fragment",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a fragment (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200#x",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-bad-escape",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a malformed percent escape (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&b=%zz",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-bad-utf8",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse an escape that decodes to invalid UTF-8 (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sn=%C3%28",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-bad-name",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse an escaped parameter name (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?%73=POSTR&st=COLONIZATION&t=1734307200",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-two-segments",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse two path segments (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/batch/clx1a2b3c4?s=POSTR",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "sign-refuse-compact-other-scheme",
+      "operation": "sign",
+      "requirement": "MUST",
+      "description": "Signers MUST refuse a `web+wemush://` URL (signers emit only `wemush://`) (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "web+wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200",
+        "kid": "w1",
+        "key": "mushoh-2026"
+      },
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "id": "verify-compact-valid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed compact URL verifies (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=mushoh-2026.xbXvsW0_g4BwDvX5ga6GWovQLK_3PomihF75mBm_yPLRu_nB7rfpSs8OWXr2vNA2ixbrDCtwOXoR8L_FlzxkBA"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "mushoh-2026",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nmushoh-2026\nwemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200"
+      }
+    },
+    {
+      "id": "verify-compact-short-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL signed under a short kid verifies (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "w1",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200"
+      }
+    },
+    {
+      "id": "verify-compact-plus",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL with `+` in a value verifies as received (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2&sig=w1.bDF_yZMa-EkgTz5LlskOdUItlFiHiGCE_SCHJ4_J8qBueMOrvsLxGNAQ0RRJUzniUWkbPc4yqkZTGnJaPLHzAw"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "w1",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2"
+      }
+    },
+    {
+      "id": "verify-compact-percent-encoded-id",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL with a percent-encoded ID verifies (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster&sig=w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "w1",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster"
+      }
+    },
+    {
+      "id": "verify-compact-extension-param",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`td` and an `x-` parameter are covered and verify (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2&sig=w1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "w1",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2"
+      }
+    },
+    {
+      "id": "verify-compact-id-encrypted",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL whose ID is `encrypted` verifies (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/encrypted?s=POSTR&sig=w1.cCxO1ryQ5Raz-vu-gvFbO3k2GgmoRMCIwANe4-h7leHV6CutOZjL4uigOoNj4vvdLsTf8FEeRtB1d8NHPQFACQ"
+      },
+      "expected": {
+        "status": "valid",
+        "kid": "w1",
+        "signingInput": "WOLS-SIG-v1\ncompact-url\nw1\nwemush://v1/encrypted?s=POSTR"
+      }
+    },
+    {
+      "id": "verify-compact-tampered-param",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed parameter fails verification (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=FRUITING&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-tampered-extension",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A changed `td` fails verification (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=4&x-acme-room=B2&sig=w1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-added-param",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "An added parameter before `sig` fails verification (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&b=x&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-removed-param",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A removed parameter fails verification (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-reordered",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Reordered parameters fail verification: exact bytes (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?st=COLONIZATION&s=POSTR&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-reencoded-space",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`%20` rewritten as `+` fails verification: exact bytes (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue+Oyster&sig=w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-reencoded-hex-case",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`%2F` rewritten as `%2f` fails verification: exact bytes (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/Lab%20A%2fplate%2B3%25?s=POSTR&sn=Blue%20Oyster&sig=w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-unsigned",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL without `sig` is unsigned (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200"
+      },
+      "expected": {
+        "status": "unsigned"
+      }
+    },
+    {
+      "id": "verify-compact-unknown-kid",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A compact URL signed with a key that isn't in the trust store (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=LLENC&st=COLONIZATION&t=1734307200&sig=attacker-1.r0KEhfAplQbv_BFeE8qfCP3YpgLSpj-VSlBkOPSxmvsJSh_eej_w3oLYUhfp7G2JlKz13CCkBZrAWHh_zF2VBg"
+      },
+      "expected": {
+        "status": "unknown-kid"
+      }
+    },
+    {
+      "id": "verify-compact-kid-swapped",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Moving a signature to another kid of the same key fails: the kid is signed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.xbXvsW0_g4BwDvX5ga6GWovQLK_3PomihF75mBm_yPLRu_nB7rfpSs8OWXr2vNA2ixbrDCtwOXoR8L_FlzxkBA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-encrypted-url-signature-replayed",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Cross-form replay: an encrypted URL's token doesn't verify on a compact URL (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.pt2uS7cvZ3C4IxUkCvVfDDOeFsfNp44gHawu5UKl6eq8kpEHBxStrduTN6D59Bjy3VpV3rGMKSt2qzudiLdbBQ"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-encrypted-url-compact-signature-replayed",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Cross-form replay: a compact URL's token doesn't verify on an encrypted URL (1.5.0)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=AAAA&iv=AAAAAAAAAAAAAAAA&kdf=raw&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-embedded-signature-replayed",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Cross-form replay: an embedded-form signature over the same bytes doesn't verify (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.ac0N6_LI1g16lJ6hXi2FPqTVWa6sR2029omoGxOrLVO5Wz1uRrVQym4kUJLNHTgCQtnzkXFzDdm_hEsb1QgXCA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-wrong-form-prefix",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signature over the compact URL bytes made with the `encrypted-url` tag fails verification (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.ZUu1Km6QGwfUvCCeBrSaoeD-5istEZieQUCi9Tx0Xm_4s88z5q2JRsM6hFRx5q75GQSIGejrq_kxJlq8DuRmAA"
+      },
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-sig-not-last",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`sig` MUST be the last parameter (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA&x=1"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-two-sig",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`sig` MUST appear once (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-sig-only",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`sig` can't be the only parameter (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-duplicate-name",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A repeated parameter name is malformed, so first-wins and last-wins readers can't differ (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&s=AMELL&sig=w1.6TwptGUHA0ut35h4gZE7XoLKHv-d5Bj6SEEnvkybaj9feluDc8TXnEzQf8gctq8ukB7wWTp5llY6APx0gUYOCw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-empty-parameter",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "An empty parameter is malformed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&&st=COLONIZATION&t=1734307200&sig=w1.wJkkzbhMsyKiPQlXOQ7-pY70jaCYhKGmb6KDjE_l2IeW7TIxTPIZVpac-0l1uFDfHj0vYzptKZDZ1s45FXx9BA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-escaped-name",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "An escaped parameter name is malformed, so `%73` can't be read as `s` (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?%73=POSTR&st=COLONIZATION&t=1734307200&sig=w1.3LVYkLz7a2xb_vJ6upVL_8EJB88x8FacffT_KepopnyIndNeLqux6dr0z7_B5cO0L_SB1SjoyenvRSXwvVtNBQ"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-bad-escape",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A malformed percent escape is malformed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&b=%zz&sig=w1.5H7VjmFDsT0SPXC7yrSVXGnGFaQxVID76YHcugRPNZCFAHP0hSBz6PzKJgHDX0UD1AJDrjSJVj3wE6uDH0F7BQ"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-bad-utf8",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "An escape that decodes to invalid UTF-8 is malformed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sn=%C3%28&sig=w1.8Fkj5NqmR9mjod-o7lkH6HbPK0ylUCXyT3SCZgDThyXQUVqY3E7eNc8s1Lw-sVxMVe9ahTK_l5SPwsHC9EiYDg"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-bad-id-escape",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A malformed escape in the ID segment is malformed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/abc%2?s=POSTR&sig=w1.k6gZVBdQ0ihIJmT1xKjNqvzZh24agcft0pNmxMt_qF9GR5anpOBD2DbJBvAmT_Q-PU7tej6YCyIEvWxraJDPCA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-fragment",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed compact URL with a fragment is malformed (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA#x"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-non-ascii",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A signed compact URL must be ASCII (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=PÖSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-uppercase-scheme",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Only the lowercase `wemush://v1/` prefix is signable (1.5.0)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "WEMUSH://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-two-segments",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "A URL with two path segments isn't a compact URL (1.5.0)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/a/b?s=POSTR&sig=w1.mbSlxUZnJxYYxbSAhE29LfQaJ40DoRouU5maASpTOO-yjCPFpQsYsXwus37c-sbMr26BwY58QmbljjIVGESFCA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-batch-route",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "Other platform routes aren't signable (1.5.0)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "wemush://v1/batch/b1?s=POSTR&sig=w1.L03vhndZbKss_Nokws7mrDP2OgyRy0FGslhz-QNhmOxyI228dpzA1g-ENpBMRbv-H_vuf16XxEZhmzfnyRS2CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-web-plus-wrapper",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "`web+wemush://` is unwrapped before verification, never verified as is (1.5.0)",
+      "input": {
+        "form": "encrypted-url",
+        "url": "web+wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "verify-compact-malformed-reserved-1-3-sig",
+      "operation": "verify",
+      "requirement": "MUST",
+      "description": "The reserved 1.3.1 `sig` value (no kid) is malformed, never valid (1.5.0)",
+      "input": {
+        "form": "compact-url",
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0-Pw"
+      },
+      "expected": {
+        "status": "malformed"
+      }
+    },
+    {
+      "id": "unwrap-compact-identity",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "A `wemush://v1/` URL is returned unchanged (1.5.0)",
+      "input": {
+        "text": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      }
+    },
+    {
+      "id": "unwrap-compact-web-plus",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "`web+` is removed, giving the exact signed URL (1.5.0)",
+      "input": {
+        "text": "web+wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200&sig=w1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      }
+    },
+    {
+      "id": "unwrap-compact-handler",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "The PWA handler form is percent-decoded once, then `web+` is removed (1.5.0)",
+      "input": {
+        "text": "https://wemush.com/wols/web%2Bwemush%3A%2F%2Fv1%2FLab%2520A%252Fplate%252B3%2525%3Fs%3DPOSTR%26sn%3DBlue%2520Oyster%26sig%3Dw1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      },
+      "expected": {
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster&sig=w1.WIOkYhPeL4P4uAHJCx6qKXOl6u3vZ0BXuB8nDSXX4lOJx3QYPuFjPlFu3IMXlprE8YdL8e_OCP2Yitxb55bDDA"
+      }
+    },
+    {
+      "id": "unwrap-compact-handler-plain",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "A handler URL wrapping `wemush://` is percent-decoded once (1.5.0)",
+      "input": {
+        "text": "https://wemush.com/wols/wemush%3A%2F%2Fv1%2FWM-LC-250114-000001%3Fs%3DPOSTR%26ty%3DCULTURE%26st%3DCOL%26b%3Dbatch_2025_12_001%26sn%3DBlue%2BOyster%26sg%3DF1%26td%3D3%26x-acme-room%3DB2%26sig%3Dw1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg"
+      },
+      "expected": {
+        "url": "wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2&sig=w1.sIIUA2IEzz3j4Ptwcbhv90RvBbh09Q1hI5r-5_rJZ_JYfDJ3S-OzS7qmQu5MAYTgIC6FoAZRIwuEz8toDtxtAg"
+      }
+    },
+    {
+      "id": "unwrap-compact-double-encoded",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "Double-encoded input is decoded once only, so it doesn't unwrap (1.5.0)",
+      "input": {
+        "text": "https://wemush.com/wols/wemush%253A%252F%252Fv1%252Fclx1a2b3c4%253Fs%253DPOSTR%2526st%253DCOLONIZATION%2526t%253D1734307200%2526sig%253Dw1.TwrqYYEuaJQw1OdW-Qj9TTK9ZXFobxaD75FDuabMF0I9P35MuoZmFByG5rMVCBApj6qF_i7VN4QQAoP56lq_CA"
+      },
+      "expected": {
+        "url": null
+      }
+    },
+    {
+      "id": "unwrap-compact-other",
+      "operation": "unwrap",
+      "requirement": "SHOULD",
+      "description": "Anything else doesn't unwrap (1.5.0)",
+      "input": {
+        "text": "https://example.com/v1/clx1a2b3c4?s=POSTR"
+      },
+      "expected": {
+        "url": null
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Proposal: Compact URL Signatures (WOLS 1.5)
 
-**Status**: Draft (non-normative). Nothing in this document changes the 1.4.0 specification.
-**Target**: WOLS 1.5.0, a minor release, shipped first as `1.5.0-rc.1`
+**Status**: Accepted into `1.5.0-rc.2` (November 28, 2026). The normative text is [Compact URL signatures](../SPECIFICATION.md#compact-url-signatures-v150), with the [`compact-signatures.json`](../conformance/vectors/compact-signatures.json) vectors. Open questions 1 and 9 stay open; section 9 records how the others were settled. This document is kept as the rationale.
+**Target**: WOLS 1.5.0, a minor release, shipped as `1.5.0-rc.2` after the data model in `1.5.0-rc.1`
 **Depends on**: the compact URL parameter registry, the species code registry, and the compact URL conformance vectors ([ROADMAP.md, v1.5.0 goals 4 and 5](../ROADMAP.md#v150-goals))
 **Date**: November 19, 2026
 **Discussion**: [RFC: Compact URL signatures (WOLS 1.5)](https://github.com/orgs/wemush/discussions/32), as [GOVERNANCE.md](../GOVERNANCE.md#types-of-decisions) requires for RFCs. Comment there; send edits to this file as PRs.
@@ -457,6 +457,9 @@ The change ships as WOLS **1.5.0**, a minor release, through the [pre-release pr
 ---
 
 ## 9. Open questions
+
+*Settled in `1.5.0-rc.2`*: 2 (no decimal encoding), 3 (unregistered parameters use an `x-` prefix, and `td` is registered), 4 (the HTTPS resolver form moves to a later release), 5 (the unwrap step stays compact-only), 6 (no named profile; `st` takes three-letter codes, so a minimal profile is possible without one), 7 (`params` stays a SHOULD) and 8 (no version signaling, because the registries are append-only). *Still open*: 1 (the print-and-scan test) and 9 (ID-only signed labels; `1.5.0-rc.2` keeps the rule that `sig` can't be the only parameter).
+
 
 1. **Print-and-scan test for 20 mm and 2×1″**: Does v8 at 3.02 dots (ECC L, or ECC M with a minimal profile) scan reliably on worn thermal stock? Test with phone cameras and the station scanner. Does v9 or v10 at 2.6 to 2.8 dots scan at all? The answer decides whether 1.5 recommends a minimal signed-compact profile for small labels.
 2. **Decimal signature encoding**: Is a second, numeric-mode token encoding (155 digits, about 19 bytes smaller with mixed-mode encoders and 69 bytes larger without) worth it if open question 1 shows that one version matters? This proposal says no for 1.5.

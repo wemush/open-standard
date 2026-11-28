@@ -493,11 +493,16 @@ Special thanks to early adopters, beta testers, and everyone providing feedback.
 - ✅ Clarifications from 1.3.1-rc.1 (reserved `sig`, what encryption does and doesn't protect, ID path encoding), released as part of 1.4.0
 - ✅ `signatures.json` conformance vectors and a 51-case cross-library interop matrix, passed by both reference libraries
 
-### Next: Version 1.5.0 (not yet scheduled)
+### Next: Version 1.5.0 (release candidates)
 
-Drafts under discussion: the [data model and JSON Schema](./proposals/wols-1.5-data-model.md) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md). Neither changes 1.4.0.
+`1.5.0-rc.2` is the current release candidate; 1.4.1 stays the latest final release until a library passes every `MUST` vector. See the [changelog](./SPECIFICATION.md#changelog).
 
-- 🚧 Compact URL and species code registries, with compact URL conformance vectors
+- 🧪 Normative data model and JSON Schema, with the Records Bundle (`1.5.0-rc.1`)
+- 🧪 Compact URL rules, parameter registry and [species code registry](./registries/species-codes.json) (`1.5.0-rc.2`)
+- 🧪 Compact URL signatures, so labels under 40 mm can be signed (`1.5.0-rc.2`)
+
+### Later
+
 - 🚧 HTTPS resolver form that phone cameras can open
 - 🚧 IoT sensor integration spec
 - 🚧 Advanced analytics schema

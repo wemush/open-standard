@@ -129,7 +129,9 @@ The specification types `strain.generation` as a string. The Python `wols` 1.3.0
 
 WOLS 1.4.0 defines Ed25519 signatures for embedded labels and encrypted URLs (see [Cryptographic Signatures](../SPECIFICATION.md#cryptographic-signatures)). Both 1.4.0 libraries sign and verify, and pass every `signatures.json` vector. The 1.3.0 libraries can't verify, but they decode signed labels and keep the token unchanged.
 
-**Today**: Compact URLs can't be signed. Resolve kids only through a trust store you control, never from the label, and treat any status other than `valid` as unverified.
+**From 1.5.0-rc.2**: Compact URLs can be signed too ([Compact URL signatures](../SPECIFICATION.md#compact-url-signatures-v150)). Until your libraries verify them, a 1.4 verifier reports a signed compact URL as `malformed`; show that as "signature not verifiable by this app", not as tampering. Decoding is unaffected: both 1.4.0 libraries decode a signed compact URL exactly as the unsigned one.
+
+**Today**: Resolve kids only through a trust store you control, never from the label, and treat any status other than `valid` as unverified.
 
 ---
 

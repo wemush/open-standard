@@ -294,7 +294,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [x] Published JSON-LD context document at `https://wemush.com/wols/v1` ([`context/v1.jsonld`](./context/v1.jsonld), served since November 27, 2026)
 - [x] Draft 1.5 proposals: [data model and JSON Schema](./proposals/wols-1.5-data-model.md) ([`schema/1.5/`](./schema/1.5/)) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md)
 - [x] `1.5.0-rc.1`: normative JSON Schema and data model (required-field clarity, multiple parents, generation without a named strain, extended data attachment through the Records Bundle, specimen condition, container), with [`data-model.json`](./conformance/vectors/data-model.json) and [`bundle.json`](./conformance/vectors/bundle.json) vectors
-- [ ] `1.5.0-rc.2`: compact URL parameter registry, species code registry and compact URL signatures, with compact URL vectors
+- [x] `1.5.0-rc.2`: compact URL parameter registry, species code registry and compact URL signatures, with [`compact.json`](./conformance/vectors/compact.json) and [`compact-signatures.json`](./conformance/vectors/compact-signatures.json) vectors
 - [ ] A maintained library passes every `MUST` vector of the final candidate
 
 ### v1.5.0 Success Metrics
