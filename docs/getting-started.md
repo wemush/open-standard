@@ -147,7 +147,7 @@ WOLS (WeMush Open Labeling Standard) is an open-source specification for encodin
 4. **Share findings**:
    - Include WOLS labels in publications
    - Enable others to replicate your work
-   - Export data for analysis
+   - Export data for analysis, or exchange it as a [Records Bundle](../SPECIFICATION.md#records-bundle-v150) (v1.5.0) with strains, recipes, observations and harvests
 
 **Next steps**: [Research Use Cases](../SPECIFICATION.md#3-research-reproducibility)
 
@@ -206,6 +206,8 @@ wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 ```bash
 wemush://v1/encrypted/clx1a2b3c4?e={ciphertext}&iv={iv}&kdf=pbkdf2&salt={salt}&i=100000
 ```
+
+All three formats can carry an Ed25519 signature: embedded labels and encrypted URLs since v1.4.0, and compact URLs since v1.5.0. See [Cryptographic Signatures](../SPECIFICATION.md#cryptographic-signatures).
 
 ## Common Workflows
 
@@ -275,7 +277,7 @@ Track a complete grow cycle:
    };
    ```
 
-   > **Generation, subculture, and transfer depth**: `strain.generation` is the *filial* (sexual) generation and only changes when a new strain is bred (e.g., spores from a fruit → F1). `strain.clonalGeneration` counts culture-to-culture subcultures. `strain.transferDepth` (v1.3.0) counts every transfer from the original culture. Record ancestry with `strain.lineage`. See [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130).
+   > **Generation, subculture, and transfer depth**: `strain.generation` is the *filial* (sexual) generation and only changes when a new strain is bred (e.g., spores from a fruit → F1). `strain.clonalGeneration` counts culture-to-culture subcultures. `strain.transferDepth` (v1.3.0) counts every transfer from the original culture. Record ancestry with `strain.lineage`, and list every parent in `derivedFrom` (v1.5.0) when there is more than one. See [Generation, Subculture, and Transfer Tracking](../SPECIFICATION.md#generation-subculture-and-transfer-tracking-v130).
 
 5. **Harvest and record yields**
 
@@ -305,8 +307,8 @@ Share reproducible experiment data:
 
 - Generate unique IDs for each specimen
 - Include as much data as possible
-- Use ISO 8601 timestamps
-- Link parents with genetics field
+- Use RFC 3339 timestamps with a time zone (`2026-11-10T08:00:00Z`)
+- Link parents with `strain.lineage`, or `derivedFrom` for several parents (v1.5.0)
 - Add custom fields for your specific needs
 
 ❌ **Don't**:
@@ -378,8 +380,8 @@ Share reproducible experiment data:
 
 **Solutions**:
 
-- Check required fields (species, type, stage, created)
-- Use proper ISO 8601 date format
+- Check required fields (`@context`, `@type`, `id`, `version`, `type`, `species`); `stage` and `created` are optional but recommended
+- Write `created` as an RFC 3339 date-time with a time zone; from v1.5.0 a date alone is invalid
 - Validate species name (scientific name recommended)
 - Check stage is valid for specimen type
 

@@ -4,7 +4,7 @@
 
 It is deliberately small:
 
-- `@vocab` maps every WOLS member, from 1.0 through the 1.5 draft, to `https://wemush.com/wols/v1#<member>`, so a JSON-LD processor never drops a field. New members need no change here.
+- `@vocab` maps every WOLS member, from 1.0 through 1.5.0, to `https://wemush.com/wols/v1#<member>`, so a JSON-LD processor never drops a field. New members need no change here.
 - Timestamps (`created` and the `…At` members) are typed `xsd:dateTime`.
 - `custom` and `_meta` are `@json`, so vendor extensions stay as opaque JSON instead of being read as linked data.
 - `id` is not aliased to `@id`, because 1.3.0 IDs can contain characters that aren't valid IRIs.

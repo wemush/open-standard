@@ -35,9 +35,10 @@ WOLS can encode:
 - Environmental conditions (temperature, humidity, CO₂)
 - Substrate composition
 - Harvest yields
-- Parent-child lineage
+- Parent-child lineage, including several parents per specimen (`derivedFrom`, since 1.5.0)
+- Taxon identifiers, specimen form, condition, container, and traceability lot codes (since 1.5.0)
 - Custom fields for your specific needs
-- Cryptographic signatures for verification (Ed25519, since 1.4.0)
+- Cryptographic signatures for verification (Ed25519, since 1.4.0; compact URLs since 1.5.0)
 
 ### What QR code format does WOLS use?
 
@@ -64,6 +65,8 @@ Yes! Use the `custom` namespace to add organization-specific fields:
   }
 }
 ```
+
+From 1.5.0, a sellable product's traceability lot code has its own optional `lot` member, so it doesn't need a custom field. To exchange records a label can't hold, such as strains, recipes, observations and harvests, use a [Records Bundle](../SPECIFICATION.md#records-bundle-v150).
 
 ### What programming languages are supported?
 
