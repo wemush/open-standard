@@ -42,11 +42,11 @@ The specification documents `wemush://v1/{id}?s={species_code}&st={stage}&t={tim
 - For a Python `wemush://…?s=PO&st=COL` URL, the TypeScript parser returns `species: "PO"` and `stage: "COL"`, neither of which is a valid value.
 - For a TypeScript `wemush://…?s=POSTR&st=COLONIZATION…` URL, the Python parser drops the stage and leaves `POSTR` unresolved.
 
-The [Implementation Guide](./implementation-guide.md#appendix-species-codes-compact-format) defines the 5-letter species code table, which the TypeScript library follows and the Python library does not.
+The 1.3.0 and 1.4.0 libraries don't change compact URL output. The Python parser accepts both `wemush://` and `web+wemush://`; the TypeScript parser still accepts only `wemush://`.
 
-The 1.3.0 and 1.4.0 libraries don't change compact URL output, because the parameter and species-code registries aren't settled. The Python parser accepts both `wemush://` and `web+wemush://`; the TypeScript parser still accepts only `wemush://`.
+**From 1.5.0-rc.2**: The specification settles every row above in [Compact URL rules](../SPECIFICATION.md#compact-url-rules-v150) and the [Species Code Registry](../SPECIFICATION.md#species-code-registry-v150), and [`compact.json`](../conformance/vectors/compact.json) tests it. Decoders read both schemes, both stage spellings, the five-letter codes, and the Python library's two-letter codes as legacy codes with a warning. Generators write `wemush://` and the registered five-letter code, or the full species name when the species has none. Unregistered parameters are kept, never rejected. The libraries change in their 1.5 releases.
 
-**Today**: Generate compact URLs with `wemush://`, full stage names, and full species names (or codes from the specification's example), and treat unrecognized parameters as optional.
+**Until your libraries implement 1.5**: Generate compact URLs with `wemush://`, full stage names, and full species names (or the five-letter codes), and treat unrecognized parameters as optional.
 
 ## 2. Encrypted format
 

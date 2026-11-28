@@ -33,6 +33,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 SPEC_VERSION = "1.3.0"
 SIG_SPEC_VERSION = "1.4.0"
 DM_SPEC_VERSION = "1.5.0-rc.1"
+COMPACT_SPEC_VERSION = "1.5.0-rc.2"
 CONTEXT = "https://wemush.com/wols/v1"
 OUT = Path(__file__).resolve().parent.parent / "vectors"
 
@@ -398,6 +399,112 @@ def bundle_cases() -> list[dict]:
              bundle(specimens=[{**base["specimens"][0], "stage": "PINNING"}]),
              False, "specimens.0.stage"),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Compact URLs (1.5.0-rc.2)
+# ---------------------------------------------------------------------------
+
+STAGE_CODES = {"INO": "INOCULATION", "INC": "INCUBATION", "COL": "COLONIZATION", "PRI": "PRIMORDIA",
+               "FRU": "FRUITING", "SEN": "SENESCENCE", "HAR": "HARVEST"}
+
+
+def compact_cases() -> list[dict]:
+    def ok(cid, desc, url, ref, req="MUST", warning=None):
+        exp = {"label": ref}
+        if warning:
+            exp["warningField"] = warning
+        return {"id": cid, "operation": "parseCompact", "requirement": req, "description": desc,
+                "input": {"url": url}, "expected": exp}
+
+    def bad(cid, desc, url, reason, req="MUST"):
+        return {"id": cid, "operation": "parseCompact", "requirement": req, "description": desc,
+                "input": {"url": url}, "expected": {"refused": True, "reason": reason}}
+
+    po = "Pleurotus ostreatus"
+    base = "wemush://v1/clx1a2b3c4"
+    rid = "wemush:clx1a2b3c4"
+    cases = [
+        ok("compact-spec-example", "The specification's example URL",
+           f"{base}?s=POSTR&st=COLONIZATION&t=1734307200",
+           {"id": rid, "species": po, "stage": "COLONIZATION", "created": "2024-12-16T00:00:00Z"}),
+        ok("compact-species-only", "`s` is the only required parameter", f"{base}?s=POSTR",
+           {"id": rid, "species": po}),
+        ok("compact-all-registered", "Every registered parameter, as `@wemush/wols` writes them",
+           f"{base}?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&t=1734307200&b=batch_2025_12_001"
+           "&sn=Blue+Oyster+PoHu&sg=F2&td=5",
+           {"id": rid, "species": po, "type": "SUBSTRATE", "stage": "COLONIZATION",
+            "created": "2024-12-16T00:00:00Z", "batch": "batch_2025_12_001",
+            "strain": {"name": "Blue Oyster PoHu", "generation": "F2", "transferDepth": 5}}),
+        *[ok(f"compact-stage-code-{code.lower()}", f"Stage code `{code}` decodes to `{name}`",
+             f"{base}?s=POSTR&st={code}", {"id": rid, "species": po, "stage": name})
+          for code, name in STAGE_CODES.items()],
+        ok("compact-python-default", "The Python library's default output: `web+wemush://`, "
+           "legacy species code, stage code", "web+wemush://v1/clx1a2b3c4?s=PO&st=COL",
+           {"id": rid, "species": po, "stage": "COLONIZATION"}, warning="s"),
+        ok("compact-legacy-species-code", "A legacy two-letter code decodes, with a warning",
+           f"{base}?s=LE", {"id": rid, "species": "Lentinula edodes"}, warning="s"),
+        ok("compact-species-new-code", "A code added in 1.5.0-rc.2 decodes", f"{base}?s=GFRON",
+           {"id": rid, "species": "Grifola frondosa"}),
+        ok("compact-species-full-name-encoded", "A full species name, percent-encoded",
+           f"{base}?s=Morchella%20importuna", {"id": rid, "species": "Morchella importuna"}),
+        ok("compact-species-full-name-plus", "In a value, `+` decodes to a space",
+           f"{base}?s=Morchella+importuna", {"id": rid, "species": "Morchella importuna"}),
+        ok("compact-species-registered-as-name", "A registered species may also be written by name",
+           f"{base}?s=Pleurotus%20ostreatus", {"id": rid, "species": po}),
+        ok("compact-id-percent-encoded", "The ID segment is percent-decoded as UTF-8",
+           "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR",
+           {"id": "wemush:Lab A/plate+3%", "species": po}),
+        ok("compact-id-plus-literal", "In the ID segment, `+` is a literal character",
+           "wemush://v1/plate+3?s=POSTR", {"id": "wemush:plate+3", "species": po}),
+        ok("compact-id-encrypted-alone", "An ID that is literally `encrypted` is a compact URL",
+           "wemush://v1/encrypted?s=POSTR", {"id": "wemush:encrypted", "species": po}),
+        ok("compact-generation-without-name", "`sg` is read when `sn` is absent",
+           f"{base}?s=POSTR&sg=F1", {"id": rid, "species": po, "strain": {"generation": "F1"}}),
+        ok("compact-transfer-depth", "`td` carries `strain.transferDepth`",
+           f"{base}?s=POSTR&sg=F1&td=4",
+           {"id": rid, "species": po, "strain": {"generation": "F1", "transferDepth": 4}}),
+        ok("compact-transfer-depth-malformed", "A malformed `td` is ignored with a warning, not rejected",
+           f"{base}?s=POSTR&td=-1", {"id": rid, "species": po}, req="SHOULD", warning="td"),
+        ok("compact-unregistered-param", "Unregistered parameters don't make a URL invalid, and are kept",
+           f"{base}?s=POSTR&x-acme-room=B2&sr=Blue",
+           {"id": rid, "species": po, "unrecognized": {"x-acme-room": "B2", "sr": "Blue"}}),
+        ok("compact-sig-kept", "A `sig` parameter is kept unchanged and never reported as verified",
+           f"{base}?s=POSTR&st=COL&sig=w1.{'A' * 86}",
+           {"id": rid, "species": po, "stage": "COLONIZATION", "sig": f"w1.{'A' * 86}"}),
+        bad("compact-missing-species", "`s` is required", f"{base}?st=COL", "missing-parameter"),
+        bad("compact-missing-id", "The ID segment must be non-empty", "wemush://v1/?s=POSTR", "invalid-url"),
+        bad("compact-wrong-scheme", "Only `wemush://` and `web+wemush://` are required to be read; "
+            "`wemush:` without `//` is not a compact URL", "wemush:v1/clx1a2b3c4?s=POSTR", "invalid-url"),
+        bad("compact-unknown-version", "A version segment other than `v1` is rejected",
+            "wemush://v2/clx1a2b3c4?s=POSTR", "unsupported-version"),
+        bad("compact-encrypted-url", "An encrypted URL is not a compact URL",
+            "wemush://v1/encrypted/clx1a2b3c4?e=AAAA&iv=AAAAAAAAAAAAAAAA&kdf=raw", "encrypted-url"),
+        bad("compact-invalid-stage", "`st` must be a stage name or code", f"{base}?s=POSTR&st=PINNING",
+            "invalid-parameter"),
+        bad("compact-invalid-type", "`ty` must be a canonical type", f"{base}?s=POSTR&ty=BAG",
+            "invalid-parameter"),
+        bad("compact-invalid-timestamp", "`t` must be plain decimal digits",
+            f"{base}?s=POSTR&t=2024-12-16", "invalid-parameter"),
+        bad("compact-invalid-generation", "`sg` must use the generation notation",
+            f"{base}?s=POSTR&sg=Gen+2", "invalid-parameter"),
+        bad("compact-duplicate-param", "A registered parameter may appear only once",
+            f"{base}?s=POSTR&s=LLENC", "duplicate-parameter"),
+        bad("compact-bad-escape", "A malformed percent escape is rejected", f"{base}?s=POSTR&b=%zz",
+            "invalid-encoding"),
+        bad("compact-bad-utf8", "An escape that decodes to invalid UTF-8 is rejected",
+            f"{base}?s=POSTR&sn=%C3%28", "invalid-encoding"),
+        bad("compact-bad-id-escape", "A malformed escape in the ID segment is rejected",
+            "wemush://v1/abc%2?s=POSTR", "invalid-encoding"),
+    ]
+    return cases
+
+
+def species_registry() -> dict:
+    reg = json.loads((OUT.parent.parent / "registries" / "species-codes.json").read_text())
+    return {"speciesCodes": {c["code"]: c["scientificName"] for c in reg["codes"]},
+            "legacySpeciesCodes": {c["code"]: c["scientificName"] for c in reg["legacyCodes"]["codes"]},
+            "stageCodes": STAGE_CODES}
 
 
 # ---------------------------------------------------------------------------
@@ -1650,6 +1757,9 @@ def main() -> None:
           version=DM_SPEC_VERSION)
     write("bundle.json", "Records bundle validation (for implementations that support Bundles)",
           "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=DM_SPEC_VERSION)
+    write("compact.json", "Compact URL parsing, parameter registry and species codes",
+          "QR Code Encoding > Compact Format (Compact URL rules; Species Code Registry)", compact_cases(),
+          version=COMPACT_SPEC_VERSION, extra=species_registry())
     sums = "".join(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}\n"
                    for f in sorted(OUT.glob("*.json")))
     (OUT / "SHA256SUMS").write_text(sums)

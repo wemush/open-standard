@@ -3,7 +3,7 @@
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
 **Status**: Release candidate (see [Governance](#governance))
-**Version**: 1.5.0-rc.1
+**Version**: 1.5.0-rc.2
 **Date**: November 28, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
@@ -304,7 +304,7 @@ WOLS supports three encoding formats optimized for different use cases:
 **Data Limit**: 500 bytes (alphanumeric QR code)
 
 ```bash
-wemush://v1/{id}?s={species_code}&st={stage}&t={timestamp}
+wemush://v1/{id}?s={species}[&ty={type}][&st={stage}][&t={timestamp}][&b={batch}][&sn={strain}][&sg={generation}][&td={transferDepth}][&sig={kid}.{signature}]
 ```
 
 **Example**:
@@ -313,11 +313,74 @@ wemush://v1/{id}?s={species_code}&st={stage}&t={timestamp}
 wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200
 ```
 
-**Resolution**: Full data retrieved via API endpoint:
+**Resolution**: A compact URL is a reference. Full data can be retrieved from the issuer, for example:
 
 ```bash
 GET https://api.wemush.com/v1/specimens/clx1a2b3c4
 ```
+
+##### Compact URL rules (v1.5.0)
+
+From 1.5.0 the compact format is normative, with the parameter registry and the [species code registry](#species-code-registry-v150) below. The [`compact.json`](./conformance/vectors/compact.json) vectors cover these rules.
+
+- **Scheme**: Generators SHOULD write `wemush://`. Decoders MUST accept `wemush://v1/` and `web+wemush://v1/`, which the Python `wols` library writes by default. Decoders MAY accept other forms, such as `https://{host}/{path}/v1/{id}`. An HTTPS resolver form will be defined separately.
+- **Version**: The `v1` path segment signals major version 1 only. It doesn't say which minor version or registry contents a label was written with, and doesn't need to, because the registries are append-only. Decoders MUST reject any other version segment.
+- **ID**: One path segment after `v1/`, the ID suffix without `wemush:`, percent-encoded with the same rules as the [encrypted format](#3-encrypted-format-researchcommercial). The decoded ID is `wemush:` followed by the percent-decoded segment. In the path, `+` is a literal character. A URL whose segment is `encrypted` followed by another segment is an encrypted URL, not a compact URL.
+- **Query**: Parameters are separated by `&`. Values are percent-decoded as UTF-8, and in values `+` decodes to a space. Decoders MUST reject a malformed escape, an escape that decodes to invalid UTF-8, and a registered parameter that appears more than once.
+- **Unregistered parameters**: Decoders MUST NOT reject a URL because of a parameter they don't recognize, and SHOULD make it available to the caller, marked as unrecognized. New parameters defined outside this specification MUST use an `x-` prefix (for example `x-acme-room`), so that they never collide with a name registered later.
+
+| Parameter | Required | Label member | Value |
+| --------- | -------- | ------------ | ----- |
+| `s` | Yes | `species` | A registered species code, or the full scientific name. Generators MUST write the registered code when the species has one, and the full name otherwise. |
+| `ty` | No | `type` | A canonical [SpecimenType](#specimen-types). Decoders MUST reject any other value. |
+| `st` | No | `stage` | A [GrowthStage](#specimen-types), either its full name or its 3-letter code: `INO`, `INC`, `COL`, `PRI`, `FRU`, `SEN`, `HAR`. Generators MAY write either. Decoders MUST accept both, and MUST reject any other value. |
+| `t` | No | `created` | Unix time in seconds (UTC), as plain decimal digits. It decodes to an RFC 3339 UTC date-time with no fractional seconds (`1734307200` is `2024-12-16T00:00:00Z`). Decoders MUST reject anything other than digits. |
+| `b` | No | `batch` | The batch identifier. |
+| `sn` | No | `strain.name` | The strain name. |
+| `sg` | No | `strain.generation` | The filial generation, in the [Generation Notation](#generation-notation-v120). Decoders read it whether or not `sn` is present. Decoders MUST reject a value outside the notation. |
+| `td` | No | `strain.transferDepth` | The transfer depth (v1.5.0), as plain decimal digits. Decoders SHOULD ignore a malformed value, with a warning, rather than reject the URL, because the WeMush Platform wrote it before it was registered. |
+| `sig` | No | (none) | A signature token. When present it MUST be the last parameter. Decoders MUST keep it and MUST NOT treat it as verified. See [Compact URL signatures](#compact-url-signatures-v150). |
+
+Registered names never change meaning, and names are only added, never reassigned.
+
+##### Species Code Registry (v1.5.0)
+
+The machine-readable registry is [`registries/species-codes.json`](./registries/species-codes.json). It is append-only: a code is never removed, reassigned to another species or renamed.
+
+- **Codes**: Uppercase ASCII letters, 4 to 8 of them (`^[A-Z]{4,8}$`). One code per scientific name. A code can't be mistaken for a full name, because a scientific name always has a lowercase letter.
+- **Decoding `s`**: If the value is a registered code, the species is its scientific name. Otherwise, if it is a legacy code (below), the species is its scientific name and decoders SHOULD warn. Otherwise the value is the species name itself, as written.
+- **Legacy codes**: The Python `wols` library wrote two-letter codes before 1.5. Decoders MUST read them, so those printed labels keep working. Generators MUST NOT write them. The legacy table is frozen: `PO` *Pleurotus ostreatus*, `PE` *Pleurotus eryngii*, `PC` *Pleurotus citrinopileatus*, `PP` *Pleurotus pulmonarius*, `GL` *Ganoderma lucidum*, `GA` *Ganoderma applanatum*, `LE` *Lentinula edodes*, `HE` *Hericium erinaceus*, `HC` *Hericium coralloides*, `FL` *Flammulina velutipes*, `AB` *Agaricus bisporus*, `AA` *Agaricus arvensis*, `PS` *Psilocybe cubensis*, `CA` *Cordyceps militaris*, `TA` *Trametes versicolor*, `GF` *Grifola frondosa*, `LP` *Laetiporus sulphureus*, `CM` *Cyclocybe aegerita*, `ST` *Stropharia rugosoannulata*, `PH` *Pholiota nameko*, `HY` *Hypsizygus tessellatus*, `CO` *Coprinus comatus*, `AM` *Armillaria mellea*, `MO` *Morchella esculenta*.
+- **Registering a code**: Open a pull request that adds the code to `registries/species-codes.json` and to the table below, with the accepted scientific name. Use the first letter of the genus and the first four letters of the epithet where that is free. A code is accepted when a maintainer merges it, and ships in the next release.
+
+| Code | Species |
+| ---- | ------- |
+| `POSTR` | *Pleurotus ostreatus* |
+| `PCITRI` | *Pleurotus citrinopileatus* |
+| `PDJAR` | *Pleurotus djamor* |
+| `PERYN` | *Pleurotus eryngii* |
+| `HERIN` | *Hericium erinaceus* |
+| `GLUCI` | *Ganoderma lucidum* |
+| `LPUDE` | *Laetiporus pudens* |
+| `LLENC` | *Lentinula edodes* |
+| `APOLY` | *Agrocybe polyphylla* |
+| `STRUG` | *Stropharia rugosoannulata* |
+| `PPULM` | *Pleurotus pulmonarius* |
+| `GAPPL` | *Ganoderma applanatum* |
+| `HCORA` | *Hericium coralloides* |
+| `FVELU` | *Flammulina velutipes* |
+| `ABISP` | *Agaricus bisporus* |
+| `AARVE` | *Agaricus arvensis* |
+| `PCUBE` | *Psilocybe cubensis* |
+| `CMILI` | *Cordyceps militaris* |
+| `TVERS` | *Trametes versicolor* |
+| `GFRON` | *Grifola frondosa* |
+| `LSULP` | *Laetiporus sulphureus* |
+| `CAEGE` | *Cyclocybe aegerita* |
+| `PNAME` | *Pholiota nameko* |
+| `HTESS` | *Hypsizygus tessellatus* |
+| `CCOMA` | *Coprinus comatus* |
+| `AMELL` | *Armillaria mellea* |
+| `MESCU` | *Morchella esculenta* |
 
 #### 2. Embedded Format (Recommended for Most Applications)
 
@@ -1044,7 +1107,7 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.5.0-rc.1 (release candidate; 1.4.1 remains the latest final release)
+**Current Version**: 1.5.0-rc.2 (release candidate; 1.4.1 remains the latest final release)
 **Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
@@ -1147,9 +1210,24 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 
 ## Changelog
 
+### Version 1.5.0-rc.2 (November 28, 2026)
+
+Second release candidate for 1.5.0. It settles the compact URL format. It includes everything in `1.5.0-rc.1` unchanged. Every compact URL that either reference library has written stays valid, and from 1.5 each one decodes to the same label in both libraries.
+
+Normative changes:
+
+- **Compact URL rules**: decoders MUST read `wemush://` and `web+wemush://`, MUST reject a version segment other than `v1`, and decode the ID and values by fixed rules ([Compact URL rules](#compact-url-rules-v150))
+- **Parameter registry**: `s`, `ty`, `st`, `t`, `b`, `sn`, `sg`, `td` and `sig`, each with its syntax. `st` takes a full stage name or a three-letter code. `td` (`strain.transferDepth`) is new. Unregistered parameters MUST NOT make a URL invalid, and new parameters outside the specification MUST start with `x-`
+- **Species Code Registry**: an append-only registry of 27 five-letter codes, with a machine-readable copy in [`registries/species-codes.json`](./registries/species-codes.json). Generators MUST write the registered code when one exists. The 24 two-letter codes that earlier Python releases wrote are legacy codes: decoders MUST read them and generators MUST NOT write them ([Species Code Registry](#species-code-registry-v150))
+
+Conformance:
+
+- **New vectors**: `compact.json` (36 `MUST` and 1 `SHOULD` cases, a new `parseCompact` operation), with the registry tables copied into the file
+- **Tools**: `verify_vectors.mjs` parses compact URLs independently
+
 ### Version 1.5.0-rc.1 (November 28, 2026)
 
-First release candidate for 1.5.0. It makes the data model normative. Every 1.4.x label stays valid and decodes the same way. Compact URL registries and compact URL signatures are planned for `1.5.0-rc.2`.
+First release candidate for 1.5.0. It makes the data model normative. Every 1.4.x label stays valid and decodes the same way. Compact URL registries and compact URL signatures followed in `1.5.0-rc.2`.
 
 Normative changes:
 

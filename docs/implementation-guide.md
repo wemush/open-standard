@@ -681,8 +681,11 @@ Library versions MUST align with WOLS specification versions:
 
 ## Appendix: Species Codes (Compact Format)
 
-|Code|Species|
-|----|---|
+From 1.5.0-rc.2 the codes are a registry in the specification. See the [Species Code Registry](../SPECIFICATION.md#species-code-registry-v150) for the table and the decoding rules, and [`registries/species-codes.json`](../registries/species-codes.json) for the machine-readable copy that libraries should ship. Codes are append-only, and the two-letter codes that earlier Python releases wrote are legacy codes: decoders read them and generators don't write them.
+
+To register a code, open a pull request against [github.com/wemush/open-standard](https://github.com/wemush/open-standard), as [`registries/README.md`](../registries/README.md) describes.
+
+----|---|
 |POSTR|Pleurotus ostreatus|
 |PCITRI|Pleurotus citrinopileatus|
 |PDJAR|Pleurotus djamor|

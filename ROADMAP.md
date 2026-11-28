@@ -241,7 +241,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 
 ## Next: v1.5.0
 
-### Status: 🧪 RELEASE CANDIDATE (`1.5.0-rc.1`, November 28, 2026)
+### Status: 🧪 RELEASE CANDIDATE (`1.5.0-rc.2`, November 28, 2026)
 
 ### Theme: **IoT & Analytics**
 
@@ -273,9 +273,9 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
    These proposals close gaps documented in [Interoperability Notes](./docs/interoperability-notes.md). Each one needs a decision through the [contribution process](./SPECIFICATION.md#contribution-process) before it becomes normative.
 
-   - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2.
-   - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table.
-   - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL.
+   - **Compact URL parameter registry**: Make the full parameter set normative (`s`, `ty`, `st`, `t`, `b`, `sn`, `sg`). Choose one stage encoding (full names or 3-letter codes) and say whether parsers must accept both. Define how the minor version is signaled, since `v1` alone cannot distinguish 1.0 from 1.2. *In `1.5.0-rc.2`: every parameter is normative, including the platform's `td`; decoders accept both stage spellings and generators may write either; `v1` names the major version only, and the registries are append-only, so no minor version needs signaling; external parameters use an `x-` prefix.*
+   - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table. *In `1.5.0-rc.2`: the five-letter table is the registry, with 17 more species; unregistered species are written by full name; the two-letter codes are legacy codes that decoders still read.*
+   - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL. *Not in 1.5: rc.2 only lets decoders accept such a URL; the form itself moves to a later release.*
    - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional, and the TypeScript library sets `created` only when the caller passes it.
    - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks). *In `1.5.0-rc.1` as the new `derivedFrom` member, so `strain.lineage` stays a single ID for 1.4 readers.*
    - **Generation without a named strain**: Let specimens record `generation` and `clonalGeneration` when `strain.name` is unknown.
@@ -306,7 +306,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
 ### v1.5.0 Timeline
 
-`1.5.0-rc.1` (data model) is out for feedback. `1.5.0-rc.2` adds the compact URL registries and signatures. The final release follows once a library passes every `MUST` vector and the print-and-scan test in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is done. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+`1.5.0-rc.1` (data model) and `1.5.0-rc.2` (compact URL registries and signatures) are out for feedback. The final release follows once a library passes every `MUST` vector and the print-and-scan test in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is done. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
 ## Long-Term: v2.0.0
 

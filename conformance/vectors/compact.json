@@ -1,0 +1,635 @@
+{
+  "wolsVersion": "1.5.0-rc.2",
+  "description": "Compact URL parsing, parameter registry and species codes",
+  "specSection": "QR Code Encoding > Compact Format (Compact URL rules; Species Code Registry)",
+  "speciesCodes": {
+    "POSTR": "Pleurotus ostreatus",
+    "PCITRI": "Pleurotus citrinopileatus",
+    "PDJAR": "Pleurotus djamor",
+    "PERYN": "Pleurotus eryngii",
+    "HERIN": "Hericium erinaceus",
+    "GLUCI": "Ganoderma lucidum",
+    "LPUDE": "Laetiporus pudens",
+    "LLENC": "Lentinula edodes",
+    "APOLY": "Agrocybe polyphylla",
+    "STRUG": "Stropharia rugosoannulata",
+    "PPULM": "Pleurotus pulmonarius",
+    "GAPPL": "Ganoderma applanatum",
+    "HCORA": "Hericium coralloides",
+    "FVELU": "Flammulina velutipes",
+    "ABISP": "Agaricus bisporus",
+    "AARVE": "Agaricus arvensis",
+    "PCUBE": "Psilocybe cubensis",
+    "CMILI": "Cordyceps militaris",
+    "TVERS": "Trametes versicolor",
+    "GFRON": "Grifola frondosa",
+    "LSULP": "Laetiporus sulphureus",
+    "CAEGE": "Cyclocybe aegerita",
+    "PNAME": "Pholiota nameko",
+    "HTESS": "Hypsizygus tessellatus",
+    "CCOMA": "Coprinus comatus",
+    "AMELL": "Armillaria mellea",
+    "MESCU": "Morchella esculenta"
+  },
+  "legacySpeciesCodes": {
+    "PO": "Pleurotus ostreatus",
+    "PE": "Pleurotus eryngii",
+    "PC": "Pleurotus citrinopileatus",
+    "PP": "Pleurotus pulmonarius",
+    "GL": "Ganoderma lucidum",
+    "GA": "Ganoderma applanatum",
+    "LE": "Lentinula edodes",
+    "HE": "Hericium erinaceus",
+    "HC": "Hericium coralloides",
+    "FL": "Flammulina velutipes",
+    "AB": "Agaricus bisporus",
+    "AA": "Agaricus arvensis",
+    "PS": "Psilocybe cubensis",
+    "CA": "Cordyceps militaris",
+    "TA": "Trametes versicolor",
+    "GF": "Grifola frondosa",
+    "LP": "Laetiporus sulphureus",
+    "CM": "Cyclocybe aegerita",
+    "ST": "Stropharia rugosoannulata",
+    "PH": "Pholiota nameko",
+    "HY": "Hypsizygus tessellatus",
+    "CO": "Coprinus comatus",
+    "AM": "Armillaria mellea",
+    "MO": "Morchella esculenta"
+  },
+  "stageCodes": {
+    "INO": "INOCULATION",
+    "INC": "INCUBATION",
+    "COL": "COLONIZATION",
+    "PRI": "PRIMORDIA",
+    "FRU": "FRUITING",
+    "SEN": "SENESCENCE",
+    "HAR": "HARVEST"
+  },
+  "cases": [
+    {
+      "id": "compact-spec-example",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "The specification's example URL",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "COLONIZATION",
+          "created": "2024-12-16T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "compact-species-only",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`s` is the only required parameter",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus"
+        }
+      }
+    },
+    {
+      "id": "compact-all-registered",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Every registered parameter, as `@wemush/wols` writes them",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&t=1734307200&b=batch_2025_12_001&sn=Blue+Oyster+PoHu&sg=F2&td=5"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "type": "SUBSTRATE",
+          "stage": "COLONIZATION",
+          "created": "2024-12-16T00:00:00Z",
+          "batch": "batch_2025_12_001",
+          "strain": {
+            "name": "Blue Oyster PoHu",
+            "generation": "F2",
+            "transferDepth": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-ino",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `INO` decodes to `INOCULATION`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=INO"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "INOCULATION"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-inc",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `INC` decodes to `INCUBATION`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=INC"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "INCUBATION"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-col",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `COL` decodes to `COLONIZATION`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COL"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "COLONIZATION"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-pri",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `PRI` decodes to `PRIMORDIA`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=PRI"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "PRIMORDIA"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-fru",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `FRU` decodes to `FRUITING`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=FRU"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "FRUITING"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-sen",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `SEN` decodes to `SENESCENCE`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=SEN"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "SENESCENCE"
+        }
+      }
+    },
+    {
+      "id": "compact-stage-code-har",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Stage code `HAR` decodes to `HARVEST`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=HAR"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "HARVEST"
+        }
+      }
+    },
+    {
+      "id": "compact-python-default",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "The Python library's default output: `web+wemush://`, legacy species code, stage code",
+      "input": {
+        "url": "web+wemush://v1/clx1a2b3c4?s=PO&st=COL"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "COLONIZATION"
+        },
+        "warningField": "s"
+      }
+    },
+    {
+      "id": "compact-legacy-species-code",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A legacy two-letter code decodes, with a warning",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=LE"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Lentinula edodes"
+        },
+        "warningField": "s"
+      }
+    },
+    {
+      "id": "compact-species-new-code",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A code added in 1.5.0-rc.2 decodes",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=GFRON"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Grifola frondosa"
+        }
+      }
+    },
+    {
+      "id": "compact-species-full-name-encoded",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A full species name, percent-encoded",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=Morchella%20importuna"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Morchella importuna"
+        }
+      }
+    },
+    {
+      "id": "compact-species-full-name-plus",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "In a value, `+` decodes to a space",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=Morchella+importuna"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Morchella importuna"
+        }
+      }
+    },
+    {
+      "id": "compact-species-registered-as-name",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A registered species may also be written by name",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=Pleurotus%20ostreatus"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus"
+        }
+      }
+    },
+    {
+      "id": "compact-id-percent-encoded",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "The ID segment is percent-decoded as UTF-8",
+      "input": {
+        "url": "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:Lab A/plate+3%",
+          "species": "Pleurotus ostreatus"
+        }
+      }
+    },
+    {
+      "id": "compact-id-plus-literal",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "In the ID segment, `+` is a literal character",
+      "input": {
+        "url": "wemush://v1/plate+3?s=POSTR"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:plate+3",
+          "species": "Pleurotus ostreatus"
+        }
+      }
+    },
+    {
+      "id": "compact-id-encrypted-alone",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "An ID that is literally `encrypted` is a compact URL",
+      "input": {
+        "url": "wemush://v1/encrypted?s=POSTR"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:encrypted",
+          "species": "Pleurotus ostreatus"
+        }
+      }
+    },
+    {
+      "id": "compact-generation-without-name",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`sg` is read when `sn` is absent",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&sg=F1"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "generation": "F1"
+          }
+        }
+      }
+    },
+    {
+      "id": "compact-transfer-depth",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`td` carries `strain.transferDepth`",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&sg=F1&td=4"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "strain": {
+            "generation": "F1",
+            "transferDepth": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "compact-transfer-depth-malformed",
+      "operation": "parseCompact",
+      "requirement": "SHOULD",
+      "description": "A malformed `td` is ignored with a warning, not rejected",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&td=-1"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus"
+        },
+        "warningField": "td"
+      }
+    },
+    {
+      "id": "compact-unregistered-param",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Unregistered parameters don't make a URL invalid, and are kept",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&x-acme-room=B2&sr=Blue"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "unrecognized": {
+            "x-acme-room": "B2",
+            "sr": "Blue"
+          }
+        }
+      }
+    },
+    {
+      "id": "compact-sig-kept",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A `sig` parameter is kept unchanged and never reported as verified",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=COL&sig=w1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {
+        "label": {
+          "id": "wemush:clx1a2b3c4",
+          "species": "Pleurotus ostreatus",
+          "stage": "COLONIZATION",
+          "sig": "w1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      }
+    },
+    {
+      "id": "compact-missing-species",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`s` is required",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?st=COL"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "missing-parameter"
+      }
+    },
+    {
+      "id": "compact-missing-id",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "The ID segment must be non-empty",
+      "input": {
+        "url": "wemush://v1/?s=POSTR"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-url"
+      }
+    },
+    {
+      "id": "compact-wrong-scheme",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "Only `wemush://` and `web+wemush://` are required to be read; `wemush:` without `//` is not a compact URL",
+      "input": {
+        "url": "wemush:v1/clx1a2b3c4?s=POSTR"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-url"
+      }
+    },
+    {
+      "id": "compact-unknown-version",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A version segment other than `v1` is rejected",
+      "input": {
+        "url": "wemush://v2/clx1a2b3c4?s=POSTR"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "unsupported-version"
+      }
+    },
+    {
+      "id": "compact-encrypted-url",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "An encrypted URL is not a compact URL",
+      "input": {
+        "url": "wemush://v1/encrypted/clx1a2b3c4?e=AAAA&iv=AAAAAAAAAAAAAAAA&kdf=raw"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "encrypted-url"
+      }
+    },
+    {
+      "id": "compact-invalid-stage",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`st` must be a stage name or code",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&st=PINNING"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-parameter"
+      }
+    },
+    {
+      "id": "compact-invalid-type",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`ty` must be a canonical type",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&ty=BAG"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-parameter"
+      }
+    },
+    {
+      "id": "compact-invalid-timestamp",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`t` must be plain decimal digits",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&t=2024-12-16"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-parameter"
+      }
+    },
+    {
+      "id": "compact-invalid-generation",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "`sg` must use the generation notation",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&sg=Gen+2"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-parameter"
+      }
+    },
+    {
+      "id": "compact-duplicate-param",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A registered parameter may appear only once",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&s=LLENC"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "duplicate-parameter"
+      }
+    },
+    {
+      "id": "compact-bad-escape",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A malformed percent escape is rejected",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&b=%zz"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-encoding"
+      }
+    },
+    {
+      "id": "compact-bad-utf8",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "An escape that decodes to invalid UTF-8 is rejected",
+      "input": {
+        "url": "wemush://v1/clx1a2b3c4?s=POSTR&sn=%C3%28"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-encoding"
+      }
+    },
+    {
+      "id": "compact-bad-id-escape",
+      "operation": "parseCompact",
+      "requirement": "MUST",
+      "description": "A malformed escape in the ID segment is rejected",
+      "input": {
+        "url": "wemush://v1/abc%2?s=POSTR"
+      },
+      "expected": {
+        "refused": true,
+        "reason": "invalid-encoding"
+      }
+    }
+  ]
+}

@@ -459,6 +459,66 @@ function loadKeySet(doc) {
   return { store, skipped };
 }
 
+// --- Compact URLs (1.5.0-rc.2) ------------------------------------------------
+// An independent reading of "Compact URL rules" and the Species Code Registry.
+// The registry tables come from the vector file, which copies registries/species-codes.json.
+const STAGE_CODES = { INO: 'INOCULATION', INC: 'INCUBATION', COL: 'COLONIZATION', PRI: 'PRIMORDIA',
+  FRU: 'FRUITING', SEN: 'SENESCENCE', HAR: 'HARVEST' };
+const REGISTERED = new Set(['s', 'ty', 'st', 't', 'b', 'sn', 'sg', 'td', 'sig']);
+
+function parseCompact(url, registry) {
+  const refuse = (reason) => ({ refused: true, reason });
+  const scheme = ['wemush://', 'web+wemush://'].find((s) => url.startsWith(s));
+  if (!scheme || url.includes('#')) return refuse('invalid-url');
+  const rest = url.slice(scheme.length);
+  const version = rest.match(/^(v\d+)\//);
+  if (!version) return refuse('invalid-url');
+  if (version[1] !== 'v1') return refuse('unsupported-version');
+  const after = rest.slice(3);
+  if (after.startsWith('encrypted/')) return refuse('encrypted-url');
+  const q = after.indexOf('?');
+  const segment = q < 0 ? after : after.slice(0, q);
+  if (segment === '' || segment.includes('/')) return refuse('invalid-url');
+  let id;
+  try { id = decodeURIComponent(segment); } catch { return refuse('invalid-encoding'); }
+  const params = new Map(), unrecognized = {}, warnings = [];
+  for (const pair of q < 0 || q === after.length - 1 ? [] : after.slice(q + 1).split('&')) {
+    const eqAt = pair.indexOf('=');
+    const name = eqAt < 0 ? pair : pair.slice(0, eqAt);
+    let value;
+    try { value = decodeURIComponent((eqAt < 0 ? '' : pair.slice(eqAt + 1)).replace(/\+/g, ' ')); } catch { return refuse('invalid-encoding'); }
+    if (!REGISTERED.has(name)) { unrecognized[name] = value; continue; }
+    if (params.has(name)) return refuse('duplicate-parameter');
+    params.set(name, value);
+  }
+  if (!params.has('s') || params.get('s') === '') return refuse('missing-parameter');
+  const label = { id: `wemush:${id}` };
+  const s = params.get('s');
+  if (registry.speciesCodes[s]) label.species = registry.speciesCodes[s];
+  else if (registry.legacySpeciesCodes[s]) { label.species = registry.legacySpeciesCodes[s]; warnings.push('s'); }
+  else label.species = s;
+  if (params.has('ty')) { if (!TYPES.includes(params.get('ty'))) return refuse('invalid-parameter'); label.type = params.get('ty'); }
+  if (params.has('st')) {
+    const st = params.get('st');
+    const stage = STAGES.includes(st) ? st : STAGE_CODES[st];
+    if (!stage) return refuse('invalid-parameter');
+    label.stage = stage;
+  }
+  if (params.has('t')) {
+    if (!/^\d+$/.test(params.get('t'))) return refuse('invalid-parameter');
+    label.created = new Date(Number(params.get('t')) * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+  if (params.has('b')) label.batch = params.get('b');
+  const strain = {};
+  if (params.has('sn')) strain.name = params.get('sn');
+  if (params.has('sg')) { if (!GENERATION.test(params.get('sg'))) return refuse('invalid-parameter'); strain.generation = params.get('sg'); }
+  if (params.has('td')) { if (/^\d+$/.test(params.get('td'))) strain.transferDepth = Number(params.get('td')); else warnings.push('td'); }
+  if (Object.keys(strain).length) label.strain = strain;
+  if (Object.keys(unrecognized).length) label.unrecognized = unrecognized;
+  if (params.has('sig')) label.sig = params.get('sig');
+  return { refused: false, label, warnings };
+}
+
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
@@ -488,6 +548,12 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
     } else if (c.operation === 'validateBundle') {
       const r = validateBundle(c.input);
       ok = r.valid === x.valid && (!x.errorField || r.errors.includes(x.errorField));
+      detail = JSON.stringify(r);
+    } else if (c.operation === 'parseCompact') {
+      const r = parseCompact(c.input.url, doc);
+      ok = x.refused ? r.refused === true && r.reason === x.reason
+        : !r.refused && eq(canonical(r.label), canonical(x.label)) &&
+          (x.warningField ? r.warnings.includes(x.warningField) : r.warnings.length === 0);
       detail = JSON.stringify(r);
     } else if (c.operation === 'create') {
       const r = create(c.input);
