@@ -2,9 +2,9 @@
 
 > 📖 **Read Online**: [wemush.com/open-standard/specification](https://wemush.com/open-standard/specification)
 
-**Status**: Active
-**Version**: 1.4.1
-**Date**: November 27, 2026
+**Status**: Release candidate (see [Governance](#governance))
+**Version**: 1.5.0-rc.1
+**Date**: November 28, 2026
 **Authors**: [Amy Beacom](https://github.com/abeacom), [Mark Beacom](https://github.com/mbeacom), [WeMush Foundation](https://github.com/wemush)
 **License**: CC BY 4.0
 
@@ -49,6 +49,8 @@ This standard is designed for mushroom cultivation but extensible to any biologi
 
 The foundational entity representing a biological specimen at any stage of cultivation. WOLS uses JSON-LD format for semantic web interoperability.
 
+From 1.5.0 the [JSON Schema](#schema-and-data-model-v150) in [`schema/1.5/`](./schema/1.5/) is the normative definition of this object. The interface below is a summary of it.
+
 ```typescript
 interface SpecimenLabel {
   // JSON-LD Context (Required)
@@ -57,24 +59,31 @@ interface SpecimenLabel {
 
   // Required Fields
   id: string;                    // Unique identifier with wemush: prefix (e.g., "wemush:clx1a2b3c4")
-  version: string;               // Spec version (e.g., "1.4.0")
+  version: string;               // Spec version: MAJOR.MINOR.PATCH, optional pre-release (e.g., "1.5.0", "1.5.0-rc.1")
   type: SpecimenType;            // CULTURE | SPAWN | SUBSTRATE | FRUITING | HARVEST
   species: string;               // Scientific name (e.g., "Pleurotus ostreatus")
 
   // Taxonomy & Genetics
+  taxon?: Taxon;                 // Name plus resolvable identifiers and hybrid parents (v1.5.0)
+  form?: SpecimenForm;           // Specific form within `type`, e.g. GRAIN_SPAWN (v1.5.0)
   strain?: {
-    name: string;                // Strain name or identifier
+    name?: string;               // Strain name or identifier (optional from v1.5.0)
     generation?: string;         // Filial generation (e.g., "F1", "F2", "P")
     clonalGeneration?: number;   // Culture-to-culture subculture count (0 = original culture)
     transferDepth?: number;      // Total transfers from the original culture, any kind (v1.3.0)
     lineage?: string;            // Parent specimen ID reference
     source?: string;             // "spore", "tissue", "agar", "liquid"
+    accession?: string;          // Culture-collection or vendor accession (v1.5.0)
   };
+  derivedFrom?: ParentLink[];    // Every parent, with how it was used (v1.5.0)
 
   // Lifecycle Tracking
-  stage: GrowthStage;            // INOCULATION | INCUBATION | COLONIZATION | PRIMORDIA | FRUITING | SENESCENCE | HARVEST
-  created: string;               // ISO 8601 timestamp
+  stage?: GrowthStage;           // INOCULATION | INCUBATION | COLONIZATION | PRIMORDIA | FRUITING | SENESCENCE | HARVEST
+  condition?: Condition;         // ACTIVE | CONTAMINATED | EXHAUSTED | DISPOSED | ARCHIVED (v1.5.0)
+  container?: Container;         // The vessel and its capacity (v1.5.0)
+  created?: string;              // ISO 8601 timestamp
   batch?: string;                // Associated batch identifier
+  lot?: string;                  // Traceability lot code for sellable product (v1.5.0)
 
   // Attribution
   organization?: string;         // Organization ID
@@ -209,6 +218,77 @@ The `id` field MUST start with `wemush:` prefix. The suffix format is flexible:
 | UUID | `wemush:{UUID}` | wemush:550e8400-e29b-41d4-a716-446655440000 |
 
 Implementations MUST accept any non-empty suffix after `wemush:` prefix.
+
+### Schema and Data Model (v1.5.0)
+
+#### Normative schema
+
+[`schema/1.5/label.schema.json`](./schema/1.5/label.schema.json) (JSON Schema 2020-12) is the normative definition of the embedded label, and [`schema/1.5/bundle.schema.json`](./schema/1.5/bundle.schema.json) of the [Records Bundle](#records-bundle-v150). Where the schema and the prose of this specification differ, the schema wins. The rules that JSON Schema can't express are stated in this section and are normative too.
+
+Every 1.4.x `validate` vector gets the same verdict and the same error field from the 1.5 schema; [`conformance/tools/validate_schema.py`](./conformance/tools/validate_schema.py) checks this. The exceptions are listed under [Compatibility](#compatibility).
+
+**Sync rule**: a reference library's test suite MUST validate every `validate` and `validateBundle` vector input against the schema and fail when the schema's verdict differs from the vector's. Libraries SHOULD generate their types from the schema, or check their types against it in tests.
+
+#### Required and optional members
+
+- Required: `@context`, `@type`, `id`, `version`, `type` and `species`.
+- `stage` and `created` are optional. Generators SHOULD write both.
+- `strain.name` is optional, so `generation`, `clonalGeneration` and `transferDepth` can be recorded for a strain that has no name.
+- `version` MUST be `MAJOR.MINOR.PATCH`, optionally followed by a pre-release suffix (`-` and dot-separated alphanumerics, such as `1.5.0-rc.1`).
+
+#### New members (all optional)
+
+| Member | Meaning |
+| ------ | ------- |
+| `taxon` | `{scientificName, authorship?, rank?, identifiers?, hybridOf?}`. `scientificName` is required. Each identifier is `{scheme, value}`, with `scheme` one of `mycobank`, `indexfungorum`, `gbif`, `col`, `inaturalist` or `ncbi`. A hybrid sets `rank: "hybrid"`, gives the hybrid formula as `scientificName`, and lists at least two parents in `hybridOf`. `species` stays required; keep it equal to `taxon.scientificName`. |
+| `form` | The specific form within `type`: `AGAR_PLATE`, `SLANT`, `TISSUE_CULTURE`, `LIQUID_CULTURE`, `SPORE_SYRINGE`, `SPORE_PRINT`, `SPORE_SWAB`, `GRAIN_SPAWN`, `SAWDUST_SPAWN`, `PLUG_SPAWN`, `SUBSTRATE_BLOCK`, `BULK_SUBSTRATE`, `FRUITING_BLOCK`, `FRUITING_BAG`, `LOG`, `BED`, `FRESH`, `DRIED`, `PROCESSED`, `EXTRACT` or `LIVE_SAMPLE`. Any other value MUST start with `x-` and use only lowercase letters, digits and hyphens. A generator that resolves a [type alias](#type-aliases-v120) such as `GRAIN_SPAWN` can keep it here, so the specific form survives the round trip. |
+| `derivedFrom` | An array of at least one `{id, relation?, quantity?}`, one per parent specimen. `id` is a WOLS specimen ID. `relation` is one of `SUBCULTURE`, `EXPANSION`, `SPAWN_TO_BULK`, `COMBINED`, `CLONE`, `SPORE_ISOLATE`, `CROSS` or `REPACK`. `quantity` is how much of that parent was used. |
+| `condition` | Health or terminal state, separate from `stage`: `ACTIVE`, `CONTAMINATED`, `EXHAUSTED`, `DISPOSED` or `ARCHIVED`. Absent means `ACTIVE`. Implementations MUST NOT encode contamination or disposal as a growth stage. |
+| `container` | `{format, capacity?}`. `format` is one of `PETRI_DISH`, `SLANT_TUBE`, `JAR`, `BOTTLE`, `CARBOY`, `SYRINGE`, `BAG`, `MONOTUB`, `BUCKET`, `COMPRESSED_BLOCK`, `TRAY` or `OTHER`, or an `x-` value as for `form`. |
+| `lot` | A non-empty traceability lot code for sellable product, such as a GS1 batch/lot (AI 10). It is distinct from `batch`, which is a production grouping. |
+| `strain.accession` | The culture-collection or vendor accession for the strain. |
+
+**Parents**: `strain.lineage` stays, for 1.x readers. When a label has both `strain.lineage` and `derivedFrom`, `strain.lineage` MUST equal `derivedFrom[0].id`, and validators MUST report a mismatch on `strain.lineage`. A generator that writes `derivedFrom` should also write `strain.lineage` with the primary parent, for 1.4 readers. The relation says which [counter](#generation-subculture-and-transfer-tracking-v130) moves: `SUBCULTURE` increments `clonalGeneration` and `transferDepth`; `EXPANSION` and `SPAWN_TO_BULK` increment `transferDepth` only; `CROSS` starts a new filial generation.
+
+**Quantities**: every quantity is `{value, unit}`, with `value` a JSON number and `unit` a case-sensitive [UCUM](https://ucum.org/) code, such as `g`, `kg`, `mL`, `L`, `Cel`, `[degF]`, `%` or `[ppm]`. The legacy temperature units `C` and `F` are accepted.
+
+#### Decoding, unknown members and `_meta`
+
+- **Unknown members**: a top-level member that this version doesn't define is valid. Validators SHOULD warn on it and recommend `custom`. Decoders MUST keep every top-level member they don't recognize, and every member they don't recognize inside `strain`, `custom` or `_meta`, and MUST write it back unchanged when they re-serialize the label. Members that 1.4 decoders didn't know, including all of the 1.5 members above, are covered by this rule.
+- **`signature`**: decoders MUST keep a `signature` member unchanged, whether or not it is a well-formed token. A malformed token is a [verification status](#cryptographic-signatures), not a validation error.
+- **`_meta` keys**: generators MUST write the standard `_meta` keys in camelCase (`sourceId`, `sourceSystem`, `importedAt`, `schemaVersion`). Decoders SHOULD accept `source_id`, `source_system`, `imported_at` and `schema_version`, which the Python `wols` 1.4.0 library wrote, and SHOULD re-encode them in camelCase. Other `_meta` keys are kept as they are.
+
+#### Compatibility
+
+All of the members above are optional, so every 1.4.x label stays valid and decodes the same way. A 1.4 decoder that reads a 1.5 label treats the new members as unknown members, which it warns on and, from 1.5, keeps. Signed labels need no change: the new members are part of the [JCS body](#cryptographic-signatures) like any other member. The new rules make two kinds of label invalid that a 1.4 validator would have accepted with a warning: a label that uses one of the new member names with a value this section doesn't allow, and a label whose `version` isn't `MAJOR.MINOR.PATCH`. No 1.4 generator wrote either, since the names were undefined and every generator writes the specification version.
+
+### Records Bundle (v1.5.0)
+
+A Bundle carries specimen labels together with the records a label can't hold, for exchange between systems. It is never printed in a QR code. Implementations MAY support Bundles; an implementation that claims Bundle support MUST pass the `validateBundle` vectors.
+
+```typescript
+interface Bundle {
+  "@context": "https://wemush.com/wols/v1";
+  "@type": "Bundle";
+  version: string;               // As for a label
+  generated?: string;            // RFC 3339 date-time
+  publisher?: { name: string; organization?: string; contact?: string };
+  license?: string;              // SPDX identifier or URL for the data
+  specimens: SpecimenRecord[];   // Required; may be empty
+  strains?: StrainRecord[];
+  recipes?: Recipe[];
+  observations?: Observation[];
+  harvests?: Harvest[];
+}
+```
+
+- **SpecimenRecord**: a label, which MUST also be a valid label, plus `strainRef`, `recipeRef`, `inoculatedAt`, `inoculum`, `substrateWetWeight`, `substrateDryWeight`, `location` and `circularEconomy`. Biological efficiency is derived, not stored: fresh harvest weight over substrate dry weight.
+- **StrainRecord**: `id`, `name` and `taxon` (required), plus aliases, accession, origin, isolation date and source, and growth parameter ranges.
+- **Recipe**: `id`, `name`, `kind` and `ingredients` (required). Ingredients are amounts with units; percentages are derived. It replaces `SubstrateFormula`.
+- **Observation**: one dated fact about one specimen. `id`, `specimen`, `observedAt` and `kind` are required; `recordedAt` and `source` say when and how it was recorded. `environment` replaces `EnvironmentalData`, and its values take their time from the observation.
+- **Harvest**: one flush from one specimen. `id`, `specimen`, `harvestedAt` and `freshWeight` are required.
+
+References inside a bundle MUST resolve within it: every `observations[].specimen` and `harvests[].specimen` MUST be the `id` of a specimen in `specimens`, every `strainRef` the `id` of a strain in `strains`, and every `recipeRef` the `id` of a recipe in `recipes`. The full member list is in the schema, and a worked chain is in [`examples/records/`](./examples/records/).
 
 ---
 
@@ -964,8 +1044,8 @@ This specification uses [Semantic Versioning](https://semver.org/):
 - **Minor**: Backwards-compatible additions
 - **Patch**: Clarifications, bug fixes
 
-**Current Version**: 1.4.0
-**Stability**: Active (feedback welcome)
+**Current Version**: 1.5.0-rc.1 (release candidate; 1.4.1 remains the latest final release)
+**Stability**: Release candidate (feedback welcome; requirements may change before the final release)
 
 ---
 
@@ -1066,6 +1146,25 @@ Full license: [https://creativecommons.org/licenses/by/4.0/](https://creativecom
 ---
 
 ## Changelog
+
+### Version 1.5.0-rc.1 (November 28, 2026)
+
+First release candidate for 1.5.0. It makes the data model normative. Every 1.4.x label stays valid and decodes the same way. Compact URL registries and compact URL signatures are planned for `1.5.0-rc.2`.
+
+Normative changes:
+
+- **JSON Schema**: [`schema/1.5/`](./schema/1.5/) is the normative definition of the label and the Bundle, and wins where it differs from the prose. Reference libraries MUST check every `validate` vector against it ([Schema and Data Model](#schema-and-data-model-v150))
+- **Optional members**: `stage`, `created` and `strain.name` are optional; `version` may carry a pre-release suffix and MUST otherwise be `MAJOR.MINOR.PATCH`
+- **New label members**: `taxon`, `form`, `derivedFrom`, `condition`, `container`, `lot` and `strain.accession`, all optional. When both are present, `strain.lineage` MUST equal `derivedFrom[0].id`
+- **Unknown members**: decoders MUST keep members they don't recognize, and a `signature` member as it is, and write them back unchanged
+- **`_meta` keys**: generators MUST write the standard keys in camelCase; decoders SHOULD accept snake_case and re-encode it in camelCase
+- **Records Bundle**: an optional exchange format for strains, recipes, observations and harvests, with references that MUST resolve inside the bundle ([Records Bundle](#records-bundle-v150))
+
+Conformance:
+
+- **New vectors**: `data-model.json` (34 `MUST` and 1 `SHOULD` cases, including a new `roundtrip` operation) and `bundle.json` (8 `MUST` cases, `validateBundle`, for implementations that support Bundles)
+- **Tools**: `validate_schema.py` checks every `validate` and `validateBundle` vector against the schema, and `verify_vectors.mjs` implements the 1.5 rules independently
+- **Proposal**: The [data model proposal](./proposals/wols-1.5-data-model.md) is accepted into this candidate
 
 ### Version 1.4.1 (November 27, 2026)
 

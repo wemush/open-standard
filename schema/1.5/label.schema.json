@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wemush.com/wols/schema/1.5/label.schema.json",
   "title": "WOLS Specimen label",
-  "description": "DRAFT for WOLS 1.5 (non-normative until accepted). The embedded-format Specimen label. Every 1.4.0 label that is valid today stays valid. New members are optional, and 1.4 decoders treat them as unknown top-level members (a warning, not an error).",
+  "description": "Normative for WOLS 1.5 (from 1.5.0-rc.1; where this schema and the specification prose differ, the schema wins). The embedded-format Specimen label. Every 1.4.0 label that is valid today stays valid. New members are optional, and 1.4 decoders treat them as unknown top-level members (a warning, not an error).",
   "type": "object",
   "required": ["@context", "@type", "id", "version", "type", "species"],
   "properties": {
     "@context": {
       "const": "https://wemush.com/wols/v1",
-      "description": "JSON-LD context. The context document itself must be published at this URL (ROADMAP v1.5.0 deliverable)."
+      "description": "JSON-LD context. The context document is served at this URL as application/ld+json (context/v1.jsonld)."
     },
     "@type": {"const": "Specimen"},
     "id": {"$ref": "#/$defs/SpecimenId"},

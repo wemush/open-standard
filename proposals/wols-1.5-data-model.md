@@ -1,6 +1,6 @@
 # Proposal: WOLS 1.5 data model and JSON Schema
 
-**Status**: Draft (non-normative). Nothing in this document changes the 1.4.0 specification.
+**Status**: Accepted into `1.5.0-rc.1` (November 28, 2026). The normative text is [Schema and Data Model](../SPECIFICATION.md#schema-and-data-model-v150) and [Records Bundle](../SPECIFICATION.md#records-bundle-v150) in the specification; this document keeps the rationale. Open questions below stay open for later candidates.
 **Target**: WOLS 1.5.0, a minor release, shipped first as `1.5.0-rc.1`
 **Closes**: ROADMAP v1.5.0 goal 5 items "Required-field clarity", "Multiple parents", "Generation without a named strain", "Extended data attachment", "Specimen condition" and "Container/vessel", plus goals 1 to 3 at the data-model level
 **Date**: November 27, 2026

@@ -241,7 +241,7 @@ The platform uses 7 growth stages internally. WOLS v1.2.0 now supports all 7 res
 
 ## Next: v1.5.0
 
-### Status: 📋 PLANNED
+### Status: 🧪 RELEASE CANDIDATE (`1.5.0-rc.1`, November 28, 2026)
 
 ### Theme: **IoT & Analytics**
 
@@ -277,7 +277,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
    - **Species code registry**: Move the 5-letter table from the [Implementation Guide](./docs/implementation-guide.md#appendix-species-codes-compact-format) into the specification, define the fallback for unregistered species (full name or error), and add a registration process like the one for custom namespaces. The Python library currently uses a different 2-letter table.
    - **HTTPS resolver form**: Native phone cameras don't open `wemush://` or `web+wemush://`. Define an `https://` form that is equivalent to the compact URL, how a resolver base is chosen or discovered, and how it relates to the `@context` URL.
    - **Required-field clarity**: State whether `stage` and `created` are required. The core interface implies yes; both libraries treat `stage` as optional, and the TypeScript library sets `created` only when the caller passes it.
-   - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks).
+   - **Multiple parents**: Allow `strain.lineage` to hold several parent IDs (combined spawn, multi-spore isolates, packages made from several blocks). *In `1.5.0-rc.1` as the new `derivedFrom` member, so `strain.lineage` stays a single ID for 1.4 readers.*
    - **Generation without a named strain**: Let specimens record `generation` and `clonalGeneration` when `strain.name` is unknown.
    - **Extended data attachment**: Define where `EnvironmentalData`, `SubstrateFormula`, and `CircularEconomyData` attach to a specimen, and align the REST example (`metadata`, `observations`) with the core model.
    - **Specimen condition**: Add an optional field for terminal or abnormal states (for example contaminated, disposed, archived). Today implementations must map a contaminated specimen to a growth stage, which loses information.
@@ -292,7 +292,10 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 - [ ] API specification document (REST, GraphQL)
 - [ ] Compact URL conformance vectors (other formats are covered in [`conformance/`](./conformance/README.md) as of 1.3.0)
 - [x] Published JSON-LD context document at `https://wemush.com/wols/v1` ([`context/v1.jsonld`](./context/v1.jsonld), served since November 27, 2026)
-- [ ] Draft 1.5 proposals: [data model and JSON Schema](./proposals/wols-1.5-data-model.md) ([`schema/1.5/`](./schema/1.5/)) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md)
+- [x] Draft 1.5 proposals: [data model and JSON Schema](./proposals/wols-1.5-data-model.md) ([`schema/1.5/`](./schema/1.5/)) and [compact URL signatures](./proposals/wols-1.5-compact-signatures.md)
+- [x] `1.5.0-rc.1`: normative JSON Schema and data model (required-field clarity, multiple parents, generation without a named strain, extended data attachment through the Records Bundle, specimen condition, container), with [`data-model.json`](./conformance/vectors/data-model.json) and [`bundle.json`](./conformance/vectors/bundle.json) vectors
+- [ ] `1.5.0-rc.2`: compact URL parameter registry, species code registry and compact URL signatures, with compact URL vectors
+- [ ] A maintained library passes every `MUST` vector of the final candidate
 
 ### v1.5.0 Success Metrics
 
@@ -303,7 +306,7 @@ Focus on enterprise features, IoT integration, and supply chain tracking.
 
 ### v1.5.0 Timeline
 
-Not yet scheduled. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
+`1.5.0-rc.1` (data model) is out for feedback. `1.5.0-rc.2` adds the compact URL registries and signatures. The final release follows once a library passes every `MUST` vector and the print-and-scan test in the [compact signatures proposal](./proposals/wols-1.5-compact-signatures.md) is done. Normative changes ship as release candidates first (see [GOVERNANCE.md](./GOVERNANCE.md)).
 
 ## Long-Term: v2.0.0
 
