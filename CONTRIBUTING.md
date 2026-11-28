@@ -470,7 +470,7 @@ By contributing, you agree:
 1. **You own your contribution** or have permission to submit it
 2. **You grant CC BY 4.0 license** for specification and documentation contributions
 3. **You grant Apache 2.0 license** for code example contributions
-4. **You dedicate to the public domain under CC0 1.0** contributions to the JSON Schema (`schema/`), the JSON-LD context (`context/`), conformance vectors and tools (`conformance/`), and example records (`examples/records/`)
+4. **You dedicate to the public domain under CC0 1.0** contributions to the JSON Schema (`schema/`), the JSON-LD context (`context/`), the registries (`registries/`), conformance vectors and tools (`conformance/`), and example records (`examples/records/`)
 5. **Your contribution doesn't violate** any copyrights or patents
 6. **You understand contributions are public** and permanent
 

@@ -23,7 +23,10 @@ const KNOWN = new Set(['@context', '@type', 'id', 'version', 'type', 'species', 
   'batch', 'organization', 'creator', 'custom', '_meta', 'signature',
   // 1.5.0-rc.1
   'taxon', 'form', 'derivedFrom', 'condition', 'container', 'lot']);
-const GENERATION = /^(P|P\d+|F\d+|G\d+|\d+)$/;
+// 1.5.0-rc.2: letters are read in either case.
+const GENERATION = /^(P\d*|F\d+|G\d+|\d+)$/i;
+const RFC3339 = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:\d{2})$/;
+const MAX_T = 253402300799;
 // 1.5.0-rc.1 data model (schema/1.5/label.schema.json)
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const EXT = /^x-[a-z0-9-]+$/;
@@ -42,6 +45,10 @@ const META_CAMEL = { source_id: 'sourceId', source_system: 'sourceSystem', impor
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isId = (v) => typeof v === 'string' && v.startsWith('wemush:') && v.length > 'wemush:'.length;
 const nonEmpty = (v) => typeof v === 'string' && v.length > 0;
+// 1.5.0-rc.2: a field-level encrypted value; its plaintext is checked after decryption.
+const isEnc = (v) => isObj(v) && v.encrypted === true;
+const encShapeOk = (v) => v.algorithm === 'AES-256-GCM' && ['payload', 'iv', 'kdf'].every((k) => typeof v[k] === 'string') &&
+  (v.salt === undefined || typeof v.salt === 'string') && (v.iterations === undefined || Number.isInteger(v.iterations));
 
 function checkQuantity(q, path, errors) {
   if (!isObj(q)) { errors.push(path); return; }
@@ -59,9 +66,16 @@ function checkTaxon(t, errors) {
   if (t.hybridOf !== undefined && !(Array.isArray(t.hybridOf) && t.hybridOf.length >= 2)) errors.push('taxon.hybridOf');
 }
 
-function validate(s, prefix = '') {
+function validate(label, prefix = '') {
   const errors = [], warnings = [];
   const err = (f) => errors.push(prefix + f), warn = (f) => warnings.push(prefix + f);
+  // Encrypted members are checked for shape only; identifying members may not be encrypted.
+  const NEVER_ENC = ['@context', '@type', 'id', 'version', 'type', 'species', 'signature'];
+  const s = {};
+  for (const [k, v] of Object.entries(label)) {
+    if (isEnc(v) && !NEVER_ENC.includes(k)) { if (!encShapeOk(v)) err(k); }
+    else s[k] = v;
+  }
   if (s['@context'] !== CONTEXT) err('@context');
   if (s['@type'] !== 'Specimen') err('@type');
   if (!isId(s.id)) err('id');
@@ -69,6 +83,7 @@ function validate(s, prefix = '') {
   if (!TYPES.includes(s.type)) err('type');
   if (typeof s.species !== 'string' || !s.species) err('species');
   if (s.stage !== undefined && !STAGES.includes(s.stage)) err('stage');
+  if (s.created !== undefined && !(typeof s.created === 'string' && RFC3339.test(s.created))) err('created');
   const st = s.strain;
   if (st !== undefined) {
     // 1.5.0-rc.1: strain.name is optional.
@@ -110,7 +125,7 @@ function validate(s, prefix = '') {
       if (isObj(st) && st.lineage !== undefined && st.lineage !== d[0]?.id) err('strain.lineage');
     }
   }
-  for (const k of Object.keys(s)) if (!KNOWN.has(k)) warn(k);
+  for (const k of Object.keys(label)) if (!KNOWN.has(k)) warn(k);
   return { valid: errors.length === 0, errors, warnings };
 }
 
@@ -119,7 +134,10 @@ function validate(s, prefix = '') {
 function roundtrip(text) {
   const label = JSON.parse(text);
   if (isObj(label._meta)) {
-    label._meta = Object.fromEntries(Object.entries(label._meta).map(([k, v]) => [META_CAMEL[k] ?? k, v]));
+    // 1.5.0-rc.2: when both spellings are present, the camelCase value wins and the snake_case member is kept.
+    const m = label._meta;
+    label._meta = Object.fromEntries(Object.entries(m).map(([k, v]) =>
+      [META_CAMEL[k] && !(META_CAMEL[k] in m) ? META_CAMEL[k] : k, v]));
   }
   return JSON.parse(JSON.stringify(label));
 }
@@ -141,10 +159,12 @@ function validateBundle(b) {
   if (!Array.isArray(b.specimens)) { errors.push('specimens'); return { valid: false, errors }; }
   const ids = new Set(b.specimens.map((s) => s?.id));
   const strains = new Set((b.strains ?? []).map((s) => s?.id));
+  const recipes = new Set((b.recipes ?? []).map((r) => r?.id));
   b.specimens.forEach((s, i) => {
     const r = validate(s, `specimens.${i}.`);
     errors.push(...r.errors.filter((f) => !f.endsWith('.strainRef')));
     if (s.strainRef !== undefined && !strains.has(s.strainRef)) errors.push(`specimens.${i}.strainRef`);
+    if (s.recipeRef !== undefined && !recipes.has(s.recipeRef)) errors.push(`specimens.${i}.recipeRef`);
   });
   (b.observations ?? []).forEach((o, i) => {
     for (const k of ['id', 'specimen', 'observedAt', 'kind']) if (o[k] === undefined) errors.push(`observations.${i}.${k}`);
@@ -362,7 +382,47 @@ function parseIJsonObject(text) {
   return label;
 }
 
-const detectForm = (text) => (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(text) ? 'encrypted-url' : 'embedded');
+// From 1.5.0: a URL with the compact shape takes the compact rules; any other URL the encrypted URL rules.
+const COMPACT_PREFIX = 'wemush://v1/';
+function isCompactShape(url) {
+  if (!url.startsWith(COMPACT_PREFIX) || url.startsWith(ENCRYPTED_PREFIX)) return false;
+  const q = url.indexOf('?');
+  const seg = url.slice(COMPACT_PREFIX.length, q === -1 ? url.length : q);
+  return seg !== '' && !seg.includes('/');
+}
+const detectForm = (text) => (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(text)
+  ? (isCompactShape(text) ? 'compact-url' : 'encrypted-url') : 'embedded');
+
+const strictDecode = (s) => { try { decodeURIComponent(s); } catch { throw new Malformed('escape'); } };
+function checkCompactParts(url, params) {
+  if (!isCompactShape(url)) throw new Malformed('not a compact URL');
+  const seen = new Set();
+  for (const p of params) {
+    if (p === '') throw new Malformed('empty parameter');
+    const at = p.indexOf('=');
+    const name = at === -1 ? p : p.slice(0, at);
+    if (!/^[A-Za-z0-9_-]+$/.test(name)) throw new Malformed('parameter name');
+    if (seen.has(name)) throw new Malformed('duplicate parameter');
+    seen.add(name);
+    strictDecode(at === -1 ? '' : p.slice(at + 1));
+  }
+  strictDecode(url.slice(COMPACT_PREFIX.length, url.indexOf('?')));
+}
+function signableCompact(url) {
+  const q = url.indexOf('?');
+  if (q === -1 || q === url.length - 1) return false;
+  const params = url.slice(q + 1).split('&');
+  if (params.some((p) => p.split('=')[0] === 'sig')) return false;
+  if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#')) return false;
+  try { checkCompactParts(url, params); } catch (e) { if (e instanceof Malformed) return false; throw e; }
+  return true;
+}
+function unwrapWolsUrl(text) {
+  const m = /^https:\/\/[^/?#]+\/wols\/([\s\S]+)$/.exec(text);
+  if (m) { try { text = decodeURIComponent(m[1]); } catch { return null; } }
+  if (text.startsWith(`web+${COMPACT_PREFIX}`)) text = text.slice(4);
+  return text.startsWith(COMPACT_PREFIX) ? text : null;
+}
 
 function signableUrl(url) {
   const q = url.indexOf('?');
@@ -380,18 +440,20 @@ function verifySignature(input, store) {
       ({ kid, raw } = parseToken(label.signature));
       const { signature: _, ...body } = label;
       message = signingInput('embedded', kid, jcs(body));
-    } else if (input.form === 'encrypted-url') {
+    } else if (input.form === 'encrypted-url' || input.form === 'compact-url') {
       const url = input.url;
+      const compact = input.form === 'compact-url';
       const q = url.indexOf('?');
       const params = q === -1 ? [] : url.slice(q + 1).split('&');
       const names = params.map((p) => p.split('=')[0]);
       if (!names.includes('sig')) return { status: 'unsigned' };
-      if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#') || !url.startsWith(ENCRYPTED_PREFIX)) throw new Malformed('url');
+      if (!/^[\x21-\x7e]*$/.test(url) || url.includes('#') || (!compact && !url.startsWith(ENCRYPTED_PREFIX))) throw new Malformed('url');
       if (names.filter((n) => n === 'sig').length !== 1 || names.at(-1) !== 'sig' || params.length < 2 ||
           !params.at(-1).startsWith('sig=')) throw new Malformed('sig position');
       const last = params.at(-1);
+      if (compact) checkCompactParts(url, params.slice(0, -1));
       ({ kid, raw } = parseToken(last.slice(4)));
-      message = signingInput('encrypted-url', kid, url.slice(0, url.length - last.length - 1));
+      message = signingInput(input.form, kid, url.slice(0, url.length - last.length - 1));
     } else {
       throw new Malformed('unknown form');
     }
@@ -416,12 +478,12 @@ function signSignature(input, keys) {
     const { signature: _, ...body } = parsed;
     message = signingInput('embedded', input.kid, jcs(body));
   } else {
-    if (!signableUrl(input.url)) return { refused: true };
-    message = signingInput('encrypted-url', input.kid, input.url);
+    if (!(input.form === 'compact-url' ? signableCompact(input.url) : signableUrl(input.url))) return { refused: true };
+    message = signingInput(input.form, input.kid, input.url);
   }
   const signature = `${input.kid}.${edSign(null, message, priv).toString('base64url')}`;
   const out = { signingInput: message.toString('utf8'), signature };
-  if (input.form === 'encrypted-url') out.url = `${input.url}&sig=${signature}`;
+  if (input.form !== 'embedded') out.url = `${input.url}&sig=${signature}`;
   return out;
 }
 
@@ -459,6 +521,67 @@ function loadKeySet(doc) {
   return { store, skipped };
 }
 
+// --- Compact URLs (1.5.0-rc.2) ------------------------------------------------
+// An independent reading of "Compact URL rules" and the Species Code Registry.
+// The registry tables come from the vector file, which copies registries/species-codes.json.
+const STAGE_CODES = { INO: 'INOCULATION', INC: 'INCUBATION', COL: 'COLONIZATION', PRI: 'PRIMORDIA',
+  FRU: 'FRUITING', SEN: 'SENESCENCE', HAR: 'HARVEST' };
+const REGISTERED = new Set(['s', 'ty', 'st', 't', 'b', 'sn', 'sg', 'td', 'sig']);
+
+function parseCompact(url, registry) {
+  const refuse = (reason) => ({ refused: true, reason });
+  const scheme = ['wemush://', 'web+wemush://'].find((s) => url.startsWith(s));
+  if (!scheme || url.includes('#')) return refuse('invalid-url');
+  const rest = url.slice(scheme.length);
+  const version = rest.match(/^(v\d+)\//);
+  if (!version) return refuse('invalid-url');
+  if (version[1] !== 'v1') return refuse('unsupported-version');
+  const after = rest.slice(3);
+  if (after.startsWith('encrypted/')) return refuse('encrypted-url');
+  const q = after.indexOf('?');
+  const segment = q < 0 ? after : after.slice(0, q);
+  if (segment === '' || segment.includes('/')) return refuse('invalid-url');
+  let id;
+  try { id = decodeURIComponent(segment); } catch { return refuse('invalid-encoding'); }
+  const params = new Map(), unrecognized = {}, warnings = [];
+  for (const pair of q < 0 || q === after.length - 1 ? [] : after.slice(q + 1).split('&')) {
+    if (pair === '') continue; // 1.5.0-rc.2: empty segments are ignored.
+    const eqAt = pair.indexOf('=');
+    const name = eqAt < 0 ? pair : pair.slice(0, eqAt);
+    let value;
+    try { value = decodeURIComponent((eqAt < 0 ? '' : pair.slice(eqAt + 1)).replace(/\+/g, ' ')); } catch { return refuse('invalid-encoding'); }
+    if (!REGISTERED.has(name)) { unrecognized[name] = value; continue; }
+    if (params.has(name)) return refuse('duplicate-parameter');
+    params.set(name, value);
+  }
+  if (!params.has('s') || params.get('s') === '') return refuse('missing-parameter');
+  const label = { id: `wemush:${id}` };
+  const s = params.get('s');
+  if (registry.speciesCodes[s]) label.species = registry.speciesCodes[s];
+  else if (registry.legacySpeciesCodes[s]) { label.species = registry.legacySpeciesCodes[s]; warnings.push('s'); }
+  else label.species = s;
+  if (params.has('ty')) { if (!TYPES.includes(params.get('ty'))) return refuse('invalid-parameter'); label.type = params.get('ty'); }
+  if (params.has('st')) {
+    const st = params.get('st');
+    const stage = STAGES.includes(st) ? st : STAGE_CODES[st];
+    if (!stage) return refuse('invalid-parameter');
+    label.stage = stage;
+  }
+  if (params.has('t')) {
+    if (!/^\d+$/.test(params.get('t')) || Number(params.get('t')) > MAX_T) return refuse('invalid-parameter');
+    label.created = new Date(Number(params.get('t')) * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  }
+  if (params.has('b')) label.batch = params.get('b');
+  const strain = {};
+  if (params.has('sn')) strain.name = params.get('sn');
+  if (params.has('sg')) { if (!GENERATION.test(params.get('sg'))) return refuse('invalid-parameter'); strain.generation = params.get('sg'); }
+  if (params.has('td')) { if (/^\d+$/.test(params.get('td'))) strain.transferDepth = Number(params.get('td')); else warnings.push('td'); }
+  if (Object.keys(strain).length) label.strain = strain;
+  if (Object.keys(unrecognized).length) label.unrecognized = unrecognized;
+  if (params.has('sig')) label.sig = params.get('sig');
+  return { refused: false, label, warnings };
+}
+
 // --- Runner -----------------------------------------------------------------
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let pass = 0, fail = 0;
@@ -488,6 +611,16 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
     } else if (c.operation === 'validateBundle') {
       const r = validateBundle(c.input);
       ok = r.valid === x.valid && (!x.errorField || r.errors.includes(x.errorField));
+      detail = JSON.stringify(r);
+    } else if (c.operation === 'unwrap') {
+      const r = unwrapWolsUrl(c.input.text);
+      ok = r === x.url && (r === null || verifySignature({ form: 'compact-url', url: r }, doc.trustStore).status === 'valid');
+      detail = JSON.stringify(r);
+    } else if (c.operation === 'parseCompact') {
+      const r = parseCompact(c.input.url, doc);
+      ok = x.refused ? r.refused === true && r.reason === x.reason
+        : !r.refused && eq(canonical(r.label), canonical(x.label)) &&
+          (x.warningField ? r.warnings.includes(x.warningField) : r.warnings.length === 0);
       detail = JSON.stringify(r);
     } else if (c.operation === 'create') {
       const r = create(c.input);
@@ -523,7 +656,7 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       // A signature this verifier made must also verify.
       const back = c.input.form === 'embedded'
         ? verifySignature({ form: 'embedded', label: JSON.stringify({ ...JSON.parse(c.input.label), signature: r.signature }) }, doc.trustStore)
-        : verifySignature({ form: 'encrypted-url', url: r.url }, doc.trustStore);
+        : verifySignature({ form: c.input.form, url: r.url }, doc.trustStore);
       ok = ok && back.status === 'valid';
       detail = JSON.stringify(r);
     } else if (c.operation === 'verifyNested') {

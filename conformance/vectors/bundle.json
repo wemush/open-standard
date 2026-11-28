@@ -1,5 +1,5 @@
 {
-  "wolsVersion": "1.5.0-rc.1",
+  "wolsVersion": "1.5.0-rc.2",
   "description": "Records bundle validation (for implementations that support Bundles)",
   "specSection": "Core Data Model > Records Bundle (1.5.0)",
   "cases": [
@@ -485,6 +485,315 @@
       "expected": {
         "valid": false,
         "errorField": "specimens.0.stage"
+      }
+    },
+    {
+      "id": "bundle-parent-outside",
+      "operation": "validateBundle",
+      "requirement": "MUST",
+      "description": "A `derivedFrom` parent need not be in the bundle",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Bundle",
+        "version": "1.5.0-rc.1",
+        "publisher": {
+          "name": "Example Farm"
+        },
+        "license": "CC-BY-4.0",
+        "strains": [
+          {
+            "id": "strain_po",
+            "name": "Blue Oyster",
+            "taxon": {
+              "scientificName": "Pleurotus ostreatus"
+            }
+          }
+        ],
+        "specimens": [
+          {
+            "@context": "https://wemush.com/wols/v1",
+            "@type": "Specimen",
+            "id": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "version": "1.5.0-rc.1",
+            "type": "FRUITING",
+            "species": "Pleurotus ostreatus",
+            "stage": "FRUITING",
+            "strainRef": "strain_po",
+            "substrateDryWeight": {
+              "value": 1000,
+              "unit": "g"
+            },
+            "derivedFrom": [
+              {
+                "id": "wemush:01JC8Z3K7Q0GS0000000000001",
+                "relation": "SPAWN_TO_BULK"
+              }
+            ]
+          }
+        ],
+        "observations": [
+          {
+            "id": "obs_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "observedAt": "2026-11-12T08:30:00Z",
+            "kind": "ENVIRONMENT",
+            "environment": {
+              "temperature": {
+                "value": 16.5,
+                "unit": "Cel"
+              }
+            }
+          }
+        ],
+        "harvests": [
+          {
+            "id": "hv_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "harvestedAt": "2026-11-20T10:00:00Z",
+            "flush": 1,
+            "freshWeight": {
+              "value": 612,
+              "unit": "g"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "bundle-recipe-ref",
+      "operation": "validateBundle",
+      "requirement": "MUST",
+      "description": "A specimen's `recipeRef` resolves to a recipe in the bundle",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Bundle",
+        "version": "1.5.0-rc.1",
+        "publisher": {
+          "name": "Example Farm"
+        },
+        "license": "CC-BY-4.0",
+        "strains": [
+          {
+            "id": "strain_po",
+            "name": "Blue Oyster",
+            "taxon": {
+              "scientificName": "Pleurotus ostreatus"
+            }
+          }
+        ],
+        "specimens": [
+          {
+            "@context": "https://wemush.com/wols/v1",
+            "@type": "Specimen",
+            "id": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "version": "1.5.0-rc.1",
+            "type": "FRUITING",
+            "species": "Pleurotus ostreatus",
+            "stage": "FRUITING",
+            "strainRef": "strain_po",
+            "substrateDryWeight": {
+              "value": 1000,
+              "unit": "g"
+            },
+            "recipeRef": "recipe_mm"
+          }
+        ],
+        "observations": [
+          {
+            "id": "obs_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "observedAt": "2026-11-12T08:30:00Z",
+            "kind": "ENVIRONMENT",
+            "environment": {
+              "temperature": {
+                "value": 16.5,
+                "unit": "Cel"
+              }
+            }
+          }
+        ],
+        "harvests": [
+          {
+            "id": "hv_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "harvestedAt": "2026-11-20T10:00:00Z",
+            "flush": 1,
+            "freshWeight": {
+              "value": 612,
+              "unit": "g"
+            }
+          }
+        ],
+        "recipes": [
+          {
+            "id": "recipe_mm",
+            "name": "Masters Mix",
+            "kind": "SUBSTRATE",
+            "ingredients": [
+              {
+                "name": "Hardwood sawdust",
+                "amount": {
+                  "value": 500,
+                  "unit": "g"
+                }
+              },
+              {
+                "name": "Soybean hulls",
+                "amount": {
+                  "value": 500,
+                  "unit": "g"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "bundle-recipe-ref-unknown",
+      "operation": "validateBundle",
+      "requirement": "MUST",
+      "description": "A specimen's `recipeRef` MUST name a recipe in the bundle",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Bundle",
+        "version": "1.5.0-rc.1",
+        "publisher": {
+          "name": "Example Farm"
+        },
+        "license": "CC-BY-4.0",
+        "strains": [
+          {
+            "id": "strain_po",
+            "name": "Blue Oyster",
+            "taxon": {
+              "scientificName": "Pleurotus ostreatus"
+            }
+          }
+        ],
+        "specimens": [
+          {
+            "@context": "https://wemush.com/wols/v1",
+            "@type": "Specimen",
+            "id": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "version": "1.5.0-rc.1",
+            "type": "FRUITING",
+            "species": "Pleurotus ostreatus",
+            "stage": "FRUITING",
+            "strainRef": "strain_po",
+            "substrateDryWeight": {
+              "value": 1000,
+              "unit": "g"
+            },
+            "recipeRef": "recipe_missing"
+          }
+        ],
+        "observations": [
+          {
+            "id": "obs_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "observedAt": "2026-11-12T08:30:00Z",
+            "kind": "ENVIRONMENT",
+            "environment": {
+              "temperature": {
+                "value": 16.5,
+                "unit": "Cel"
+              }
+            }
+          }
+        ],
+        "harvests": [
+          {
+            "id": "hv_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "harvestedAt": "2026-11-20T10:00:00Z",
+            "flush": 1,
+            "freshWeight": {
+              "value": 612,
+              "unit": "g"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "specimens.0.recipeRef"
+      }
+    },
+    {
+      "id": "bundle-strain-ref-empty",
+      "operation": "validateBundle",
+      "requirement": "MUST",
+      "description": "`strainRef`, when present, MUST be a non-empty string",
+      "input": {
+        "@context": "https://wemush.com/wols/v1",
+        "@type": "Bundle",
+        "version": "1.5.0-rc.1",
+        "publisher": {
+          "name": "Example Farm"
+        },
+        "license": "CC-BY-4.0",
+        "strains": [
+          {
+            "id": "strain_po",
+            "name": "Blue Oyster",
+            "taxon": {
+              "scientificName": "Pleurotus ostreatus"
+            }
+          }
+        ],
+        "specimens": [
+          {
+            "@context": "https://wemush.com/wols/v1",
+            "@type": "Specimen",
+            "id": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "version": "1.5.0-rc.1",
+            "type": "FRUITING",
+            "species": "Pleurotus ostreatus",
+            "stage": "FRUITING",
+            "strainRef": "",
+            "substrateDryWeight": {
+              "value": 1000,
+              "unit": "g"
+            }
+          }
+        ],
+        "observations": [
+          {
+            "id": "obs_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "observedAt": "2026-11-12T08:30:00Z",
+            "kind": "ENVIRONMENT",
+            "environment": {
+              "temperature": {
+                "value": 16.5,
+                "unit": "Cel"
+              }
+            }
+          }
+        ],
+        "harvests": [
+          {
+            "id": "hv_1",
+            "specimen": "wemush:01JC8Z3K7Q0FB0000000000001",
+            "harvestedAt": "2026-11-20T10:00:00Z",
+            "flush": 1,
+            "freshWeight": {
+              "value": 612,
+              "unit": "g"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "errorField": "specimens.0.strainRef"
       }
     }
   ]

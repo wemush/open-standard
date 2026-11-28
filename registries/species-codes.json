@@ -1,0 +1,243 @@
+{
+  "$comment": "WOLS species code registry for the compact URL `s` parameter. Append-only: a code is never removed, reassigned or renamed. See SPECIFICATION.md, Species Code Registry. CC0 1.0.",
+  "registry": "species-codes",
+  "codePattern": "^[A-Z]{4,8}$",
+  "codes": [
+    {
+      "code": "POSTR",
+      "scientificName": "Pleurotus ostreatus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PCITRI",
+      "scientificName": "Pleurotus citrinopileatus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PDJAR",
+      "scientificName": "Pleurotus djamor",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PERYN",
+      "scientificName": "Pleurotus eryngii",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "HERIN",
+      "scientificName": "Hericium erinaceus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "GLUCI",
+      "scientificName": "Ganoderma lucidum",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "LPUDE",
+      "scientificName": "Laetiporus pudens",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "LLENC",
+      "scientificName": "Lentinula edodes",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "APOLY",
+      "scientificName": "Agrocybe polyphylla",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "STRUG",
+      "scientificName": "Stropharia rugosoannulata",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PPULM",
+      "scientificName": "Pleurotus pulmonarius",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "GAPPL",
+      "scientificName": "Ganoderma applanatum",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "HCORA",
+      "scientificName": "Hericium coralloides",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "FVELU",
+      "scientificName": "Flammulina velutipes",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "ABISP",
+      "scientificName": "Agaricus bisporus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "AARVE",
+      "scientificName": "Agaricus arvensis",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PCUBE",
+      "scientificName": "Psilocybe cubensis",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "CMILI",
+      "scientificName": "Cordyceps militaris",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "TVERS",
+      "scientificName": "Trametes versicolor",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "GFRON",
+      "scientificName": "Grifola frondosa",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "LSULP",
+      "scientificName": "Laetiporus sulphureus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "CAEGE",
+      "scientificName": "Cyclocybe aegerita",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "PNAME",
+      "scientificName": "Pholiota nameko",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "HTESS",
+      "scientificName": "Hypsizygus tessellatus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "CCOMA",
+      "scientificName": "Coprinus comatus",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "AMELL",
+      "scientificName": "Armillaria mellea",
+      "since": "1.5.0-rc.2"
+    },
+    {
+      "code": "MESCU",
+      "scientificName": "Morchella esculenta",
+      "since": "1.5.0-rc.2"
+    }
+  ],
+  "legacyCodes": {
+    "$comment": "Two-letter codes written by the Python `wols` library before 1.5. Decoders MUST read them; generators MUST NOT write them. Frozen: no new legacy codes.",
+    "codes": [
+      {
+        "code": "PO",
+        "scientificName": "Pleurotus ostreatus"
+      },
+      {
+        "code": "PE",
+        "scientificName": "Pleurotus eryngii"
+      },
+      {
+        "code": "PC",
+        "scientificName": "Pleurotus citrinopileatus"
+      },
+      {
+        "code": "PP",
+        "scientificName": "Pleurotus pulmonarius"
+      },
+      {
+        "code": "GL",
+        "scientificName": "Ganoderma lucidum"
+      },
+      {
+        "code": "GA",
+        "scientificName": "Ganoderma applanatum"
+      },
+      {
+        "code": "LE",
+        "scientificName": "Lentinula edodes"
+      },
+      {
+        "code": "HE",
+        "scientificName": "Hericium erinaceus"
+      },
+      {
+        "code": "HC",
+        "scientificName": "Hericium coralloides"
+      },
+      {
+        "code": "FL",
+        "scientificName": "Flammulina velutipes"
+      },
+      {
+        "code": "AB",
+        "scientificName": "Agaricus bisporus"
+      },
+      {
+        "code": "AA",
+        "scientificName": "Agaricus arvensis"
+      },
+      {
+        "code": "PS",
+        "scientificName": "Psilocybe cubensis"
+      },
+      {
+        "code": "CA",
+        "scientificName": "Cordyceps militaris"
+      },
+      {
+        "code": "TA",
+        "scientificName": "Trametes versicolor"
+      },
+      {
+        "code": "GF",
+        "scientificName": "Grifola frondosa"
+      },
+      {
+        "code": "LP",
+        "scientificName": "Laetiporus sulphureus"
+      },
+      {
+        "code": "CM",
+        "scientificName": "Cyclocybe aegerita"
+      },
+      {
+        "code": "ST",
+        "scientificName": "Stropharia rugosoannulata"
+      },
+      {
+        "code": "PH",
+        "scientificName": "Pholiota nameko"
+      },
+      {
+        "code": "HY",
+        "scientificName": "Hypsizygus tessellatus"
+      },
+      {
+        "code": "CO",
+        "scientificName": "Coprinus comatus"
+      },
+      {
+        "code": "AM",
+        "scientificName": "Armillaria mellea"
+      },
+      {
+        "code": "MO",
+        "scientificName": "Morchella esculenta"
+      }
+    ]
+  }
+}

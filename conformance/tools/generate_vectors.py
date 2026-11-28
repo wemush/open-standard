@@ -18,7 +18,7 @@ import base64
 import hashlib
 import json
 import unicodedata
-from urllib.parse import quote
+from urllib.parse import quote, unquote_to_bytes
 from pathlib import Path
 
 import math
@@ -33,6 +33,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 SPEC_VERSION = "1.3.0"
 SIG_SPEC_VERSION = "1.4.0"
 DM_SPEC_VERSION = "1.5.0-rc.1"
+COMPACT_SPEC_VERSION = "1.5.0-rc.2"
 CONTEXT = "https://wemush.com/wols/v1"
 OUT = Path(__file__).resolve().parent.parent / "vectors"
 
@@ -214,6 +215,9 @@ def label15(id_: str = "wemush:clx1a2b3c4", **fields: object) -> dict:
 GRAIN = "wemush:01JC8Z3K7Q0GS0000000000001"
 GRAIN_B = "wemush:01JC8Z3K7Q0GS0000000000002"
 CULTURE = "wemush:01JC8Z3K7Q0LC0000000000001"
+# The shape of a field-level encryption object (1.3.0). Validation checks the shape only.
+ENC = {"encrypted": True, "algorithm": "AES-256-GCM", "payload": "AAAAAAAAAAAAAAAAAAAAAA",
+       "iv": "AAAAAAAAAAAAAAAA", "kdf": "raw"}
 
 
 def data_model_cases() -> list[dict]:
@@ -284,6 +288,22 @@ def data_model_cases() -> list[dict]:
         ok("dm-meta-camel-case", "`_meta` with its standard keys in camelCase",
            label15(_meta={"sourceId": "spec_42", "sourceSystem": "example-lims",
                           "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7"})),
+        # --- 1.4 labels that stay valid (1.5.0-rc.2) --------------------------------
+        ok("dm-encrypted-fields",
+           "Field-level encryption objects (1.3.0) are valid in place of any member that may be encrypted",
+           label15(strain=ENC, stage=ENC, created=ENC, batch=ENC, organization=ENC, custom=ENC, lot=ENC,
+                   derivedFrom=ENC)),
+        ok("dm-custom-non-object-value",
+           "A `custom` value need not be an object; the WeMush Platform writes `_platformType` as a string",
+           label15(custom={"_platformType": "GRAIN_SPAWN", "mushoh": {"qcChecked": True}})),
+        ok("dm-lineage-not-an-id", "A 1.4 `strain.lineage` that isn't a WOLS ID stays valid",
+           label15(strain={"name": "Blue Oyster", "lineage": "clx0parent01"})),
+        ok("dm-empty-batch", "An empty `batch`, `organization` or `creator` stays valid, as in 1.4",
+           label15(batch="", organization="", creator="")),
+        ok("dm-generation-lowercase", "Generation letters are read in either case",
+           label15(strain={"name": "Blue Oyster", "generation": "f2"})),
+        ok("dm-generation-parental-number", "`P` takes an optional number, like `F` and `G`",
+           label15(strain={"name": "Blue Oyster", "generation": "P2"})),
         # --- Invalid labels -------------------------------------------------------
         bad("dm-version-malformed", "`version` MUST be MAJOR.MINOR.PATCH with an optional pre-release",
             label15(version="1.5"), "version"),
@@ -322,6 +342,10 @@ def data_model_cases() -> list[dict]:
             "taxon.hybridOf"),
         bad("dm-lot-empty", "`lot`, when present, MUST be a non-empty string",
             label15(lot=""), "lot"),
+        bad("dm-created-not-date-time", "`created` MUST be an RFC 3339 date-time, not a date alone",
+            label15(created="2026-11-10"), "created"),
+        bad("dm-encrypted-species", "`species` is never encrypted, so an encryption object there is invalid",
+            label15(species=ENC), "species"),
         # --- Decode then encode ---------------------------------------------------
         rt("rt-unknown-member-preserved",
            "A member the decoder doesn't know MUST survive decode and re-encode",
@@ -344,6 +368,11 @@ def data_model_cases() -> list[dict]:
                           "importedAt": "2026-11-20T10:00:00Z", "schemaVersion": "7",
                           "vendor_note": "kept as is"}),
            req="SHOULD"),
+        rt("rt-meta-both-spellings",
+           "When `_meta` has both spellings of a key, the camelCase value is used and the snake_case "
+           "member is kept unchanged",
+           label15(_meta={"sourceId": "spec_42", "source_id": "old_7"}),
+           label15(_meta={"sourceId": "spec_42", "source_id": "old_7"})),
     ]
 
 
@@ -397,7 +426,139 @@ def bundle_cases() -> list[dict]:
         case("bundle-specimen-invalid-label", "Each specimen MUST also be a valid label",
              bundle(specimens=[{**base["specimens"][0], "stage": "PINNING"}]),
              False, "specimens.0.stage"),
+        case("bundle-parent-outside", "A `derivedFrom` parent need not be in the bundle",
+             bundle(specimens=[{**base["specimens"][0],
+                                "derivedFrom": [{"id": "wemush:01JC8Z3K7Q0GS0000000000001",
+                                                 "relation": "SPAWN_TO_BULK"}]}]), True),
+        case("bundle-recipe-ref", "A specimen's `recipeRef` resolves to a recipe in the bundle",
+             bundle(recipes=[{"id": "recipe_mm", "name": "Masters Mix", "kind": "SUBSTRATE",
+                              "ingredients": [{"name": "Hardwood sawdust", "amount": {"value": 500, "unit": "g"}},
+                                              {"name": "Soybean hulls", "amount": {"value": 500, "unit": "g"}}]}],
+                    specimens=[{**base["specimens"][0], "recipeRef": "recipe_mm"}]), True),
+        case("bundle-recipe-ref-unknown", "A specimen's `recipeRef` MUST name a recipe in the bundle",
+             bundle(specimens=[{**base["specimens"][0], "recipeRef": "recipe_missing"}]),
+             False, "specimens.0.recipeRef"),
+        case("bundle-strain-ref-empty", "`strainRef`, when present, MUST be a non-empty string",
+             bundle(specimens=[{**base["specimens"][0], "strainRef": ""}]),
+             False, "specimens.0.strainRef"),
     ]
+
+
+# ---------------------------------------------------------------------------
+# Compact URLs (1.5.0-rc.2)
+# ---------------------------------------------------------------------------
+
+STAGE_CODES = {"INO": "INOCULATION", "INC": "INCUBATION", "COL": "COLONIZATION", "PRI": "PRIMORDIA",
+               "FRU": "FRUITING", "SEN": "SENESCENCE", "HAR": "HARVEST"}
+
+
+def compact_cases() -> list[dict]:
+    def ok(cid, desc, url, ref, req="MUST", warning=None):
+        exp = {"label": ref}
+        if warning:
+            exp["warningField"] = warning
+        return {"id": cid, "operation": "parseCompact", "requirement": req, "description": desc,
+                "input": {"url": url}, "expected": exp}
+
+    def bad(cid, desc, url, reason, req="MUST"):
+        return {"id": cid, "operation": "parseCompact", "requirement": req, "description": desc,
+                "input": {"url": url}, "expected": {"refused": True, "reason": reason}}
+
+    po = "Pleurotus ostreatus"
+    base = "wemush://v1/clx1a2b3c4"
+    rid = "wemush:clx1a2b3c4"
+    cases = [
+        ok("compact-spec-example", "The specification's example URL",
+           f"{base}?s=POSTR&st=COLONIZATION&t=1734307200",
+           {"id": rid, "species": po, "stage": "COLONIZATION", "created": "2024-12-16T00:00:00Z"}),
+        ok("compact-species-only", "`s` is the only required parameter", f"{base}?s=POSTR",
+           {"id": rid, "species": po}),
+        ok("compact-all-registered", "Every registered parameter, as `@wemush/wols` writes them",
+           f"{base}?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&t=1734307200&b=batch_2025_12_001"
+           "&sn=Blue+Oyster+PoHu&sg=F2&td=5",
+           {"id": rid, "species": po, "type": "SUBSTRATE", "stage": "COLONIZATION",
+            "created": "2024-12-16T00:00:00Z", "batch": "batch_2025_12_001",
+            "strain": {"name": "Blue Oyster PoHu", "generation": "F2", "transferDepth": 5}}),
+        *[ok(f"compact-stage-code-{code.lower()}", f"Stage code `{code}` decodes to `{name}`",
+             f"{base}?s=POSTR&st={code}", {"id": rid, "species": po, "stage": name})
+          for code, name in STAGE_CODES.items()],
+        ok("compact-python-default", "The Python library's default output: `web+wemush://`, "
+           "legacy species code, stage code", "web+wemush://v1/clx1a2b3c4?s=PO&st=COL",
+           {"id": rid, "species": po, "stage": "COLONIZATION"}, warning="s"),
+        ok("compact-legacy-species-code", "A legacy two-letter code decodes, with a warning",
+           f"{base}?s=LE", {"id": rid, "species": "Lentinula edodes"}, warning="s"),
+        ok("compact-species-new-code", "A code added in 1.5.0-rc.2 decodes", f"{base}?s=GFRON",
+           {"id": rid, "species": "Grifola frondosa"}),
+        ok("compact-species-full-name-encoded", "A full species name, percent-encoded",
+           f"{base}?s=Morchella%20importuna", {"id": rid, "species": "Morchella importuna"}),
+        ok("compact-species-full-name-plus", "In a value, `+` decodes to a space",
+           f"{base}?s=Morchella+importuna", {"id": rid, "species": "Morchella importuna"}),
+        ok("compact-species-registered-as-name", "A registered species may also be written by name",
+           f"{base}?s=Pleurotus%20ostreatus", {"id": rid, "species": po}),
+        ok("compact-id-percent-encoded", "The ID segment is percent-decoded as UTF-8",
+           "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR",
+           {"id": "wemush:Lab A/plate+3%", "species": po}),
+        ok("compact-id-plus-literal", "In the ID segment, `+` is a literal character",
+           "wemush://v1/plate+3?s=POSTR", {"id": "wemush:plate+3", "species": po}),
+        ok("compact-id-encrypted-alone", "An ID that is literally `encrypted` is a compact URL",
+           "wemush://v1/encrypted?s=POSTR", {"id": "wemush:encrypted", "species": po}),
+        ok("compact-generation-without-name", "`sg` is read when `sn` is absent",
+           f"{base}?s=POSTR&sg=F1", {"id": rid, "species": po, "strain": {"generation": "F1"}}),
+        ok("compact-transfer-depth", "`td` carries `strain.transferDepth`",
+           f"{base}?s=POSTR&sg=F1&td=4",
+           {"id": rid, "species": po, "strain": {"generation": "F1", "transferDepth": 4}}),
+        ok("compact-transfer-depth-malformed", "A malformed `td` is ignored with a warning, not rejected",
+           f"{base}?s=POSTR&td=-1", {"id": rid, "species": po}, req="SHOULD", warning="td"),
+        ok("compact-unregistered-param", "Unregistered parameters don't make a URL invalid, and are kept",
+           f"{base}?s=POSTR&x-acme-room=B2&sr=Blue",
+           {"id": rid, "species": po, "unrecognized": {"x-acme-room": "B2", "sr": "Blue"}}),
+        ok("compact-sig-kept", "A `sig` parameter is kept unchanged and never reported as verified",
+           f"{base}?s=POSTR&st=COL&sig=w1.{'A' * 86}",
+           {"id": rid, "species": po, "stage": "COLONIZATION", "sig": f"w1.{'A' * 86}"}),
+        ok("compact-empty-segments", "Empty segments (`&&`, a leading or trailing `&`) are ignored",
+           f"{base}?&s=POSTR&&st=COL&", {"id": rid, "species": po, "stage": "COLONIZATION"}),
+        ok("compact-empty-value", "A parameter with an empty value, or no `=`, has the empty string as its value",
+           f"{base}?s=POSTR&b&x-note=", {"id": rid, "species": po, "batch": "", "unrecognized": {"x-note": ""}}),
+        ok("compact-timestamp-max", "`t` up to 253402300799 (9999-12-31T23:59:59Z) is accepted",
+           f"{base}?s=POSTR&t=253402300799", {"id": rid, "species": po, "created": "9999-12-31T23:59:59Z"}),
+        bad("compact-missing-species", "`s` is required", f"{base}?st=COL", "missing-parameter"),
+        bad("compact-empty-species", "An empty `s` is the same as a missing one", f"{base}?s=&st=COL",
+            "missing-parameter"),
+        bad("compact-timestamp-too-large", "A `t` past 9999-12-31T23:59:59Z can't be a date-time",
+            f"{base}?s=POSTR&t=253402300800", "invalid-parameter"),
+        bad("compact-fragment", "A compact URL has no fragment", f"{base}?s=POSTR#B2", "invalid-url"),
+        bad("compact-missing-id", "The ID segment must be non-empty", "wemush://v1/?s=POSTR", "invalid-url"),
+        bad("compact-wrong-scheme", "Only `wemush://` and `web+wemush://` are required to be read; "
+            "`wemush:` without `//` is not a compact URL", "wemush:v1/clx1a2b3c4?s=POSTR", "invalid-url"),
+        bad("compact-unknown-version", "A version segment other than `v1` is rejected",
+            "wemush://v2/clx1a2b3c4?s=POSTR", "unsupported-version"),
+        bad("compact-encrypted-url", "An encrypted URL is not a compact URL",
+            "wemush://v1/encrypted/clx1a2b3c4?e=AAAA&iv=AAAAAAAAAAAAAAAA&kdf=raw", "encrypted-url"),
+        bad("compact-invalid-stage", "`st` must be a stage name or code", f"{base}?s=POSTR&st=PINNING",
+            "invalid-parameter"),
+        bad("compact-invalid-type", "`ty` must be a canonical type", f"{base}?s=POSTR&ty=BAG",
+            "invalid-parameter"),
+        bad("compact-invalid-timestamp", "`t` must be plain decimal digits",
+            f"{base}?s=POSTR&t=2024-12-16", "invalid-parameter"),
+        bad("compact-invalid-generation", "`sg` must use the generation notation",
+            f"{base}?s=POSTR&sg=Gen+2", "invalid-parameter"),
+        bad("compact-duplicate-param", "A registered parameter may appear only once",
+            f"{base}?s=POSTR&s=LLENC", "duplicate-parameter"),
+        bad("compact-bad-escape", "A malformed percent escape is rejected", f"{base}?s=POSTR&b=%zz",
+            "invalid-encoding"),
+        bad("compact-bad-utf8", "An escape that decodes to invalid UTF-8 is rejected",
+            f"{base}?s=POSTR&sn=%C3%28", "invalid-encoding"),
+        bad("compact-bad-id-escape", "A malformed escape in the ID segment is rejected",
+            "wemush://v1/abc%2?s=POSTR", "invalid-encoding"),
+    ]
+    return cases
+
+
+def species_registry() -> dict:
+    reg = json.loads((OUT.parent.parent / "registries" / "species-codes.json").read_text())
+    return {"speciesCodes": {c["code"]: c["scientificName"] for c in reg["codes"]},
+            "legacySpeciesCodes": {c["code"]: c["scientificName"] for c in reg["legacyCodes"]["codes"]},
+            "stageCodes": STAGE_CODES}
 
 
 # ---------------------------------------------------------------------------
@@ -657,6 +818,8 @@ def field_cases() -> list[dict]:
 SIG_DOMAIN = "WOLS-SIG-v1"
 FORM_EMBEDDED = "embedded"
 FORM_URL = "encrypted-url"
+FORM_COMPACT = "compact-url"
+COMPACT_PREFIX = "wemush://v1/"
 ENCRYPTED_PREFIX = "wemush://v1/encrypted/"
 KID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 SIG_RE = re.compile(r"[A-Za-z0-9_-]{86}")
@@ -1618,16 +1781,308 @@ def key_set_cases(signed_text: str) -> list[dict]:
     return cases
 
 
-def signature_metadata() -> dict:
+# ---------------------------------------------------------------------------
+# Compact URL signatures (1.5.0-rc.2)
+# ---------------------------------------------------------------------------
+
+# The compact file's trust store adds a short kid for the same key as mushoh-2026.
+COMPACT_TRUSTED = {**TRUSTED, "w1": "mushoh-2026"}
+PARAM_NAME_RE = re.compile(r"[A-Za-z0-9_-]+")
+BAD_ESCAPE_RE = re.compile(r"%(?![0-9A-Fa-f]{2})")
+
+
+def compact_store() -> dict[str, dict]:
+    return {kid: {"alg": "Ed25519", "publicKey": public_raw(name)} for kid, name in COMPACT_TRUSTED.items()}
+
+
+def is_compact_shape(url: str) -> bool:
+    """`wemush://v1/` and one non-empty path segment, not an encrypted URL."""
+    if not url.startswith(COMPACT_PREFIX) or url.startswith(ENCRYPTED_PREFIX):
+        return False
+    q = url.find("?")
+    seg = url[len(COMPACT_PREFIX): q if q != -1 else len(url)]
+    return seg != "" and "/" not in seg
+
+
+def url_form(url: str) -> str:
+    """Which URL rules a signed URL takes. Anything that isn't compact takes the encrypted URL rules."""
+    return FORM_COMPACT if is_compact_shape(url) else FORM_URL
+
+
+def strict_decode(s: str) -> None:
+    if BAD_ESCAPE_RE.search(s):
+        raise Malformed("bad percent escape")
+    try:
+        unquote_to_bytes(s).decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise Malformed("escape decodes to invalid UTF-8") from e
+
+
+def check_compact_parts(url: str, params: list[str]) -> None:
+    """The compact rules beyond the encrypted URL rules, for every parameter before `sig`."""
+    if not is_compact_shape(url):
+        raise Malformed("not a compact URL")
+    seen: set[str] = set()
+    for p in params:
+        if p == "":
+            raise Malformed("empty parameter")
+        name, _, value = p.partition("=")
+        if not PARAM_NAME_RE.fullmatch(name):
+            raise Malformed("bad parameter name")
+        if name in seen:
+            raise Malformed("duplicate parameter")
+        seen.add(name)
+        strict_decode(value)
+    strict_decode(url[len(COMPACT_PREFIX): url.find("?")])
+
+
+def split_signed_compact(url: str) -> tuple[str, str] | None:
+    q = url.find("?")
+    params = url[q + 1:].split("&") if q != -1 else []
+    names = [p.split("=", 1)[0] for p in params]
+    if "sig" not in names:
+        return None
+    if any(ord(c) < 0x21 or ord(c) > 0x7E for c in url) or "#" in url:
+        raise Malformed("non-ASCII, space or fragment")
+    if names.count("sig") != 1 or names[-1] != "sig" or len(params) < 2:
+        raise Malformed("sig must appear once, as the last parameter")
+    last = params[-1]
+    if not last.startswith("sig="):
+        raise Malformed("sig without value")
+    check_compact_parts(url, params[:-1])
+    return url[: len(url) - len(last) - 1], last[4:]
+
+
+def verify_compact(url: str, store: dict[str, dict] | None = None) -> tuple[str, bytes | None]:
+    try:
+        split = split_signed_compact(url)
+        if split is None:
+            return "unsigned", None
+        body, tok = split
+        kid, raw = parse_token(tok)
+        message = signing_input(FORM_COMPACT, kid, body.encode("ascii"))
+    except Malformed:
+        return "malformed", None
+    return _check(kid, raw, message, compact_store() if store is None else store), message
+
+
+def check_signable_compact(url: str) -> None:
+    q = url.find("?")
+    if q == -1 or q == len(url) - 1:
+        raise Malformed("no query")
+    params = url[q + 1:].split("&")
+    if any(p.split("=", 1)[0] == "sig" for p in params):
+        raise Malformed("already signed")
+    if any(ord(c) < 0x21 or ord(c) > 0x7E for c in url) or "#" in url:
+        raise Malformed("not ASCII, or has a fragment")
+    check_compact_parts(url, params)
+
+
+def unwrap_wols_url(text: str) -> str | None:
+    """The optional pre-step: decode an https://{host}/wols/{x} handler URL once, then drop `web+`."""
+    m = re.fullmatch(r"https://[^/?#]+/wols/(.+)", text, re.S)
+    if m:
+        try:
+            text = unquote_to_bytes(m.group(1)).decode("utf-8") if not BAD_ESCAPE_RE.search(m.group(1)) else ""
+        except UnicodeDecodeError:
+            return None
+    if text.startswith("web+" + COMPACT_PREFIX):
+        text = text[len("web+"):]
+    return text if text.startswith(COMPACT_PREFIX) else None
+
+
+def compact_signature_cases() -> list[dict]:
+    store = compact_store()
+    c_spec = "wemush://v1/clx1a2b3c4?s=POSTR&st=COLONIZATION&t=1734307200"
+    c_ts = "wemush://v1/clx1a2b3c4?s=POSTR&ty=SUBSTRATE&st=COLONIZATION&sn=Blue+Oyster+PoHu&sg=F2"
+    c_host = "wemush://v1/Lab%20A%2Fplate%2B3%25?s=POSTR&sn=Blue%20Oyster"
+    c_td = ("wemush://v1/WM-LC-250114-000001?s=POSTR&ty=CULTURE&st=COL&b=batch_2025_12_001"
+            "&sn=Blue+Oyster&sg=F1&td=3&x-acme-room=B2")
+    c_enc = "wemush://v1/encrypted?s=POSTR"
+
+    def sign(u: str, kid: str, key: str | None = None, form: str = FORM_COMPACT) -> str:
+        return sign_url(u, kid, key or COMPACT_TRUSTED.get(kid, kid), form=form)
+
+    s_spec, s_w1, s_ts, s_host, s_td = (sign(c_spec, "mushoh-2026"), sign(c_spec, "w1"), sign(c_ts, "w1"),
+                                        sign(c_host, "w1"), sign(c_td, "w1"))
+    tok_w1 = s_w1.rsplit("&sig=", 1)[1]
+
+    # Tokens from the other forms, for cross-form replay.
+    enc_base = ENCRYPTED_PREFIX + "clx1a2b3c4?e=AAAA&iv=AAAAAAAAAAAAAAAA&kdf=raw"
+    s_enc = sign_url(enc_base, "w1", "mushoh-2026", form=FORM_URL)
+    enc_tok = s_enc.rsplit("&sig=", 1)[1]
+    emb_tok = token("w1", raw_sign("mushoh-2026", signing_input(FORM_EMBEDDED, "w1", c_spec.encode())))
+
+    cases: list[dict] = []
+    tag = " (1.5.0)"
+
+    def v(cid, desc, u, status, kid=None, req="MUST"):
+        cases.append({"id": cid, "operation": "verify", "requirement": req, "description": desc + tag,
+                      "input": {"form": url_form(u), "url": u},
+                      "expected": {"status": status, **({"kid": kid} if kid else {})}})
+
+    def s(cid, desc, u, kid):
+        out = sign(u, kid)
+        msg = signing_input(FORM_COMPACT, kid, u.encode("ascii"))
+        cases.append({"id": cid, "operation": "sign", "requirement": "MUST", "description": desc + tag,
+                      "input": {"form": FORM_COMPACT, "url": u, "kid": kid, "key": COMPACT_TRUSTED[kid]},
+                      "expected": {"signingInput": msg.decode("ascii"),
+                                   "signature": out.rsplit("&sig=", 1)[1], "url": out}})
+
+    def refuse(cid, desc, u):
+        cases.append({"id": cid, "operation": "sign", "requirement": "MUST", "description": desc + tag,
+                      "input": {"form": FORM_COMPACT, "url": u, "kid": "w1", "key": "mushoh-2026"},
+                      "expected": {"refused": True}})
+
+    def unwrap(cid, desc, text, url):
+        cases.append({"id": cid, "operation": "unwrap", "requirement": "SHOULD", "description": desc + tag,
+                      "input": {"text": text}, "expected": {"url": url}})
+
+    # --- sign ---------------------------------------------------------------
+    s("sign-compact-url", "Sign a compact URL: its exact bytes under the `compact-url` form tag", c_spec,
+      "mushoh-2026")
+    s("sign-compact-url-short-kid", "The same URL under the short kid `w1`, which maps to the same key",
+      c_spec, "w1")
+    s("sign-compact-url-plus", "`+` in a value and the TypeScript parameter set are signed as written",
+      c_ts, "w1")
+    s("sign-compact-url-percent-encoded-id", "Percent-encoding in the ID segment is signed exactly as written",
+      c_host, "w1")
+    s("sign-compact-url-extension", "`td` and an `x-` parameter are covered like any other parameter", c_td, "w1")
+    s("sign-compact-url-id-encrypted", "An ID that is literally `encrypted` is a compact URL", c_enc, "w1")
+    for cid, desc, u in [
+        ("no-query", "a compact URL with no query", c_spec.split("?")[0]),
+        ("empty-query", "a compact URL with an empty query", c_spec.split("?")[0] + "?"),
+        ("already-signed", "a URL that already has `sig`", s_w1),
+        ("duplicate-name", "a repeated parameter name", c_spec + "&s=LLENC"),
+        ("empty-parameter", "an empty parameter", c_spec.replace("&st=", "&&st=")),
+        ("non-ascii", "a character outside U+0021 to U+007E", c_spec + "&sn=Blue Oyster"),
+        ("fragment", "a fragment", c_spec + "#x"),
+        ("bad-escape", "a malformed percent escape", c_spec + "&b=%zz"),
+        ("bad-utf8", "an escape that decodes to invalid UTF-8", c_spec + "&sn=%C3%28"),
+        ("bad-name", "an escaped parameter name", c_spec.replace("?s=", "?%73=")),
+        ("two-segments", "two path segments", "wemush://v1/batch/clx1a2b3c4?s=POSTR"),
+        ("other-scheme", "a `web+wemush://` URL (signers emit only `wemush://`)", "web+" + c_spec),
+    ]:
+        refuse(f"sign-refuse-compact-{cid}", f"Signers MUST refuse {desc}", u)
+
+    # --- verify -------------------------------------------------------------
+    v("verify-compact-valid", "A signed compact URL verifies", s_spec, "valid", kid="mushoh-2026")
+    v("verify-compact-short-kid", "A compact URL signed under a short kid verifies", s_w1, "valid", kid="w1")
+    v("verify-compact-plus", "A compact URL with `+` in a value verifies as received", s_ts, "valid", kid="w1")
+    v("verify-compact-percent-encoded-id", "A compact URL with a percent-encoded ID verifies", s_host, "valid",
+      kid="w1")
+    v("verify-compact-extension-param", "`td` and an `x-` parameter are covered and verify", s_td, "valid",
+      kid="w1")
+    v("verify-compact-id-encrypted", "A compact URL whose ID is `encrypted` verifies", sign(c_enc, "w1"), "valid",
+      kid="w1")
+    v("verify-compact-tampered-param", "A changed parameter fails verification",
+      s_w1.replace("st=COLONIZATION", "st=FRUITING"), "invalid")
+    v("verify-compact-tampered-extension", "A changed `td` fails verification", s_td.replace("&td=3", "&td=4"),
+      "invalid")
+    v("verify-compact-added-param", "An added parameter before `sig` fails verification",
+      s_w1.replace("&sig=", "&b=x&sig="), "invalid")
+    v("verify-compact-removed-param", "A removed parameter fails verification",
+      s_w1.replace("&t=1734307200", ""), "invalid")
+    v("verify-compact-reordered", "Reordered parameters fail verification: exact bytes",
+      s_w1.replace("?s=POSTR&st=COLONIZATION", "?st=COLONIZATION&s=POSTR"), "invalid")
+    v("verify-compact-reencoded-space", "`%20` rewritten as `+` fails verification: exact bytes",
+      s_host.replace("sn=Blue%20Oyster", "sn=Blue+Oyster"), "invalid")
+    v("verify-compact-reencoded-hex-case", "`%2F` rewritten as `%2f` fails verification: exact bytes",
+      s_host.replace("%2F", "%2f"), "invalid")
+    v("verify-compact-unsigned", "A compact URL without `sig` is unsigned", c_spec, "unsigned")
+    v("verify-compact-unknown-kid", "A compact URL signed with a key that isn't in the trust store",
+      sign(c_spec.replace("POSTR", "LLENC"), "attacker-1", "attacker-1"), "unknown-kid")
+    v("verify-compact-kid-swapped", "Moving a signature to another kid of the same key fails: the kid is signed",
+      s_spec.replace("&sig=mushoh-2026.", "&sig=w1."), "invalid")
+    v("verify-compact-encrypted-url-signature-replayed",
+      "Cross-form replay: an encrypted URL's token doesn't verify on a compact URL", c_spec + "&sig=" + enc_tok,
+      "invalid")
+    v("verify-encrypted-url-compact-signature-replayed",
+      "Cross-form replay: a compact URL's token doesn't verify on an encrypted URL", enc_base + "&sig=" + tok_w1,
+      "invalid")
+    v("verify-compact-embedded-signature-replayed",
+      "Cross-form replay: an embedded-form signature over the same bytes doesn't verify", c_spec + "&sig=" + emb_tok,
+      "invalid")
+    v("verify-compact-wrong-form-prefix",
+      "A signature over the compact URL bytes made with the `encrypted-url` tag fails verification",
+      sign(c_spec, "w1", form=FORM_URL), "invalid")
+    for cid, desc, u in [
+        ("sig-not-last", "`sig` MUST be the last parameter", s_w1 + "&x=1"),
+        ("two-sig", "`sig` MUST appear once", s_w1 + "&sig=" + tok_w1),
+        ("sig-only", "`sig` can't be the only parameter", "wemush://v1/clx1a2b3c4?sig=" + tok_w1),
+        ("duplicate-name", "A repeated parameter name is malformed, so first-wins and last-wins readers can't differ",
+         sign(c_spec + "&s=AMELL", "w1")),
+        ("empty-parameter", "An empty parameter is malformed", sign(c_spec.replace("&st=", "&&st="), "w1")),
+        ("escaped-name", "An escaped parameter name is malformed, so `%73` can't be read as `s`",
+         sign(c_spec.replace("?s=", "?%73="), "w1")),
+        ("bad-escape", "A malformed percent escape is malformed", sign(c_spec + "&b=%zz", "w1")),
+        ("bad-utf8", "An escape that decodes to invalid UTF-8 is malformed", sign(c_spec + "&sn=%C3%28", "w1")),
+        ("bad-id-escape", "A malformed escape in the ID segment is malformed",
+         sign("wemush://v1/abc%2?s=POSTR", "w1")),
+        ("fragment", "A signed compact URL with a fragment is malformed", s_w1 + "#x"),
+        ("non-ascii", "A signed compact URL must be ASCII", s_w1.replace("s=POSTR", "s=PÖSTR")),
+        ("uppercase-scheme", "Only the lowercase `wemush://v1/` prefix is signable", s_w1.replace("wemush://", "WEMUSH://")),
+        ("two-segments", "A URL with two path segments isn't a compact URL",
+         sign("wemush://v1/a/b?s=POSTR", "w1")),
+        ("batch-route", "Other platform routes aren't signable", sign("wemush://v1/batch/b1?s=POSTR", "w1")),
+        ("web-plus-wrapper", "`web+wemush://` is unwrapped before verification, never verified as is",
+         "web+" + s_w1),
+        ("reserved-1-3-sig", "The reserved 1.3.1 `sig` value (no kid) is malformed, never valid",
+         c_spec + "&sig=" + b64url(bytes(range(64)))),
+    ]:
+        v(f"verify-compact-malformed-{cid}", desc, u, "malformed")
+
+    # --- unwrap (optional pre-step) -----------------------------------------
+    unwrap("unwrap-compact-identity", "A `wemush://v1/` URL is returned unchanged", s_w1, s_w1)
+    unwrap("unwrap-compact-web-plus", "`web+` is removed, giving the exact signed URL", "web+" + s_w1, s_w1)
+    unwrap("unwrap-compact-handler", "The PWA handler form is percent-decoded once, then `web+` is removed",
+           "https://wemush.com/wols/" + quote("web+" + s_host, safe=""), s_host)
+    unwrap("unwrap-compact-handler-plain", "A handler URL wrapping `wemush://` is percent-decoded once",
+           "https://wemush.com/wols/" + quote(s_td, safe=""), s_td)
+    unwrap("unwrap-compact-double-encoded", "Double-encoded input is decoded once only, so it doesn't unwrap",
+           "https://wemush.com/wols/" + quote(quote(s_w1, safe=""), safe=""), None)
+    unwrap("unwrap-compact-other", "Anything else doesn't unwrap", "https://example.com/v1/clx1a2b3c4?s=POSTR",
+           None)
+
+    # Self-check.
+    for c in cases:
+        inp, x = c["input"], c["expected"]
+        if c["operation"] == "sign":
+            try:
+                check_signable_compact(inp["url"])
+                refused = False
+            except Malformed:
+                refused = True
+            if refused != bool(x.get("refused")):
+                raise SystemExit(f"{c['id']}: signer refusal disagrees")
+            if not refused and verify_compact(x["url"], store)[0] != "valid":
+                raise SystemExit(f"{c['id']}: signed URL doesn't verify")
+        elif c["operation"] == "verify":
+            fn = verify_compact if inp["form"] == FORM_COMPACT else verify_url
+            status, msg = fn(inp["url"], store)
+            if status != x["status"]:
+                raise SystemExit(f"{c['id']}: computed {status}, expected {x['status']}")
+            if status == "valid":
+                x["signingInput"] = msg.decode("ascii")
+        else:
+            got = unwrap_wols_url(inp["text"])
+            if got != x["url"]:
+                raise SystemExit(f"{c['id']}: unwrap gave {got!r}")
+            if got is not None and verify_compact(got, store)[0] != "valid":
+                raise SystemExit(f"{c['id']}: unwrapped URL doesn't verify")
+    return cases
+
+
+def signature_metadata(trusted: dict[str, str] = TRUSTED) -> dict:
     return {
         "signingDomain": SIG_DOMAIN,
         "testKeys": {
             name: {"seedBase64url": b64url(test_seed(name)), "publicKeyBase64url": b64url(public_raw(name)),
-                   "trusted": name in TRUSTED.values()}
+                   "trusted": name in trusted.values()}
             for name in KEY_NAMES
         },
         "trustStore": {kid: {"alg": "Ed25519", "publicKeyBase64url": b64url(public_raw(name))}
-                       for kid, name in TRUSTED.items()},
+                       for kid, name in trusted.items()},
     }
 
 
@@ -1647,9 +2102,15 @@ def main() -> None:
           version=SIG_SPEC_VERSION, extra=signature_metadata())
     write("data-model.json", "Data model: 1.5 label members, JSON Schema rules and round trips",
           "Core Data Model > Schema and Data Model (1.5.0)", data_model_cases(),
-          version=DM_SPEC_VERSION)
+          version=COMPACT_SPEC_VERSION)
     write("bundle.json", "Records bundle validation (for implementations that support Bundles)",
-          "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=DM_SPEC_VERSION)
+          "Core Data Model > Records Bundle (1.5.0)", bundle_cases(), version=COMPACT_SPEC_VERSION)
+    write("compact.json", "Compact URL parsing, parameter registry and species codes",
+          "QR Code Encoding > Compact Format (Compact URL rules; Species Code Registry)", compact_cases(),
+          version=COMPACT_SPEC_VERSION, extra=species_registry())
+    write("compact-signatures.json", "Ed25519 signatures over compact URLs",
+          "Privacy & Security > Cryptographic Signatures > Compact URL signatures (1.5.0)",
+          compact_signature_cases(), version=COMPACT_SPEC_VERSION, extra=signature_metadata(COMPACT_TRUSTED))
     sums = "".join(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}\n"
                    for f in sorted(OUT.glob("*.json")))
     (OUT / "SHA256SUMS").write_text(sums)
